@@ -1,0 +1,19 @@
+# Per-repo no-mistakes configuration for the Pretty Unfocused podcast site.
+#
+# The gate runs each command as `cmd.exe /c <command>`, so they are written in
+# cmd.exe syntax. The first pull request adds package.json with the typecheck,
+# test and lint scripts named here. Review auto-fix stays off, with one
+# automatic follow-up each for test, lint, rebase and CI.
+auto_fix:
+  review: 0
+  test: 1
+  lint: 1
+  rebase: 1
+  ci: 1
+
+# prepare: a run worktree starts with tracked files only, so it has no
+# node_modules until this installs them from the lockfile.
+commands:
+  prepare: "npm ci"
+  test: "npm run typecheck && npm test"
+  lint: "npm run lint"
