@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0" xmlns:anchor="https://anchor.fm/xmlns" xmlns:podcast="https://podcastindex.org/namespace/1.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:psc="http://podlove.org/simple-chapters">
+	<channel>
+		<title><![CDATA[Pretty Unfocused ]]></title>
+		<description><![CDATA[Hosted by Maya and Gia (two chronically curious besties). We’re talking ADHD, creativity, money habits, self-growth, and the messy middle—plus whatever we’re currently obsessed with. Cozy chaos only.]]></description>
+		<link>https://podcasters.spotify.com/pod/show/mayagia</link>
+		<generator>Anchor Podcasts</generator>
+		<lastBuildDate>Sun, 22 Nov 2026 00:05:19 GMT</lastBuildDate>
+		<atom:link href="https://anchor.fm/s/111f1fc90/podcast/rss" rel="self" type="application/rss+xml"/>
+		<author><![CDATA[Pretty Unfocused ]]></author>
+		<copyright><![CDATA[Pretty Unfocused ]]></copyright>
+		<language><![CDATA[en-us]]></language>
+		<atom:link rel="hub" href="https://pubsubhubbub.appspot.com/"/>
+		<itunes:author>Pretty Unfocused </itunes:author>
+		<itunes:summary>Hosted by Maya and Gia (two chronically curious besties). We’re talking ADHD, creativity, money habits, self-growth, and the messy middle—plus whatever we’re currently obsessed with. Cozy chaos only.</itunes:summary>
+		<itunes:type>episodic</itunes:type>
+		<itunes:owner>
+			<itunes:name>Pretty Unfocused </itunes:name>
+			<itunes:email></itunes:email>
+		</itunes:owner>
+		<itunes:explicit>false</itunes:explicit>
+		<itunes:category text="Society &amp; Culture"/>
+		<itunes:image href="https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_nologo/45860388/45860388-1794674786304-8af5265790ebe.jpg"/>
+		<item>
+			<title><![CDATA[Hagrid and Dumbledore Have an Ultimate Girls Night]]></title>
+			<description><![CDATA[<p>What’s more comforting and girly than the ULTIMATE girls night with face masks, some wine, and oh yeah, combing our beards. We love to talk about mani pedis and everything magic.</p>
+]]></description>
+			<link>https://podcasters.spotify.com/pod/show/mayagia/episodes/Hagrid-and-Dumbledore-Have-an-Ultimate-Girls-Night-e3r04cc</link>
+			<guid isPermaLink="false">f55266ba-057f-4c6d-ad58-069c554a6f49</guid>
+			<dc:creator><![CDATA[Pretty Unfocused ]]></dc:creator>
+			<pubDate>Tue, 27 Oct 2026 01:00:03 GMT</pubDate>
+			<enclosure url="https://anchor.fm/s/111f1fc90/podcast/play/127979340/https%3A%2F%2Fd3ctxlq1ktw2nl.cloudfront.net%2Fstaging%2F2026-9-25%2F434937598-44100-2-acff10bdf07bf.mp3" length="72474121" type="audio/mpeg"/>
+			<itunes:summary>&lt;p&gt;What’s more comforting and girly than the ULTIMATE girls night with face masks, some wine, and oh yeah, combing our beards. We love to talk about mani pedis and everything magic.&lt;/p&gt;
+</itunes:summary>
+			<itunes:explicit>false</itunes:explicit>
+			<itunes:duration>01:15:29</itunes:duration>
+			<itunes:image href="https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_nologo/45860388/45860388-1794674786304-8af5265790ebe.jpg"/>
+			<itunes:season>1</itunes:season>
+			<itunes:episode>20</itunes:episode>
+			<itunes:episodeType>full</itunes:episodeType>
+		</item>
+<item>
+			<title><![CDATA[The Halloween Takeover of Pete and Timmy]]></title>
+			<description><![CDATA[<p>YEET, YEET, SKRTTT, YEET!!! What’s better than two cohosts who recreate and ICONIC SNL skit? Yeah, nothing! This is week 3 of halloween costumes and we showed up and popped off of Pete and Tim. We talk about Halloween red flags, best candy flavors, and more spooky things.</p>
+]]></description>
+			<link>https://podcasters.spotify.com/pod/show/mayagia/episodes/The-Halloween-Takeover-of-Pete-and-Timmy-e3qljma</link>
+			<guid isPermaLink="false">1094858d-71ca-4b8a-a53e-29ba55b489a6</guid>
+			<dc:creator><![CDATA[Pretty Unfocused ]]></dc:creator>
+			<pubDate>Mon, 19 Oct 2026 14:27:33 GMT</pubDate>
+			<enclosure url="https://anchor.fm/s/111f1fc90/podcast/play/127634570/https%3A%2F%2Fd3ctxlq1ktw2nl.cloudfront.net%2Fstaging%2F2026-9-17%2F434393553-44100-2-4e4daac077512.mp3" length="61796518" type="audio/mpeg"/>
+			<itunes:summary>&lt;p&gt;YEET, YEET, SKRTTT, YEET!!! What’s better than two cohosts who recreate and ICONIC SNL skit? Yeah, nothing! This is week 3 of halloween costumes and we showed up and popped off of Pete and Tim. We talk about Halloween red flags, best candy flavors, and more spooky things.&lt;/p&gt;
+</itunes:summary>
+			<itunes:explicit>false</itunes:explicit>
+			<itunes:duration>01:04:22</itunes:duration>
+			<itunes:image href="https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_nologo/45860388/45860388-1794674786304-8af5265790ebe.jpg"/>
+			<itunes:season>1</itunes:season>
+			<itunes:episode>19</itunes:episode>
+			<itunes:episodeType>full</itunes:episodeType>
+		</item>
+<item>
+			<title><![CDATA[Things That Scare Dale and Brennan as Adults]]></title>
+			<description><![CDATA[<p>Everything comes better in a pair of two. Dale and Brennan decided they wanted to be the cohosts today. What are your thoughts? Did they do well?</p>
+]]></description>
+			<link>https://podcasters.spotify.com/pod/show/mayagia/episodes/Things-That-Scare-Dale-and-Brennan-as-Adults-e3qak1d</link>
+			<guid isPermaLink="false">0d4ec82d-d3e1-4644-a08e-10fc0247b22b</guid>
+			<dc:creator><![CDATA[Pretty Unfocused ]]></dc:creator>
+			<pubDate>Mon, 12 Oct 2026 17:48:28 GMT</pubDate>
+			<enclosure url="https://anchor.fm/s/111f1fc90/podcast/play/127274477/https%3A%2F%2Fd3ctxlq1ktw2nl.cloudfront.net%2Fstaging%2F2026-9-12%2F433984841-44100-2-6e5fca3c6c2d3.mp3" length="60826434" type="audio/mpeg"/>
+			<itunes:summary>&lt;p&gt;Everything comes better in a pair of two. Dale and Brennan decided they wanted to be the cohosts today. What are your thoughts? Did they do well?&lt;/p&gt;
+</itunes:summary>
+			<itunes:explicit>false</itunes:explicit>
+			<itunes:duration>01:03:21</itunes:duration>
+			<itunes:image href="https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_nologo/45860388/45860388-1794674786304-8af5265790ebe.jpg"/>
+			<itunes:season>1</itunes:season>
+			<itunes:episode>18</itunes:episode>
+			<itunes:episodeType>full</itunes:episodeType>
+		</item>
+<item>
+			<title><![CDATA[Figuring out our mid 20's ]]></title>
+			<description><![CDATA[<p>Welcome audio only listeners!! Listen to us yap about our coming up story, friendship breakup/rekindling as well as what helped us find our niche, passions, and what to do next as a mid 20 yr old!</p>
+]]></description>
+			<link>https://podcasters.spotify.com/pod/show/mayagia/episodes/Figuring-out-our-mid-20s-e3ihsu3</link>
+			<guid isPermaLink="false">11f535e5-aa46-4d70-af08-43bb0ebd0e3d</guid>
+			<dc:creator><![CDATA[Pretty Unfocused ]]></dc:creator>
+			<pubDate>Mon, 27 Apr 2026 17:07:07 GMT</pubDate>
+			<enclosure url="https://anchor.fm/s/111f1fc90/podcast/play/119124355/https%3A%2F%2Fd3ctxlq1ktw2nl.cloudfront.net%2Fstaging%2F2026-3-27%2F422974626-44100-2-d0ca50c0867bb.m4a" length="43117707" type="audio/x-m4a"/>
+			<itunes:summary>&lt;p&gt;Welcome audio only listeners!! Listen to us yap about our coming up story, friendship breakup/rekindling as well as what helped us find our niche, passions, and what to do next as a mid 20 yr old!&lt;/p&gt;
+</itunes:summary>
+			<itunes:explicit>false</itunes:explicit>
+			<itunes:duration>00:44:26</itunes:duration>
+			<itunes:image href="https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_nologo/45860388/45860388-1794674786304-8af5265790ebe.jpg"/>
+			<itunes:season>1</itunes:season>
+			<itunes:episode>1</itunes:episode>
+			<itunes:episodeType>full</itunes:episodeType>
+		</item>
+</channel>
+</rss>
