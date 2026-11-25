@@ -46,15 +46,20 @@ function renderListenPanel(): string {
 
 function renderMiniCard(show: Show): string {
   const [latestEpisode] = show.episodes;
-  if (latestEpisode?.youtubeUrl === undefined) {
+  if (latestEpisode === undefined) {
     return '';
   }
+  const playUrl = latestEpisode.youtubeUrl ?? latestEpisode.spotifyUrl;
+  if (playUrl === undefined) {
+    return '';
+  }
+  const platform = latestEpisode.youtubeUrl === undefined ? 'Spotify' : 'YouTube';
   const title = escapeHtml(latestEpisode.title);
   const { thumbnail } = latestEpisode;
   const srcset = thumbnail.srcset === undefined ? '' : ` srcset="${escapeHtml(thumbnail.srcset)}"`;
   return `<aside class="mini-card" aria-label="Latest episode" data-frame="mini" data-inert-on-menu>
       <img class="mini-card-image" src="${escapeHtml(thumbnail.src)}"${srcset} sizes="${MINI_IMAGE_SIZES}" width="${thumbnail.width}" height="${thumbnail.height}" alt="" decoding="async" fetchpriority="low">
-      <a class="mini-card-link" href="${escapeHtml(latestEpisode.youtubeUrl)}" aria-label="Play ${title} on YouTube">
+      <a class="mini-card-link" href="${escapeHtml(playUrl)}" aria-label="Play ${title} on ${platform}">
         <span class="label mini-card-label">Latest<span class="mini-card-label-rest"> episode</span></span>
         <span class="mini-card-title">${title}</span>
       </a>
