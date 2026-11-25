@@ -44,7 +44,14 @@ describe('showDataPlugin', () => {
   it('builds the shell with an empty main while no sections are registered', async () => {
     const page = await buildPage();
 
-    expect(page).toContain('<main id="main"></main>');
+    expect(page).toContain('<main id="main" tabindex="-1" data-inert-on-menu></main>');
     expect(page).toContain('<title>Pretty Unfocused</title>');
+  });
+
+  it('puts the page frame in place of its marker', async () => {
+    const page = await buildPage();
+
+    expect(page).toContain('<header class="frame" data-module-frame');
+    expect(page).not.toContain('<!--render:frame-->');
   });
 });

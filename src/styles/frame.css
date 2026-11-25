@@ -1,0 +1,467 @@
+.frame {
+  --top-button-bg: var(--cream);
+  --top-button-fg: var(--wine);
+  --top-listen-bg: var(--gold);
+  --top-focus: var(--gold);
+  --top-text: var(--cream);
+  --top-menu-focus: var(--gold);
+  --top-listen-focus: var(--cream);
+  --bottom-button-bg: var(--cream);
+  --bottom-button-fg: var(--wine);
+  --bottom-listen-bg: var(--gold);
+  --bottom-menu-focus: var(--gold);
+  --bottom-listen-focus: var(--cream);
+  --bottom-text: var(--cream);
+  --button-bg: var(--top-button-bg);
+  --button-fg: var(--top-button-fg);
+  --listen-bg: var(--top-listen-bg);
+  --menu-focus: var(--top-menu-focus);
+  --listen-focus: var(--top-listen-focus);
+
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.frame[data-surface-top='light'] {
+  --top-button-bg: var(--wine);
+  --top-button-fg: var(--cream);
+  --top-listen-bg: var(--wine);
+  --top-focus: var(--roast);
+  --top-text: var(--wine);
+  --top-menu-focus: var(--roast);
+  --top-listen-focus: var(--roast);
+}
+
+.frame[data-surface-bottom='light'] {
+  --bottom-button-bg: var(--wine);
+  --bottom-button-fg: var(--cream);
+  --bottom-listen-bg: var(--wine);
+  --bottom-menu-focus: var(--roast);
+  --bottom-listen-focus: var(--roast);
+  --bottom-text: var(--wine);
+}
+
+.frame a,
+.frame button,
+.frame-section,
+.menu-panel,
+.listen-panel {
+  pointer-events: auto;
+}
+
+.frame-button {
+  position: absolute;
+  inset-block-start: var(--space-4);
+  z-index: 11;
+  background: var(--button-bg);
+  color: var(--button-fg);
+}
+
+.frame-button--menu {
+  inset-inline-start: var(--gutter);
+  --focus-ring: var(--menu-focus);
+}
+
+.frame-button--listen {
+  inset-inline-end: var(--gutter);
+  background: var(--listen-bg);
+  --focus-ring: var(--listen-focus);
+}
+
+.frame-corner--menu[data-open] .frame-button--menu {
+  background: var(--cream);
+  color: var(--wine);
+  --focus-ring: var(--gold);
+}
+
+html[data-menu-open] .frame-button--listen {
+  background: var(--gold);
+  color: var(--wine);
+  --focus-ring: var(--cream);
+}
+
+.frame-button[aria-expanded='true']:hover,
+html[data-menu-open] .frame-button:hover {
+  translate: none;
+}
+
+.frame-button-icon {
+  display: grid;
+}
+
+.frame-button-icon--close,
+.frame-button[aria-expanded='true'] .frame-button-icon--open {
+  display: none;
+}
+
+.frame-button[aria-expanded='true'] .frame-button-icon--close {
+  display: grid;
+}
+
+.frame-mark {
+  position: absolute;
+  inset-block-start: 22px;
+  inset-inline-start: 50%;
+  inline-size: 64px;
+  block-size: 64px;
+  z-index: 12;
+  border-radius: 50%;
+  translate: -50% 0;
+  --focus-ring: var(--top-focus);
+}
+
+.frame-mark img {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.frame-section {
+  position: absolute;
+  inset-block-end: var(--space-4);
+  inset-inline-start: var(--gutter);
+  color: var(--bottom-text);
+  transition: color var(--dur-ui) var(--ease-out);
+}
+
+.menu-panel {
+  --menu-origin: calc(var(--gutter) + var(--round-size) / 2) calc(var(--space-4) + var(--round-size) / 2);
+
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  padding: var(--space-8) var(--gutter) var(--space-7);
+  text-align: center;
+  background: var(--wine);
+  color: var(--cream);
+  clip-path: circle(0 at var(--menu-origin));
+  visibility: hidden;
+  overflow-y: auto;
+  transition:
+    clip-path var(--dur-move) var(--ease-wipe),
+    visibility 0s linear var(--dur-move);
+}
+
+[data-open] > .menu-panel {
+  clip-path: circle(150% at var(--menu-origin));
+  visibility: visible;
+  transition:
+    clip-path var(--dur-move) var(--ease-wipe),
+    visibility 0s;
+}
+
+.menu-list {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+}
+
+.menu-socials {
+  justify-content: center;
+}
+
+.menu-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--size-h2);
+  line-height: 0.92;
+  text-transform: uppercase;
+  text-decoration: none;
+  -webkit-text-stroke: var(--display-stroke) currentcolor;
+  transition: color var(--dur-ui) var(--ease-out);
+}
+
+.menu-link:hover {
+  color: var(--gold);
+}
+
+.menu-link-number {
+  color: var(--gold);
+  font-family: var(--font-text);
+  font-weight: 700;
+  font-size: var(--size-label);
+  letter-spacing: 0.14em;
+  -webkit-text-stroke: 0;
+}
+
+.listen-panel {
+  --focus-ring: var(--roast);
+
+  position: absolute;
+  inset-block-start: calc(var(--space-4) + var(--round-size) + var(--space-2));
+  inset-inline-end: var(--gutter);
+  z-index: 12;
+  min-inline-size: 15rem;
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--cream);
+  color: var(--wine);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.96);
+  transform-origin: top right;
+  transition:
+    opacity var(--dur-ui) var(--ease-out),
+    transform var(--dur-ui) var(--ease-out),
+    visibility 0s linear var(--dur-ui);
+}
+
+.frame-corner--listen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: color-mix(in srgb, var(--wine) 70%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-ui) var(--ease-out);
+}
+
+.frame-corner--listen[data-open]::before {
+  opacity: 1;
+}
+
+[data-open] > .listen-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity var(--dur-ui) var(--ease-out),
+    transform var(--dur-ui) var(--ease-out),
+    visibility 0s;
+}
+
+.listen-title {
+  margin-block-end: var(--space-2);
+  padding-inline: var(--space-3);
+  color: var(--roast);
+}
+
+.listen-list {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.listen-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: 44px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: var(--size-body);
+  text-decoration: none;
+  transition:
+    background-color var(--dur-ui) var(--ease-out),
+    color var(--dur-ui) var(--ease-out);
+}
+
+.listen-link:hover {
+  background: var(--wine);
+  color: var(--cream);
+}
+
+.mini-card {
+  position: absolute;
+  inset-block-end: var(--space-4);
+  inset-inline-end: var(--gutter);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  inline-size: 21rem;
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--ember);
+  color: var(--cream);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(var(--space-4));
+  pointer-events: auto;
+  transition:
+    opacity var(--dur-ui) var(--ease-out),
+    transform var(--dur-ui) var(--ease-out),
+    visibility 0s linear var(--dur-ui);
+}
+
+.mini-card[data-visible] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity var(--dur-ui) var(--ease-out),
+    transform var(--dur-ui) var(--ease-out),
+    visibility 0s;
+}
+
+.mini-card-image {
+  inline-size: 88px;
+  aspect-ratio: 16 / 9;
+  flex: none;
+  border-radius: var(--space-2);
+  object-fit: cover;
+}
+
+.mini-card-link {
+  display: block;
+  min-inline-size: 0;
+  flex: 1;
+  text-decoration: none;
+}
+
+.mini-card-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+}
+
+.mini-card-label {
+  display: block;
+  margin-block-end: var(--space-1);
+  color: var(--gold);
+}
+
+.mini-card-title {
+  display: -webkit-box;
+  overflow: hidden;
+  font-weight: 700;
+  font-size: var(--size-body);
+  line-height: 1.1;
+  text-wrap: balance;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+@media (max-width: 599px) {
+  .frame {
+    --button-bg: var(--bottom-button-bg);
+    --button-fg: var(--bottom-button-fg);
+    --listen-bg: var(--bottom-listen-bg);
+    --menu-focus: var(--bottom-menu-focus);
+    --listen-focus: var(--bottom-listen-focus);
+  }
+
+  .frame-button {
+    inset-block-start: auto;
+    inset-block-end: var(--space-3);
+  }
+
+  .frame-mark {
+    inset-block-start: 14px;
+    inline-size: 54px;
+    block-size: 54px;
+  }
+
+  .menu-panel {
+    --menu-origin: calc(var(--gutter) + var(--round-size) / 2) calc(100% - var(--space-3) - var(--round-size) / 2);
+
+    padding-block: var(--space-7);
+  }
+
+  .listen-panel {
+    inset-block-start: auto;
+    inset-block-end: calc(var(--space-3) + var(--round-size) + var(--space-2));
+    transform: translateY(8px) scale(0.96);
+    transform-origin: bottom right;
+  }
+
+  [data-open] > .listen-panel {
+    transform: none;
+  }
+
+  .mini-card {
+    inset-block-end: var(--space-3);
+    inset-inline: calc(var(--gutter) + var(--round-size) + var(--space-3));
+    inline-size: auto;
+    gap: var(--space-2);
+    block-size: var(--round-size);
+    padding: 0 var(--space-3);
+  }
+
+  .mini-card-label {
+    display: none;
+  }
+
+  .mini-card-image {
+    inline-size: 56px;
+  }
+
+  .mini-card-play {
+    display: none;
+  }
+}
+
+.frame-button,
+.frame-mark,
+.frame-section {
+  transition:
+    opacity var(--dur-ui) var(--ease-out),
+    scale var(--dur-ui) var(--ease-pop),
+    translate var(--dur-ui) var(--ease-out),
+    background-color var(--dur-ui) var(--ease-out),
+    color var(--dur-ui) var(--ease-out);
+}
+
+.frame-mark[data-hidden] {
+  opacity: 0;
+  visibility: hidden;
+  scale: 0.4;
+  transition:
+    opacity var(--dur-ui) var(--ease-out),
+    scale var(--dur-ui) var(--ease-pop),
+    visibility 0s linear var(--dur-ui);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame-mark[data-hidden] {
+    scale: none;
+  }
+}
+
+@media (max-width: 599px) {
+  .frame-section {
+    inset-block: 14px auto;
+    display: flex;
+    align-items: center;
+    block-size: 54px;
+    max-inline-size: calc(50% - var(--gutter) - var(--round-size) / 2 - var(--space-2));
+    color: var(--top-text);
+  }
+}
+
+@media (max-width: 399px) {
+  .mini-card-image {
+    inline-size: 48px;
+  }
+}
+
+@media (max-width: 359px) {
+  .frame-section {
+    block-size: 44px;
+  }
+
+  .mini-card {
+    padding-inline: var(--space-2);
+  }
+
+  .frame-mark {
+    inline-size: 44px;
+    block-size: 44px;
+  }
+
+  .mini-card-image {
+    display: none;
+  }
+}

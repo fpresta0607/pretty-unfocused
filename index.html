@@ -9,6 +9,11 @@
       content="2 BFF’s, 1 ADHD brain. Maya and Gia, two chronically curious besties, talking ADHD, creativity, money habits, self-growth and the messy middle. New episodes every Monday."
     />
     <meta name="theme-color" content="#46021F" />
+    <script>
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.dataset.motion = 'on';
+      }
+    </script>
     <style>
       html {
         background: #46021f;
@@ -33,7 +38,10 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
   </head>
-  <body>
-    <main id="main"><!--render:sections--></main>
+  <body data-module-scroll>
+    <a class="skip-link" href="#main" data-inert-on-menu>Skip to content</a>
+    <!--render:frame-->
+    <main id="main" tabindex="-1" data-inert-on-menu><!--render:sections--></main>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
