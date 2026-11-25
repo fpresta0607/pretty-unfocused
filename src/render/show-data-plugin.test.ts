@@ -41,17 +41,25 @@ async function buildPage(): Promise<string> {
 }
 
 describe('showDataPlugin', () => {
-  it('builds the shell with an empty main while no sections are registered', async () => {
+  it('opens main with the home hero', async () => {
     const page = await buildPage();
 
-    expect(page).toContain('<main id="main" tabindex="-1" data-inert-on-menu></main>');
+    expect(page).toContain('<main id="main" tabindex="-1" data-inert-on-menu><section class="section section--wine hero" id="home"');
     expect(page).toContain('<title>Pretty Unfocused</title>');
   });
 
-  it('puts the page frame in place of its marker', async () => {
+  it('puts the page frame in place of its marker, with Home first in its menu', async () => {
     const page = await buildPage();
 
     expect(page).toContain('<header class="frame" data-module-frame');
+    expect(page).toContain('href="#home" data-menu="link"');
     expect(page).not.toContain('<!--render:frame-->');
+  });
+
+  it('puts the intro in place of its marker', async () => {
+    const page = await buildPage();
+
+    expect(page).toContain('<div class="intro" aria-hidden="true" data-module-intro>');
+    expect(page).not.toContain('<!--render:intro-->');
   });
 });

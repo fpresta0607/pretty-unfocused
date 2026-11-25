@@ -414,6 +414,19 @@ html[data-menu-open] .frame-button:hover {
     color var(--dur-ui) var(--ease-out);
 }
 
+html[data-intro] .frame-button--listen {
+  transition-delay: 120ms;
+}
+
+html[data-intro] .frame-section {
+  transition-delay: 180ms;
+}
+
+html[data-intro]:not([data-frame-ready]) :is(.frame-button, .frame-section) {
+  opacity: 0;
+  scale: 0.4;
+}
+
 .frame-mark[data-hidden] {
   opacity: 0;
   visibility: hidden;

@@ -2,14 +2,13 @@ import type { Show } from '../show/show-types.ts';
 import { escapeHtml } from './escape-html.ts';
 import { renderIcon, renderIconSprite } from './icons.ts';
 import { PLATFORM_LINKS, renderPlatformPills } from './platform-links.ts';
+import { RING_SMALL_SIZE, RING_SMALL_SRC } from './ring-asset.ts';
 
 export interface FrameSection {
   id: string;
   label: string;
 }
 
-const RING_SMALL_SRC = '/src/assets/splash-ring-small.webp';
-const RING_SMALL_SIZE = 159;
 const MINI_IMAGE_SIZES = '96px';
 
 function renderMenuButton(): string {

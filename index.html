@@ -10,15 +10,34 @@
     />
     <meta name="theme-color" content="#46021F" />
     <script>
-      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        document.documentElement.dataset.motion = 'on';
-      }
+      (function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var root = document.documentElement;
+        var hasSeenIntro = false;
+        try {
+          hasSeenIntro = sessionStorage.getItem('pu-intro-seen') === '1';
+        } catch (error) {}
+        root.dataset.motion = 'on';
+        if (hasSeenIntro) {
+          root.dataset.heroState = 'pending';
+        } else {
+          root.dataset.intro = 'pending';
+        }
+        setTimeout(function () {
+          if (root.dataset.intro === 'pending') delete root.dataset.intro;
+          if (root.dataset.heroState === 'pending') delete root.dataset.heroState;
+        }, 4000);
+      })();
     </script>
     <style>
       html {
         background: #46021f;
       }
+      html[data-intro='pending'] {
+        background: #f7f1e9;
+      }
     </style>
+    <link rel="preconnect" href="https://i.ytimg.com" />
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Pretty Unfocused" />
@@ -40,6 +59,7 @@
   </head>
   <body data-module-scroll>
     <a class="skip-link" href="#main" data-inert-on-menu>Skip to content</a>
+    <!--render:intro-->
     <!--render:frame-->
     <main id="main" tabindex="-1" data-inert-on-menu><!--render:sections--></main>
     <script type="module" src="/src/main.ts"></script>

@@ -1,0 +1,86 @@
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: none;
+  overflow: hidden;
+  color: var(--wine);
+}
+
+html[data-intro] .intro {
+  display: block;
+}
+
+html[data-intro='leaving'] .intro {
+  pointer-events: none;
+}
+
+.intro-panel {
+  position: absolute;
+  inset: 0 0 -16vh;
+}
+
+.intro-curtain {
+  position: absolute;
+  inset: 0;
+  border-radius: 0 0 50% 50% / 0 0 16vh 16vh;
+  background: var(--cream);
+}
+
+.intro-content {
+  position: absolute;
+  inset: 0 0 16vh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.intro-ring {
+  inline-size: clamp(6rem, 18svh, 10rem);
+  block-size: clamp(6rem, 18svh, 10rem);
+}
+
+.intro-text {
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, min(17vw, 15svh), 9rem);
+  line-height: 1.02;
+  text-transform: uppercase;
+  -webkit-text-stroke: var(--display-stroke) currentcolor;
+}
+
+.intro-mask {
+  display: block;
+  overflow: hidden;
+  padding-block: 0.06em;
+}
+
+.intro-line {
+  display: block;
+}
+
+.intro-line--tint {
+  color: var(--roast);
+}
+
+html[data-intro='pending'] .intro-ring {
+  animation: intro-ring-pop 380ms var(--ease-pop) both;
+}
+
+html[data-intro='pending'] .intro-line {
+  animation: intro-line-rise 420ms var(--ease-out) both;
+  animation-delay: calc(80ms + var(--line-index) * 70ms);
+}
+
+@keyframes intro-ring-pop {
+  from {
+    transform: scale(0.35) rotate(-30deg);
+  }
+}
+
+@keyframes intro-line-rise {
+  from {
+    transform: translateY(115%);
+  }
+}
