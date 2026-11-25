@@ -3,11 +3,9 @@ import { escapeHtml } from './escape-html.ts';
 import { formatShortDate } from './format-date.ts';
 import { renderIcon } from './icons.ts';
 import { renderPlatformPills } from './platform-links.ts';
+import { RING_SIZE, RING_SRC, RING_SRCSET } from './ring-asset.ts';
 import { TAGLINE_LINES } from './tagline-lines.ts';
 
-const RING_SRC = '/src/assets/splash-ring.webp';
-const RING_SMALL_SRC = '/src/assets/splash-ring-small.webp';
-const RING_SIZE = 511;
 const CARD_IMAGE_SIZES = '(min-width: 900px) 26vw, 80vw';
 
 function renderTaglineLines(): string {
@@ -27,7 +25,7 @@ function renderLetters(letters: string): string {
 }
 
 function renderRingLetter(): string {
-  return `<span class="hero-letter-mask hero-letter-mask--ring"><img class="hero-letter hero-ring" data-hero="letter" src="${RING_SRC}" srcset="${RING_SMALL_SRC} 159w, ${RING_SRC} 511w" sizes="14vw" width="${RING_SIZE}" height="${RING_SIZE}" alt=""></span>`;
+  return `<span class="hero-letter-mask hero-letter-mask--ring"><img class="hero-letter hero-ring" data-hero="letter" src="${RING_SRC}" srcset="${RING_SRCSET}" sizes="14vw" width="${RING_SIZE}" height="${RING_SIZE}" alt=""></span>`;
 }
 
 function renderTitle(): string {

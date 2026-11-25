@@ -12,7 +12,6 @@
 
   --size-giant: clamp(2.5rem, 16.2vw, 26rem);
   --size-h2: clamp(3rem, 8vw, 8rem);
-  --size-script: clamp(3rem, 7.4vw, 7.4rem);
   --size-script-hero: max(3rem, calc(var(--size-giant) * 0.65));
   --size-h3: clamp(1.5rem, 2.4vw, 2rem);
   --size-body: 1.1875rem;

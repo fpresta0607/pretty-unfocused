@@ -9,7 +9,6 @@
 
 html[data-intro] .intro {
   display: block;
-  animation: intro-failsafe 0s step-end 4s forwards;
 }
 
 html[data-intro='leaving'] .intro {
@@ -83,12 +82,5 @@ html[data-intro='pending'] .intro-line {
 @keyframes intro-line-rise {
   from {
     transform: translateY(115%);
-  }
-}
-
-@keyframes intro-failsafe {
-  to {
-    visibility: hidden;
-    pointer-events: none;
   }
 }

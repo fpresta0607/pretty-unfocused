@@ -1,8 +1,5 @@
+import { RING_SIZE, RING_SRC, RING_SRCSET } from './ring-asset.ts';
 import { TAGLINE_LINES } from './tagline-lines.ts';
-
-const RING_SRC = '/src/assets/splash-ring.webp';
-const RING_SMALL_SRC = '/src/assets/splash-ring-small.webp';
-const RING_SIZE = 511;
 
 function renderIntroLines(): string {
   return TAGLINE_LINES.map((line, index) => {
@@ -16,7 +13,7 @@ export function renderIntro(): string {
     <div class="intro-panel" data-intro="panel">
       <div class="intro-curtain"></div>
       <div class="intro-content">
-        <img class="intro-ring" data-intro="ring" src="${RING_SRC}" srcset="${RING_SMALL_SRC} 159w, ${RING_SRC} 511w" sizes="10rem" width="${RING_SIZE}" height="${RING_SIZE}" alt="" loading="lazy">
+        <img class="intro-ring" data-intro="ring" src="${RING_SRC}" srcset="${RING_SRCSET}" sizes="10rem" width="${RING_SIZE}" height="${RING_SIZE}" alt="" loading="lazy">
         <p class="intro-text">
         ${renderIntroLines()}
         </p>

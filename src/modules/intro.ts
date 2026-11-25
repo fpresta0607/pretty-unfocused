@@ -73,6 +73,10 @@ export class Intro extends Module {
     window.clearTimeout(this.exitTimeout);
 
     const root = document.documentElement;
+    if (root.dataset.intro !== 'pending') {
+      this.el.remove();
+      return;
+    }
     const panel = this.el.querySelectorAll('[data-intro="panel"]');
     const ring = this.el.querySelector<HTMLImageElement>('[data-intro="ring"]');
     const heroRing = document.querySelector<HTMLImageElement>('.hero-ring');

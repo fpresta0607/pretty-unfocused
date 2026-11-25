@@ -71,9 +71,12 @@ export class Hero extends Module {
       defaults: { ease: EASE_OUT, duration: 420 },
       onComplete: () => {
         leadText?.restore();
-        card.forEach(
-          (element) => element instanceof HTMLElement && delete element.dataset.revealing,
-        );
+        card.forEach((element) => {
+          if (element instanceof HTMLElement) {
+            delete element.dataset.revealing;
+            element.style.removeProperty('transform');
+          }
+        });
         [...scriptMask, ...card].forEach(
           (element) => element instanceof HTMLElement && element.style.removeProperty('clip-path'),
         );
