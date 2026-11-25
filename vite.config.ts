@@ -1,32 +1,13 @@
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig } from 'vite';
 
-import { renderSections } from './src/render/render-page.ts';
+import { showDataPlugin } from './src/render/show-data-plugin.ts';
+import { buildFixtureShow } from './src/show/build-fixture-show.ts';
 import { fetchShow } from './src/show/fetch-show.ts';
-import type { Show } from './src/show/show-types.ts';
 
-const SECTIONS_MARKER = '<!--render:sections-->';
+const FIXTURES_MODE = 'fixtures';
 
-function showDataPlugin(): Plugin {
-  let show: Show | undefined;
-
-  return {
-    name: 'show-data',
-    async buildStart() {
-      show = await fetchShow(globalThis.fetch);
-    },
-    transformIndexHtml: {
-      order: 'pre',
-      handler(html) {
-        if (show === undefined) {
-          throw new Error('Show data has not been fetched');
-        }
-        const loadedShow = show;
-        return html.replace(SECTIONS_MARKER, () => renderSections(loadedShow));
-      },
-    },
-  };
-}
-
-export default defineConfig({
-  plugins: [showDataPlugin()],
-});
+export default defineConfig(({ mode }) => ({
+  plugins: [
+    showDataPlugin(mode === FIXTURES_MODE ? buildFixtureShow : () => fetchShow(globalThis.fetch)),
+  ],
+}));

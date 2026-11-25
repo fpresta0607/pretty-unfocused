@@ -105,13 +105,13 @@ describe('mergeShow with the real feed fixtures', () => {
     expect(episode).not.toHaveProperty('youtubeUrl');
   });
 
-  it('numbers YouTube-only episodes published after the newest numbered podcast episode', () => {
-    const numbersByVideoId = new Map(
-      show.episodes.map((episode) => [episode.youtubeVideoId, episode.number]),
+  it('leaves YouTube-only episodes unnumbered because no feed numbers them', () => {
+    const youtubeOnlyEpisodes = show.episodes.filter(
+      (episode) => episode.youtubeVideoId === 'M-Q4eX8Szic' || episode.youtubeVideoId === 'fN3NtGR3Nnk',
     );
 
-    expect(numbersByVideoId.get('M-Q4eX8Szic')).toBe(21);
-    expect(numbersByVideoId.get('fN3NtGR3Nnk')).toBe(22);
+    expect(youtubeOnlyEpisodes).toHaveLength(2);
+    youtubeOnlyEpisodes.forEach((episode) => expect(episode).not.toHaveProperty('number'));
   });
 
   it('strips the show suffix from YouTube-only titles and leaves them without a Spotify link', () => {
@@ -133,52 +133,25 @@ describe('mergeShow with the real feed fixtures', () => {
 });
 
 describe('mergeShow numbering', () => {
-  it('leaves YouTube-only episodes older than the newest numbered episode unnumbered', () => {
-    const podcast = createPodcastFeed(
-      [createPodcastItem({ title: 'Numbered', number: 5, publishedAt: '2026-10-10T00:00:00.000Z' })],
-      'https://example.com/art.jpg',
-    );
-    const youtube = {
-      entries: [
-        createYoutubeEntry({ videoId: 'old', title: 'Old', publishedAt: '2026-09-01T00:00:00.000Z' }),
-      ],
-    };
+  it.each([
+    ['older than', '2026-09-01T00:00:00.000Z'],
+    ['newer than', '2026-11-01T00:00:00.000Z'],
+  ])(
+    'leaves a YouTube-only episode %s the newest numbered podcast episode unnumbered',
+    (_label, publishedAt) => {
+      const podcast = createPodcastFeed(
+        [createPodcastItem({ title: 'Numbered', number: 20, publishedAt: '2026-10-10T00:00:00.000Z' })],
+        'https://example.com/art.jpg',
+      );
+      const youtube = { entries: [createYoutubeEntry({ videoId: 'trailer', title: 'Trailer', publishedAt })] };
 
-    const show = mergeShow(podcast, youtube, NO_THUMBNAILS);
+      const show = mergeShow(podcast, youtube, NO_THUMBNAILS);
 
-    expect(show.episodes.find((episode) => episode.youtubeVideoId === 'old')).not.toHaveProperty('number');
-  });
-
-  it('numbers newer YouTube-only episodes on from the highest podcast number, oldest first', () => {
-    const podcast = createPodcastFeed(
-      [
-        createPodcastItem({ guid: 'a', title: 'A', number: 3, publishedAt: '2026-10-01T00:00:00.000Z' }),
-        createPodcastItem({ guid: 'b', title: 'B', number: 9, publishedAt: '2026-10-08T00:00:00.000Z' }),
-      ],
-      'https://example.com/art.jpg',
-    );
-    const youtube = {
-      entries: [
-        createYoutubeEntry({ videoId: 'third', title: 'Third', publishedAt: '2026-10-29T00:00:00.000Z' }),
-        createYoutubeEntry({ videoId: 'first', title: 'First', publishedAt: '2026-10-15T00:00:00.000Z' }),
-        createYoutubeEntry({ videoId: 'second', title: 'Second', publishedAt: '2026-10-22T00:00:00.000Z' }),
-      ],
-    };
-
-    const show = mergeShow(podcast, youtube, NO_THUMBNAILS);
-
-    const numbers = Object.fromEntries(show.episodes.map((episode) => [episode.title, episode.number]));
-    expect(numbers).toEqual({ A: 3, B: 9, First: 10, Second: 11, Third: 12 });
-  });
-
-  it('does not number YouTube-only episodes when the podcast has no numbers', () => {
-    const podcast = createPodcastFeed([createPodcastItem({ title: 'Plain' })], 'https://example.com/art.jpg');
-    const youtube = { entries: [createYoutubeEntry({ publishedAt: '2026-11-01T00:00:00.000Z' })] };
-
-    const show = mergeShow(podcast, youtube, NO_THUMBNAILS);
-
-    expect(show.episodes.map((episode) => episode.number)).toEqual([undefined, undefined]);
-  });
+      const numbers = Object.fromEntries(show.episodes.map((episode) => [episode.title, episode.number]));
+      expect(numbers).toEqual({ Numbered: 20, Trailer: undefined });
+      expect(show.episodes.find((episode) => episode.youtubeVideoId === 'trailer')).not.toHaveProperty('number');
+    },
+  );
 });
 
 describe('mergeShow matching and descriptions', () => {

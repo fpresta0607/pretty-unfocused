@@ -88,11 +88,7 @@ function buildPodcastEpisode(
   };
 }
 
-function buildYoutubeEpisode(
-  video: YoutubeEntry,
-  number: number | undefined,
-  availability: ThumbnailAvailability,
-): Episode {
+function buildYoutubeEpisode(video: YoutubeEntry, availability: ThumbnailAvailability): Episode {
   return {
     id: video.videoId,
     title: stripShowTitleSuffix(video.title),
@@ -101,31 +97,7 @@ function buildYoutubeEpisode(
     youtubeUrl: video.url,
     youtubeVideoId: video.videoId,
     thumbnail: createVideoThumbnail(video.videoId, availability.maxresVideoIds.has(video.videoId)),
-    ...(number === undefined ? {} : { number }),
   };
-}
-
-function numberVideosPublishedAfterPodcast(
-  videos: readonly YoutubeEntry[],
-  items: readonly PodcastItem[],
-): Map<string, number> {
-  const numberedItems = items.flatMap((item) =>
-    item.number === undefined
-      ? []
-      : [{ number: item.number, publishedAtMs: Date.parse(item.publishedAt) }],
-  );
-  const videoNumbers = new Map<string, number>();
-  if (numberedItems.length === 0) {
-    return videoNumbers;
-  }
-
-  const highestNumber = Math.max(...numberedItems.map((item) => item.number));
-  const newestNumberedMs = Math.max(...numberedItems.map((item) => item.publishedAtMs));
-  videos
-    .filter((video) => Date.parse(video.publishedAt) > newestNumberedMs)
-    .sort((left, right) => compareNewestFirst(right, left))
-    .forEach((video, index) => videoNumbers.set(video.videoId, highestNumber + 1 + index));
-  return videoNumbers;
 }
 
 export function mergeShow(
@@ -155,11 +127,9 @@ export function mergeShow(
     return buildPodcastEpisode(item, video, podcast.imageUrl, availability);
   });
 
-  const youtubeOnlyVideos = fullVideos.filter((video) => !matchedVideoIds.has(video.videoId));
-  const videoNumbers = numberVideosPublishedAfterPodcast(youtubeOnlyVideos, podcast.items);
-  const youtubeEpisodes = youtubeOnlyVideos.map((video) =>
-    buildYoutubeEpisode(video, videoNumbers.get(video.videoId), availability),
-  );
+  const youtubeEpisodes = fullVideos
+    .filter((video) => !matchedVideoIds.has(video.videoId))
+    .map((video) => buildYoutubeEpisode(video, availability));
 
   const clips: Clip[] = shorts.map((short) => ({
     id: short.videoId,
