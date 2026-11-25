@@ -1,7 +1,10 @@
 @import '@fontsource/italiana/latin-400.css';
+@import '@fontsource/pinyon-script/latin-400.css';
 @import '@fontsource/cormorant-garamond/latin-500.css';
 @import '@fontsource/cormorant-garamond/latin-700.css';
 @import 'locomotive-scroll/locomotive-scroll.css';
 @import './tokens.css';
 @import './base.css';
 @import './frame.css';
+@import './intro.css';
+@import './hero.css';

@@ -95,6 +95,16 @@ main:focus {
   transform: translateY(-50%);
 }
 
+.section {
+  position: relative;
+  min-block-size: 100svh;
+}
+
+.section--wine {
+  background: var(--wine);
+  color: var(--cream);
+}
+
 .label {
   font-family: var(--font-text);
   font-weight: 700;
@@ -102,6 +112,18 @@ main:focus {
   line-height: 1.2;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+.apostrophe {
+  margin-inline: -0.12em -0.04em;
+}
+
+.figure {
+  font-family: var(--font-text);
+  font-weight: 500;
+  font-size: 1.1em;
+  line-height: 0;
+  font-variant-numeric: lining-nums;
 }
 
 .icon {
@@ -183,6 +205,18 @@ main:focus {
   border-color: var(--gold);
   background: var(--gold);
   color: var(--wine);
+}
+
+.sticker {
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: var(--space-2) 14px;
+  border-radius: 18px 18px 18px 4px;
+  background: var(--cream);
+  inline-size: max-content;
+  font-size: 22px;
+  line-height: 1;
+  transform: rotate(-8deg);
 }
 
 @media (max-width: 599px) {

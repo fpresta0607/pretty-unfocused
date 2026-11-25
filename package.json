@@ -29,6 +29,8 @@
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.3.0",
     "@fontsource/italiana": "^5.3.0",
+    "@fontsource/pinyon-script": "^5.3.0",
+    "animejs": "^4.5.0",
     "locomotive-scroll": "^5.1.1",
     "modujs": "^1.4.2"
   }

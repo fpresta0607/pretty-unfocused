@@ -1,13 +1,15 @@
 import ModularApp from 'modujs';
 
 import { Frame } from './modules/frame.ts';
+import { Hero } from './modules/hero.ts';
+import { Intro } from './modules/intro.ts';
 import { Listen } from './modules/listen.ts';
 import { Menu } from './modules/menu.ts';
 import { Scroll } from './modules/scroll.ts';
 import './styles/main.css';
 
 const app = new ModularApp({
-  modules: { frame: Frame, listen: Listen, menu: Menu, scroll: Scroll },
+  modules: { frame: Frame, hero: Hero, intro: Intro, listen: Listen, menu: Menu, scroll: Scroll },
 });
 
 app.init(app);
