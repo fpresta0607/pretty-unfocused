@@ -48,6 +48,14 @@ describe('showDataPlugin', () => {
     expect(page).toContain('<title>Pretty Unfocused</title>');
   });
 
+  it('follows the hero with the about section, named in the frame menu', async () => {
+    const page = await buildPage();
+
+    expect(page.indexOf('id="home"')).toBeLessThan(page.indexOf('id="about"'));
+    expect(page).toContain('href="#about" data-menu="link"');
+    expect(page).toContain('About the show');
+  });
+
   it('puts the page frame in place of its marker, with Home first in its menu', async () => {
     const page = await buildPage();
 
