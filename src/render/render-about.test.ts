@@ -47,36 +47,56 @@ describe('renderAbout with the fixture show', () => {
     expect(markup).toContain('<span class="about-script-line"><span class="about-script" data-about="script">only.</span></span>');
   });
 
-  it('puts the name and its photo-to-come pill before the ring in both cards, so each title band reads first', () => {
-    const hosts = markup.match(/<li class="about-host[^>]*>.*?<[/]li>/g) ?? [];
+  it.each([
+    ['Maya', 0, 'maya'],
+    ['Gia', 1, 'gia'],
+  ])('shows %s as a photo card with the name above the photo', (name, index, modifier) => {
+    const host = markup.match(/<li class="about-host[^>]*>.*?<\/li>/g)?.[index] ?? '';
 
-    expect(hosts).toHaveLength(2);
-    hosts.forEach((host) => {
-      expect(host.indexOf('about-host-name')).toBeLessThan(host.indexOf('about-host-pill'));
-      expect(host.indexOf('about-host-pill')).toBeLessThan(host.indexOf('about-host-ring'));
-    });
+    expect(host).toContain(`about-host--${modifier}`);
+    expect(host).toContain(`<span class="about-host-name" aria-hidden="true">${name}</span>`);
+    expect(host.indexOf('about-host-name')).toBeLessThan(host.indexOf('about-host-photo'));
+    expect(host).toContain(`src="/src/assets/host-${modifier}.webp"`);
+    expect(host).toContain(
+      `srcset="/src/assets/host-${modifier}-small.webp 360w, /src/assets/host-${modifier}.webp 720w"`,
+    );
+    expect(host).toContain('sizes="(min-width: 1200px) 260px, (min-width: 900px) 23vw, (min-width: 600px) 232px, 145px"');
+    expect(host).toContain('width="720" height="864"');
+    expect(host).toContain(`alt="${name}"`);
+    expect(host).toContain('loading="lazy"');
+    expect(host).toContain('decoding="async"');
   });
 
-  it('shows both hosts by first name with a photo-to-come marker and decorative rings', () => {
+  it('renders exactly two host cards and names each host once to assistive tech', () => {
     const hosts = markup.match(/<li class="about-host[^>]*>.*?<\/li>/g) ?? [];
 
     expect(hosts).toHaveLength(2);
-    expect(hosts[0]).toContain('>Maya</span>');
-    expect(hosts[1]).toContain('>Gia</span>');
     hosts.forEach((host) => {
-      expect(host).toContain('Photo to come');
-      expect(host).toContain('alt=""');
-      expect(host).toContain('loading="lazy"');
-      expect(host).toMatch(/width="\d+" height="\d+"/);
-      expect(host).toContain('srcset=');
+      expect(host.match(/aria-hidden="true"/g)).toHaveLength(1);
+      expect(host.match(/alt="[^"]+"/g)).toHaveLength(1);
+    });
+  });
+
+  it('leaves out the photo-to-come pill and the splash ring from the host cards', () => {
+    const hosts = markup.match(/<li class="about-host[^>]*>.*?<\/li>/g) ?? [];
+
+    hosts.forEach((host) => {
+      expect(host).not.toContain('Photo to come');
+      expect(host).not.toContain('about-host-pill');
+      expect(host).not.toContain('about-host-ring');
+      expect(host).not.toContain('splash-ring');
     });
   });
 
   it('does not invent a surname, a bio or a note to the client', () => {
-    const text = markup.replace(/<[^>]*>/g, ' ');
+    const text = markup.replace(/<ul class="about-hosts".*?<\/ul>/s, '').replace(/<[^>]*>/g, ' ');
+    const cardNames = (markup.match(/<span class="about-host-name"[^>]*>(.*?)<\/span>/g) ?? []).map((name) =>
+      name.replace(/<[^>]*>/g, ''),
+    );
 
+    expect(cardNames).toEqual(['Maya', 'Gia']);
     expect(text).not.toMatch(/Host photos and bios|yours to supply/i);
-    expect(text).not.toMatch(/(Maya|Gia)\s+(?!Photo to come|and )[A-Z][a-z]+/);
+    expect(text).not.toMatch(/(Maya|Gia)\s+(?!and )[A-Z][a-z]+/);
   });
 
   it('renders the feed description without its closing sentence', () => {
