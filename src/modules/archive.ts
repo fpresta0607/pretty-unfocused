@@ -10,6 +10,7 @@ const MAX_STAGGER_STEPS = 6;
 const STICKER_TILT_DEGREES = -8;
 const STICKER_HIDDEN_ROTATION = -24;
 const MINI_CARD_HIDE_FROM_FRACTION = 0.85;
+const LANDED_ROW_FRACTION = 0.75;
 
 export class Archive extends Module {
   private pendingRows: HTMLElement[] = [];
@@ -30,8 +31,13 @@ export class Archive extends Module {
 
   private readonly handleClick = (event: MouseEvent): void => {
     const trigger = event.target instanceof Element ? event.target.closest('[data-archive="trigger"]') : null;
-    if (trigger !== null) {
-      trigger.setAttribute('aria-expanded', String(trigger.getAttribute('aria-expanded') !== 'true'));
+    if (trigger === null) {
+      return;
+    }
+    const isOpening = trigger.getAttribute('aria-expanded') !== 'true';
+    trigger.setAttribute('aria-expanded', String(isOpening));
+    if (isOpening) {
+      this.bringActionsIntoView(trigger);
     }
   };
 
@@ -55,7 +61,7 @@ export class Archive extends Module {
     this.heading?.setAttribute('data-reveal', 'pending');
     this.sticker = this.el.querySelector<HTMLElement>('[data-archive="sticker"]');
     utils.set(this.sticker ?? [], { opacity: 0, scale: 0, rotate: STICKER_HIDDEN_ROTATION });
-    this.pendingRows = Array.from(this.el.querySelectorAll<HTMLElement>('[data-archive="row"]'));
+    this.pendingRows = this.smoothScrollDevice.matches ? Array.from(this.el.querySelectorAll<HTMLElement>('[data-archive="row"]')) : [];
     this.pendingRows.forEach((row) => row.setAttribute('data-reveal', 'pending'));
     window.addEventListener('scroll', this.scheduleUpdate, { passive: true });
     window.addEventListener('resize', this.scheduleUpdate);
@@ -107,9 +113,37 @@ export class Archive extends Module {
     this.sticker = null;
   }
 
+  private bringActionsIntoView(trigger: Element): void {
+    const panel = trigger.nextElementSibling;
+    const lastAction = panel?.querySelector<HTMLElement>('.archive-actions > :last-child');
+    if (panel === null || panel === undefined || lastAction === null || lastAction === undefined) {
+      return;
+    }
+    const behavior = isMotionEnabled(document.documentElement) ? 'smooth' : 'instant';
+    const scroll = (): void => {
+      if (trigger.getAttribute('aria-expanded') === 'true') {
+        lastAction.scrollIntoView({ block: 'nearest', behavior });
+      }
+    };
+    if (!(Number.parseFloat(getComputedStyle(panel).transitionDuration) > 0)) {
+      scroll();
+      return;
+    }
+    const scrollWhenOpen = (event: Event): void => {
+      if (event instanceof TransitionEvent && event.propertyName === 'grid-template-rows') {
+        panel.removeEventListener('transitionend', scrollWhenOpen);
+        scroll();
+      }
+    };
+    panel.addEventListener('transitionend', scrollWhenOpen);
+  }
+
   private revealRows(): void {
     let stagger = 0;
     for (let row = this.pendingRows[0]; row !== undefined && row.getBoundingClientRect().top < window.innerHeight; row = this.pendingRows[0]) {
+      if (row.getBoundingClientRect().top < window.innerHeight * LANDED_ROW_FRACTION) {
+        row.setAttribute('data-landed', '');
+      }
       row.style.setProperty('--stagger', String(Math.min(stagger, MAX_STAGGER_STEPS)));
       row.removeAttribute('data-reveal');
       this.pendingRows.shift();

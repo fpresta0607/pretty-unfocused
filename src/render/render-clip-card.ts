@@ -16,10 +16,24 @@ function renderSrcset(clip: Clip): string {
   return ` srcset="${escapeHtml(srcset)}" sizes="${CARD_IMAGE_SIZES}"`;
 }
 
+const MAX_TRAILING_MARK_SYMBOLS = 3;
+
+function groupTitleWords(title: string): string[] {
+  const words: string[] = [];
+  title.split(/\s+/).forEach((token) => {
+    const isTrailingMark = !/[\p{L}\p{N}]/u.test(token) && Array.from(token).length <= MAX_TRAILING_MARK_SYMBOLS;
+    if (isTrailingMark && words.length > 0) {
+      words[words.length - 1] += ` ${token}`;
+    } else {
+      words.push(token);
+    }
+  });
+  return words;
+}
+
 function renderTitleWords(title: string): string {
-  return escapeHtml(title)
-    .split(/\s+/)
-    .map((word) => `<span class="clip-card-word">${word}</span>`)
+  return groupTitleWords(title)
+    .map((word) => `<span class="clip-card-word">${escapeHtml(word)}</span>`)
     .join(' ');
 }
 
@@ -29,8 +43,10 @@ export function renderClipCard(clip: Clip, position: number, layer: number): str
   return `<li class="clip-card" data-clips="card" style="--fan-position:${position};--fan-layer:${layer}">
           <div class="clip-card-face">
             <img class="clip-card-image" src="${escapeHtml(thumbnail.src)}"${renderSrcset(clip)} width="${thumbnail.width}" height="${thumbnail.height}" alt="" loading="lazy" decoding="async">
-            <p class="clip-card-title">${renderTitleWords(clip.title)}</p>
-            <a class="round-button round-button--gold clip-card-play" href="${escapeHtml(clip.youtubeUrl)}"${renderPlayerAttributes(clip.youtubeVideoId, clip.title, 'vertical')}>${renderIcon('play')}<span class="visually-hidden">Play ${title}</span></a>
+            <div class="clip-card-foot">
+              <p class="clip-card-title">${renderTitleWords(clip.title)}</p>
+              <a class="round-button round-button--gold clip-card-play" href="${escapeHtml(clip.youtubeUrl)}"${renderPlayerAttributes(clip.youtubeVideoId, clip.title, 'vertical')}>${renderIcon('play')}<span class="visually-hidden">Play ${title}</span></a>
+            </div>
           </div>
         </li>`;
 }

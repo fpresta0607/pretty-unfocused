@@ -152,11 +152,25 @@ describe('renderClips fan and limits', () => {
   });
 
   it('sets each word of a title in its own unbreakable span so a clipped title ends between words', () => {
-    const card = readCards(renderClips(makeShow([makeClip(0, { title: 'A new  episode 🦃🍂' })])))[0] ?? '';
+    const card = readCards(renderClips(makeShow([makeClip(0, { title: 'A new  episode' })])))[0] ?? '';
 
     expect(card).toContain(
-      '<p class="clip-card-title"><span class="clip-card-word">A</span> <span class="clip-card-word">new</span> <span class="clip-card-word">episode</span> <span class="clip-card-word">🦃🍂</span></p>',
+      '<p class="clip-card-title"><span class="clip-card-word">A</span> <span class="clip-card-word">new</span> <span class="clip-card-word">episode</span></p>',
     );
+  });
+
+  it('keeps trailing punctuation and emoji with the word before them', () => {
+    const card = readCards(renderClips(makeShow([makeClip(0, { title: 'Your reminder !!! 😎 now' })])))[0] ?? '';
+
+    expect(card).toContain(
+      '<p class="clip-card-title"><span class="clip-card-word">Your</span> <span class="clip-card-word">reminder !!! 😎</span> <span class="clip-card-word">now</span></p>',
+    );
+  });
+
+  it('keeps a longer run of emoji as a word of its own', () => {
+    const card = readCards(renderClips(makeShow([makeClip(0, { title: 'edition 🦃🍂🥧🪵' })])))[0] ?? '';
+
+    expect(card).toContain('<span class="clip-card-word">edition</span> <span class="clip-card-word">🦃🍂🥧🪵</span>');
   });
 
   it('escapes a clip title everywhere it is written', () => {
@@ -164,7 +178,7 @@ describe('renderClips fan and limits', () => {
 
     expect(card).not.toContain('<b>');
     expect(card.match(/Tom &amp; &lt;b&gt;&quot;Jerry&quot;&lt;\/b&gt;/g)).toHaveLength(2);
-    expect(card).toContain('<span class="clip-card-word">&lt;b&gt;&quot;Jerry&quot;&lt;/b&gt;</span>');
+    expect(card).toContain('<span class="clip-card-word">Tom &amp;</span> <span class="clip-card-word">&lt;b&gt;&quot;Jerry&quot;&lt;/b&gt;</span>');
     expect(card).toContain('data-player-title="Tom &amp; &lt;b&gt;&quot;Jerry&quot;&lt;/b&gt;"');
   });
 

@@ -81,6 +81,7 @@ html:not([data-motion='on']) .clips {
   --fan-drop: 0px;
   --enter: 3.5rem;
   --fan-pitch: calc(var(--card-w) + var(--card-gap));
+  --title-room: calc(min(var(--card-w), var(--fan-pitch) - var(--ring)) - 2 * var(--card-pad));
 
   display: flex;
   inline-size: max-content;
@@ -110,11 +111,8 @@ html:not([data-motion='on']) .clips {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  align-items: flex-start;
-  gap: var(--space-2);
   inline-size: 100%;
   block-size: 100%;
-  padding: var(--card-pad);
   border-radius: var(--radius);
   outline: var(--ring) solid var(--gold);
   background: var(--gold);
@@ -123,14 +121,6 @@ html:not([data-motion='on']) .clips {
   translate: 0 calc(var(--lift) * var(--space-4) * -1);
   rotate: calc(var(--lift) * var(--fan-position) * var(--fan-turn) * var(--deal) * -1);
   transition: --lift var(--dur-ui) var(--ease-out);
-}
-
-.clip-card-face::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(to bottom, rgb(70 2 31 / 0) 30%, var(--wine) 72%);
 }
 
 .clip-card-image {
@@ -142,12 +132,21 @@ html:not([data-motion='on']) .clips {
   object-fit: cover;
 }
 
+.clip-card-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--card-pad);
+  background: linear-gradient(to bottom, rgb(70 2 31 / 0), var(--wine) 3rem);
+}
+
 .clip-card-title {
   display: -webkit-box;
-  max-inline-size: min(100%, calc(var(--fan-pitch) - var(--card-pad) - var(--ring) - var(--card-w) * 0.04));
+  max-inline-size: var(--title-room);
   overflow: hidden;
   font-weight: 700;
-  font-size: clamp(var(--size-body), calc(var(--card-w) * 0.26 - 25px), var(--size-h3));
+  font-size: max(1.0625rem, min(clamp(var(--size-body), calc(var(--card-w) * 0.26 - 25px), var(--size-h3)), calc(var(--title-room) / 6.4)));
   line-height: 1.15;
   text-wrap: balance;
   -webkit-box-orient: vertical;
@@ -310,6 +309,10 @@ html:not([data-motion='on']) .clips {
 @media (min-width: 900px) {
   .clips {
     --pad-top: calc(var(--space-4) + var(--round-size) + var(--space-3));
+  }
+
+  .clips-fan {
+    margin-block-start: calc(var(--space-3) - var(--space-4) - var(--ring) + var(--space-1));
   }
 
   .clips-inner {

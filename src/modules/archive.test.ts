@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import ModularApp from 'modujs';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
 import { renderArchive } from '../render/render-archive.ts';
 import type { Episode, Show } from '../show/show-types.ts';
@@ -86,6 +86,7 @@ beforeEach(() => {
 
 afterEach(() => {
   app.destroy();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
   delete document.documentElement.dataset.motion;
   document.body.innerHTML = '';
@@ -138,6 +139,61 @@ describe('the every-episode rows', () => {
     expect(document.getElementById(panelId)?.contains(getElement('[href="https://www.youtube.com/watch?v=video2"]'))).toBe(true);
   });
 
+  describe('bringing the actions into view', () => {
+    let scrollIntoView: MockInstance<Element['scrollIntoView']>;
+
+    beforeEach(() => {
+      scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => undefined);
+    });
+
+    it('scrolls the last action of an opened row into view at once when the page has no motion', () => {
+      mountArchive();
+
+      getTrigger(1).click();
+
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', behavior: 'instant' });
+      expect(scrollIntoView.mock.contexts[0]).toBe(getElement('[href="https://www.youtube.com/watch?v=video1"]').parentElement?.lastElementChild);
+    });
+
+    it('scrolls smoothly when the page has motion', () => {
+      document.documentElement.dataset.motion = 'on';
+      mountArchive();
+
+      getTrigger(1).click();
+
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', behavior: 'smooth' });
+    });
+
+    it('leaves the page alone when a row closes', () => {
+      mountArchive();
+      getTrigger(1).click();
+      scrollIntoView.mockClear();
+
+      getTrigger(1).click();
+
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    });
+
+    it('waits for the panel to finish opening before it scrolls', () => {
+      const panel = getElement('#archive-panel-1');
+      const readStyle = window.getComputedStyle.bind(window);
+      vi.spyOn(window, 'getComputedStyle').mockImplementation((element) =>
+        element === panel ? ({ transitionDuration: '0.4s' } as CSSStyleDeclaration) : readStyle(element),
+      );
+      mountArchive();
+
+      getTrigger(1).click();
+      const scrollsBeforeTheEnd = scrollIntoView.mock.calls.length;
+      const transitionEnd = new TransitionEvent('transitionend');
+      Object.defineProperty(transitionEnd, 'propertyName', { value: 'grid-template-rows' });
+      panel.dispatchEvent(transitionEnd);
+
+      expect(scrollsBeforeTheEnd).toBe(0);
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it('stops listening for clicks once destroyed', () => {
     mountArchive();
     app.destroy();
@@ -186,6 +242,34 @@ describe('the every-episode arrival', () => {
       mountArchive();
 
       expect(document.querySelectorAll('[data-reveal="pending"]')).toHaveLength(EPISODE_COUNT + 1);
+    });
+
+    it('draws every row at once on a touch screen, with no entrance to wait for', () => {
+      isFinePointer = false;
+      getElement('#every-episode').getBoundingClientRect = () => new DOMRect(0, VIEWPORT_HEIGHT * 0.97, 1000, 2000);
+
+      mountArchive();
+
+      expect(getRows().some((row) => row.hasAttribute('data-reveal'))).toBe(false);
+    });
+
+    it('draws a row that is already well on screen when the page lands without its entrance', async () => {
+      mountArchive();
+      placeRowsFrom(VIEWPORT_HEIGHT * 0.3, 80);
+
+      await scrollPage();
+
+      expect(getRows().map((row) => row.hasAttribute('data-landed'))).toEqual([true, true, true, true, true]);
+    });
+
+    it('lets a row that is just crossing the bottom edge keep its entrance', async () => {
+      mountArchive();
+      placeRowsFrom(VIEWPORT_HEIGHT * 0.95, 80);
+
+      await scrollPage();
+
+      expect(getRows()[0]?.hasAttribute('data-reveal')).toBe(false);
+      expect(getRows()[0]?.hasAttribute('data-landed')).toBe(false);
     });
 
     it('hides the sticker while the headline waits', () => {

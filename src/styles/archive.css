@@ -78,6 +78,10 @@ html:not([data-motion='on']) .archive {
     translate var(--dur-move) var(--ease-out) calc(var(--stagger, 0) * 70ms);
 }
 
+.archive-row[data-landed] {
+  transition: none;
+}
+
 .archive-row[data-reveal='pending'] {
   opacity: 0;
   translate: 0 var(--space-5);
