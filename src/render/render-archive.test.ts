@@ -157,15 +157,14 @@ describe('renderArchive rows', () => {
     expect(row).toContain('&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; more');
   });
 
-  it('keeps a short description whole and cuts a long one at a word', () => {
+  it('keeps every description whole, however long', () => {
     const longDescription = `${'word '.repeat(100)}end`;
     const rows = readRows(renderArchive(makeShow([makeEpisode(1), makeEpisode(2, { description: longDescription })])));
     const shortText = rows[0]?.match(/<p class="archive-description">(.*?)<\/p>/)?.[1];
-    const longText = rows[1]?.match(/<p class="archive-description">(.*?)<\/p>/)?.[1] ?? '';
+    const longText = rows[1]?.match(/<p class="archive-description">(.*?)<\/p>/)?.[1];
 
     expect(shortText).toBe('Description 1');
-    expect(longText.length).toBeLessThanOrEqual(301);
-    expect(longText.endsWith('word…')).toBe(true);
+    expect(longText).toBe(longDescription);
   });
 
   it('leaves out the description paragraph when the episode has none', () => {

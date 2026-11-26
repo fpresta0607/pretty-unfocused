@@ -133,12 +133,8 @@ html:not([data-motion='on']) .clips {
 }
 
 .clip-card-foot {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-2);
   padding: var(--card-pad);
-  background: linear-gradient(to bottom, rgb(70 2 31 / 0), var(--wine) 3rem);
+  background: var(--wine);
 }
 
 .clip-card-title {
@@ -161,7 +157,8 @@ html:not([data-motion='on']) .clips {
 .clip-card-play {
   --round-size: clamp(36px, calc(var(--card-w) * 0.22), 48px);
 
-  order: -1;
+  align-self: flex-start;
+  margin: 0 var(--card-pad) var(--card-pad);
 }
 
 .clip-card-play:hover {
@@ -257,6 +254,24 @@ html:not([data-motion='on']) .clips {
   }
 }
 
+@media (max-width: 599px) and (max-height: 799px) {
+  .clips-inner {
+    grid-template-rows: auto;
+  }
+
+  .clips-tiktok {
+    order: 1;
+  }
+
+  .clips-fan {
+    order: 2;
+  }
+
+  .clips-dashes {
+    order: 3;
+  }
+}
+
 @media (min-width: 600px) and (min-height: 40rem), (max-width: 599px) and (min-height: 50rem) {
   html[data-motion='on'] .clips {
     min-block-size: 190svh;
@@ -297,7 +312,7 @@ html:not([data-motion='on']) .clips {
   }
 
   .clips-fan-list {
-    --card-w: max(10.5rem, min(28vw, calc((100svh - 26.5rem - 1.6 * var(--size-h2)) * 9 / 16), 15rem));
+    --card-w: max(10.5rem, min(28vw, calc((100svh - 26.5rem - 2.5 * var(--size-h2)) * 9 / 16), 15rem));
   }
 
   .clips-tiktok {
@@ -311,19 +326,16 @@ html:not([data-motion='on']) .clips {
     --pad-top: calc(var(--space-4) + var(--round-size) + var(--space-3));
   }
 
-  .clips-fan {
-    margin-block-start: calc(var(--space-3) - var(--space-4) - var(--ring) + var(--space-1));
-  }
-
   .clips-inner {
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
     grid-template-areas:
-      'heading tiktok'
-      'fan fan';
+      'heading fan'
+      'tiktok fan'
+      '. dashes';
     column-gap: var(--space-5);
     align-content: center;
-    align-items: end;
+    align-items: start;
   }
 
   .clips .section-heading {
@@ -332,38 +344,41 @@ html:not([data-motion='on']) .clips {
 
   .clips-fan {
     grid-area: fan;
-  }
-
-  .clips-dashes {
-    grid-column: 1 / -1;
+    margin-inline: 0 calc(var(--gutter) * -1);
+    margin-block-start: 0;
   }
 
   .clips-fan-list {
-    --card-w: max(10.5rem, min(28vw, calc((100svh - 18rem - 1.6 * var(--size-h2)) * 9 / 16), 15rem));
+    --card-w: max(10.5rem, min(20vw, calc((100svh - 19.3rem) * 9 / 16), 15rem));
+
+    padding-inline: 0 var(--gutter);
+  }
+
+  .clips-dashes {
+    grid-area: dashes;
   }
 
   .clips-tiktok {
     grid-area: tiktok;
-    justify-self: end;
+    justify-self: start;
     inline-size: 22rem;
   }
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 1440px) {
   .clips-dashes {
     display: none;
   }
 
   .clips-fan {
     container-type: inline-size;
-    margin-block-start: 0;
     margin-inline: 0;
     padding-block: var(--space-4);
     overflow: visible;
   }
 
   .clips-fan-list {
-    --card-w: min(calc(100cqi / 5.9), calc((100svh - 18.8rem - 1.6 * var(--size-h2)) * 0.43), 22rem);
+    --card-w: min(calc(100cqi / 5.9), calc((100svh - 17.3rem) / 2.2), 22rem);
     --card-gap: calc(var(--card-w) * -0.1);
     --fan-turn: 3deg;
     --fan-drop: calc(var(--card-w) * 0.032);

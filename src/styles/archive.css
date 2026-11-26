@@ -202,7 +202,7 @@ html:not([data-motion='on']) .archive {
 .archive-panel-inner {
   min-block-size: 0;
   padding-inline-start: calc(var(--number-width) + var(--row-gap));
-  overflow: hidden;
+  overflow: clip;
 }
 
 .archive-description {
@@ -233,7 +233,7 @@ html:not([data-motion='on']) .archive {
   }
 }
 
-html[data-archive-in-view] .mini-card {
+[data-frame-section='every-episode'] .mini-card {
   opacity: 0;
   visibility: hidden;
   transform: translateY(var(--space-4));

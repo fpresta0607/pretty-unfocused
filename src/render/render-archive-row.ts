@@ -1,12 +1,9 @@
 import type { Episode } from '../show/show-types.ts';
 import { escapeHtml } from './escape-html.ts';
-import { excerptDescription } from './excerpt-description.ts';
 import { formatDuration } from './format-duration.ts';
 import { formatShortDate } from './format-date.ts';
 import { renderIcon } from './icons.ts';
 import { renderPlayerAttributes } from './render-player-attributes.ts';
-
-const DESCRIPTION_MAX_CHARACTERS = 300;
 
 function renderNumber(number: number | undefined): string {
   if (number === undefined) {
@@ -37,8 +34,7 @@ function renderActions(episode: Episode): string {
 }
 
 export function renderArchiveRow(episode: Episode, index: number, number: number | undefined): string {
-  const description = excerptDescription(episode.description, DESCRIPTION_MAX_CHARACTERS);
-  const descriptionMarkup = description === '' ? '' : `<p class="archive-description">${escapeHtml(description)}</p>`;
+  const descriptionMarkup = episode.description === '' ? '' : `<p class="archive-description">${escapeHtml(episode.description)}</p>`;
   const actions = renderActions(episode);
   const actionsMarkup = actions === '' ? '' : `<div class="archive-actions">${actions}</div>`;
   return `<li class="archive-row" data-archive="row">

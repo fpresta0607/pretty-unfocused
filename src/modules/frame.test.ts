@@ -177,6 +177,22 @@ describe('the frame', () => {
     expect(getElement('[data-frame="section"]').textContent).toBe('About');
   });
 
+  it('names the section under the label on the frame itself, at the moment the label changes', async () => {
+    placePiece('[data-frame="section"]', 120, 756);
+    placeSection('home', -VIEWPORT_HEIGHT, 757);
+    placeSection('about', 757, 2000);
+    mountFrame();
+    const sectionWhileOverTheHero = getElement<HTMLElement>('.frame').dataset.frameSection;
+
+    await scrollTo(() => {
+      placeSection('home', -VIEWPORT_HEIGHT, 756);
+      placeSection('about', 756, 2000);
+    });
+
+    expect(sectionWhileOverTheHero).toBe('home');
+    expect(getElement<HTMLElement>('.frame').dataset.frameSection).toBe('about');
+  });
+
   it('turns a piece light only once the section edge has reached its centre', async () => {
     placePiece('.frame-button--menu', 68, 52);
     placeSection('home', 0, VIEWPORT_HEIGHT);

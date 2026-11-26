@@ -17,6 +17,8 @@ function renderSrcset(clip: Clip): string {
 }
 
 const MAX_TRAILING_MARK_SYMBOLS = 3;
+const MAX_OPENING_WORD_LENGTH = 3;
+const MAX_OPENING_GROUP_LENGTH = 14;
 
 function groupTitleWords(title: string): string[] {
   const words: string[] = [];
@@ -31,8 +33,17 @@ function groupTitleWords(title: string): string[] {
   return words;
 }
 
+function keepOpeningWordsTogether(words: string[]): string[] {
+  const firstFullWord = words.findIndex((word) => word.length > MAX_OPENING_WORD_LENGTH);
+  const opening = firstFullWord < 1 ? '' : words.slice(0, firstFullWord + 1).join(' ');
+  if (opening === '' || opening.length > MAX_OPENING_GROUP_LENGTH) {
+    return words;
+  }
+  return [opening, ...words.slice(firstFullWord + 1)];
+}
+
 function renderTitleWords(title: string): string {
-  return groupTitleWords(title)
+  return keepOpeningWordsTogether(groupTitleWords(title))
     .map((word) => `<span class="clip-card-word">${escapeHtml(word)}</span>`)
     .join(' ');
 }
@@ -43,9 +54,9 @@ export function renderClipCard(clip: Clip, position: number, layer: number): str
   return `<li class="clip-card" data-clips="card" style="--fan-position:${position};--fan-layer:${layer}">
           <div class="clip-card-face">
             <img class="clip-card-image" src="${escapeHtml(thumbnail.src)}"${renderSrcset(clip)} width="${thumbnail.width}" height="${thumbnail.height}" alt="" loading="lazy" decoding="async">
+            <a class="round-button round-button--gold clip-card-play" href="${escapeHtml(clip.youtubeUrl)}"${renderPlayerAttributes(clip.youtubeVideoId, clip.title, 'vertical')}>${renderIcon('play')}<span class="visually-hidden">Play ${title}</span></a>
             <div class="clip-card-foot">
               <p class="clip-card-title">${renderTitleWords(clip.title)}</p>
-              <a class="round-button round-button--gold clip-card-play" href="${escapeHtml(clip.youtubeUrl)}"${renderPlayerAttributes(clip.youtubeVideoId, clip.title, 'vertical')}>${renderIcon('play')}<span class="visually-hidden">Play ${title}</span></a>
             </div>
           </div>
         </li>`;

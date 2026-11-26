@@ -129,6 +129,7 @@ export class Frame extends Module {
         piece.textContent = label;
       }
       if (isLabel) {
+        this.el.dataset.frameSection = section.id;
         this.colourLabelLetters(piece, edges);
       }
     });

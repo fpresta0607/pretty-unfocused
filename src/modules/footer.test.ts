@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderFooter } from '../render/render-footer.ts';
 import { Footer } from './footer.ts';
+import { SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
 
 const VIEWPORT_HEIGHT = 800;
 const WORD_REST_TOP = 560;
@@ -52,8 +53,11 @@ function start(isMotionOn: boolean): void {
   app.init(app);
 }
 
+let isFinePointer = true;
+
 beforeEach(() => {
-  vi.stubGlobal('matchMedia', () => ({ matches: true }));
+  isFinePointer = true;
+  vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === SMOOTH_SCROLL_DEVICE_QUERY && isFinePointer }));
 });
 
 afterEach(() => {
@@ -69,6 +73,14 @@ describe('Footer with motion on', () => {
     start(true);
 
     expect(getFooter().dataset.reveal).toBe('pending');
+  });
+
+  it('shows the headline, the email and the links with the page on a touch screen, with no reveal to wait for', () => {
+    isFinePointer = false;
+
+    start(true);
+
+    expect(getFooter().dataset.reveal).toBeUndefined();
   });
 
   it('releases the footer once the stain has begun to rise', async () => {

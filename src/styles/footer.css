@@ -54,6 +54,20 @@ html[data-motion='on'] .footer {
   }
 }
 
+@media not ((hover: hover) and (pointer: fine)) {
+  html[data-motion='on'] .footer-pin {
+    margin-block-start: -40svh;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-ui) var(--ease-out);
+  }
+
+  html[data-motion='on'] .footer[data-stain-swept] .footer-pin {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
 html[data-motion='on']:has(.footer[data-stain-swept]) {
   background-color: var(--wine);
 }
@@ -361,22 +375,8 @@ html[data-footer-in-view] .mini-card {
   }
 }
 
-@media (max-width: 599px) and (min-height: 760px) {
-  .footer-heading {
-    font-size: clamp(3rem, 17vw, 5.5rem);
-  }
-
-  .footer-script-line {
-    font-size: clamp(3.0625rem, 15.5vw, 5rem);
-  }
-}
-
 @media (max-width: 599px) and (min-height: 800px) {
   .footer-links {
     gap: var(--space-3);
-  }
-
-  .footer-link {
-    font-size: 1.75rem;
   }
 }

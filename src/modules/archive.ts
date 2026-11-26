@@ -9,7 +9,6 @@ import { hasEntered, isRevealOpen, revealSectionHeading } from './section-headin
 const MAX_STAGGER_STEPS = 6;
 const STICKER_TILT_DEGREES = -8;
 const STICKER_HIDDEN_ROTATION = -24;
-const MINI_CARD_HIDE_FROM_FRACTION = 0.85;
 const LANDED_ROW_FRACTION = 0.75;
 
 export class Archive extends Module {
@@ -41,19 +40,10 @@ export class Archive extends Module {
     }
   };
 
-  private readonly updateMiniCardVisibility = (): void => {
-    const { top, bottom } = this.el.getBoundingClientRect();
-    const edge = window.innerHeight * MINI_CARD_HIDE_FROM_FRACTION;
-    document.documentElement.toggleAttribute('data-archive-in-view', top < edge && bottom > edge);
-  };
-
   init(): void {
     this.el.querySelectorAll('[data-archive="trigger"]').forEach((trigger) => trigger.setAttribute('aria-expanded', 'false'));
     this.el.setAttribute('data-archive-ready', '');
     this.el.addEventListener('click', this.handleClick);
-    window.addEventListener('scroll', this.updateMiniCardVisibility, { passive: true });
-    window.addEventListener('resize', this.updateMiniCardVisibility);
-    this.updateMiniCardVisibility();
     if (!isMotionEnabled(document.documentElement)) {
       return;
     }
@@ -70,9 +60,6 @@ export class Archive extends Module {
 
   destroy(): void {
     this.el.removeEventListener('click', this.handleClick);
-    window.removeEventListener('scroll', this.updateMiniCardVisibility);
-    window.removeEventListener('resize', this.updateMiniCardVisibility);
-    document.documentElement.removeAttribute('data-archive-in-view');
     this.stopWatching();
   }
 

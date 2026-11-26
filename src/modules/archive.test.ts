@@ -204,26 +204,6 @@ describe('the every-episode rows', () => {
   });
 });
 
-describe('the Latest episode mini card', () => {
-  function readMiniCardIsHidden(): boolean {
-    return document.documentElement.hasAttribute('data-archive-in-view');
-  }
-
-  it.each([
-    ['is hidden while the list fills the screen', 0, 2000, true],
-    ['is hidden once the list has reached the lower part of the screen', VIEWPORT_HEIGHT * 0.8, 2000, true],
-    ['stays until the list comes into the screen', VIEWPORT_HEIGHT * 0.9, 2000, false],
-    ['comes back once the list has scrolled past', -1900, 2000, false],
-  ])('%s', async (_behavior, top, height, expected) => {
-    mountArchive();
-    getElement('#every-episode').getBoundingClientRect = () => new DOMRect(0, top, 1000, height);
-
-    await scrollPage();
-
-    expect(readMiniCardIsHidden()).toBe(expected);
-  });
-});
-
 describe('the every-episode arrival', () => {
   it('leaves the headline and every row in place when the page has no motion', () => {
     mountArchive();

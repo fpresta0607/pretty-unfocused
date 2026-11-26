@@ -28,7 +28,7 @@ export function renderClips(show: Show): string {
   return `<section class="section section--gold clips" id="clips" data-section data-surface="light" data-module-clips data-module-stain aria-labelledby="clips-heading">
     ${renderStainEdge()}
     <div class="clips-inner">
-      ${renderSectionHeading({ id: 'clips-heading', accessibleName: 'We love to overshare', lines: ['We love to'], script: 'overshare' })}
+      ${renderSectionHeading({ id: 'clips-heading', accessibleName: 'We love to overshare', lines: ['We', 'love to'], script: 'overshare' })}
       ${renderFan(clips)}
       ${renderTiktokCard()}
     </div>

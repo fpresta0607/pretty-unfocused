@@ -11,7 +11,7 @@ import {
   SCRIPT_WIPE_DURATION,
 } from './about.ts';
 import { isFooterInView, riseProgress } from './footer-logic.ts';
-import { isMotionEnabled } from './motion-state.ts';
+import { isMotionEnabled, SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
 import { EASE_OUT } from './motion-tokens.ts';
 import { sweepProgress } from './stain-edge.ts';
 
@@ -28,6 +28,7 @@ export class Footer extends Module {
   private readonly word = this.el.querySelector<HTMLElement>('.footer-word');
   private pendingFrame: number | undefined;
   private riseValue = '';
+  private readonly smoothScrollDevice = window.matchMedia(SMOOTH_SCROLL_DEVICE_QUERY);
 
   private readonly scheduleUpdate = (): void => {
     if (this.pendingFrame !== undefined) {
@@ -40,7 +41,7 @@ export class Footer extends Module {
   };
 
   init(): void {
-    if (isMotionEnabled(document.documentElement)) {
+    if (isMotionEnabled(document.documentElement) && this.smoothScrollDevice.matches) {
       this.isPending = true;
       this.el.setAttribute('data-reveal', 'pending');
     }

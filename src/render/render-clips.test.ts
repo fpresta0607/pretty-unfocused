@@ -63,7 +63,8 @@ describe('renderClips with the fixture show', () => {
   it('has one h2 named We love to overshare, with the visible words hidden from assistive tech', () => {
     expect(markup.match(/<h2[\s>]/g)).toHaveLength(1);
     expect(readHeadingAccessibleText(markup)).toBe('We love to overshare');
-    expect(markup).toContain('<span class="section-heading-line" data-heading="line">We love to</span>');
+    expect(markup).toContain('<span class="section-heading-line" data-heading="line">We</span>');
+    expect(markup).toContain('<span class="section-heading-line" data-heading="line">love to</span>');
     expect(markup).toContain('<span class="section-heading-script" data-heading="script">overshare</span>');
     expect(markup).toContain('aria-labelledby="clips-heading"');
   });
@@ -152,11 +153,22 @@ describe('renderClips fan and limits', () => {
   });
 
   it('sets each word of a title in its own unbreakable span so a clipped title ends between words', () => {
-    const card = readCards(renderClips(makeShow([makeClip(0, { title: 'A new  episode' })])))[0] ?? '';
+    const card = readCards(renderClips(makeShow([makeClip(0, { title: 'Your  reminder now' })])))[0] ?? '';
 
     expect(card).toContain(
-      '<p class="clip-card-title"><span class="clip-card-word">A</span> <span class="clip-card-word">new</span> <span class="clip-card-word">episode</span></p>',
+      '<p class="clip-card-title"><span class="clip-card-word">Your</span> <span class="clip-card-word">reminder</span> <span class="clip-card-word">now</span></p>',
     );
+  });
+
+  it.each([
+    ['A new episode drop', ['A new episode', 'drop']],
+    ['Join the memberships', ['Join', 'the', 'memberships']],
+    ['Hi extraordinarily', ['Hi', 'extraordinarily']],
+  ])('keeps the short opening words of "%s" with the first full word only while they fit a narrow card, so the first line is not a stub', (title, groups) => {
+    const card = readCards(renderClips(makeShow([makeClip(0, { title })])))[0] ?? '';
+    const words = [...(card.match(/<p class="clip-card-title">(.*?)<\/p>/)?.[1] ?? '').matchAll(/<span class="clip-card-word">(.*?)<\/span>/g)].map(([, word]) => word);
+
+    expect(words).toEqual(groups);
   });
 
   it('keeps trailing punctuation and emoji with the word before them', () => {
