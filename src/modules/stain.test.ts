@@ -321,15 +321,49 @@ describe('the stain edge', () => {
     expect(lifts).toEqual([0, 0, 0, 0]);
   });
 
-  it('still draws the sweep on a touch screen', async () => {
+  it('never clips the section on a touch screen, where the drawn edge alone shows the sweep', async () => {
     isFinePointer = false;
     document.documentElement.dataset.motion = 'on';
     mountStain();
 
+    const tops = [VIEWPORT.height * 0.95, VIEWPORT.height * 0.75, VIEWPORT.height * 0.6, VIEWPORT.height / 2, 0];
+    const clips = await tops.reduce<Promise<string[]>>(async (done, top) => {
+      const earlier = await done;
+      await scrollTo(top);
+      return [...earlier, getElement('#about').style.getPropertyValue('clip-path')];
+    }, Promise.resolve([]));
+
+    expect(clips).toEqual(['', '', '', '', '']);
+  });
+
+  it('removes a clip left on the section when the screen turns out to be a touch screen', async () => {
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
     await scrollTo(VIEWPORT.height * 0.75);
 
-    expect(getElement('#about').style.getPropertyValue('clip-path')).toMatch(/^path\('M-100\.0.*Z'\)$/);
-    expect(readPath('wide')).toMatch(/^M-100\.0.*Z$/);
+    isFinePointer = false;
+    await scrollTo(VIEWPORT.height * 0.7);
+
+    expect(getElement('#about').style.getPropertyValue('clip-path')).toBe('');
+  });
+
+  it('still draws the sweep and marks it done on a touch screen', async () => {
+    isFinePointer = false;
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+
+    await scrollTo(VIEWPORT.height * 0.9);
+    const earlier = readPath('wide');
+    await scrollTo(VIEWPORT.height * 0.7);
+    const isSweptMidSweep = getElement('#about').hasAttribute('data-stain-swept');
+    const later = readPath('wide');
+    await scrollTo(VIEWPORT.height / 2);
+
+    expect(earlier).toMatch(/^M-100\.0.*Z$/);
+    expect(later).toMatch(/^M-100\.0.*Z$/);
+    expect(later).not.toBe(earlier);
+    expect(isSweptMidSweep).toBe(false);
+    expect(getElement('#about').hasAttribute('data-stain-swept')).toBe(true);
   });
 
   it('lifts the content on a mouse or trackpad screen, where the page scrolls from the same script', async () => {

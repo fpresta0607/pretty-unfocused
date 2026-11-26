@@ -6,6 +6,7 @@ import {
   coveringCardCount,
   fitCards,
   frontCardIndex,
+  narrowedCardWidth,
   rowEndPadding,
   rowWidth,
   scrollTopForCard,
@@ -105,6 +106,35 @@ describe('rowWidth', () => {
   it('spans the whole cards and the gaps between them', () => {
     expect(rowWidth(2, 390, 24)).toBe(804);
     expect(rowWidth(1, 328, 16)).toBe(328);
+  });
+});
+
+describe('narrowedCardWidth', () => {
+  const THUMB_RATIO = 0.5625;
+  const FLOOR_WIDTH = 252;
+
+  it.each([
+    ['a 390x701 phone, where the card already clears the frame', 358, 360, 360, 358],
+    ['a 412x780 phone, where the card has room to spare', 380, 408, 422, 380],
+    ['a 360x640 phone, where the card runs 42 px past the frame', 328, 341, 299, 253],
+    ['a 375x553 phone, where no width brings the card above the frame', 343, 351, 212, FLOOR_WIDTH],
+    ['a 320x568 phone, whose card is already narrower than the floor', 240, 330, 212, 240],
+  ])('on %s, takes the card of %j px, %j px tall, to fit %j px as %j px wide, never below the floor', (_phone, cardWidth, cardHeight, hardHeight, expected) => {
+    const width = narrowedCardWidth(cardWidth, cardHeight, hardHeight, THUMB_RATIO, FLOOR_WIDTH);
+
+    expect(width).toBe(expected);
+  });
+
+  it('takes off as much width as the thumbnail ratio turns into the excess height, rounded down to a whole pixel', () => {
+    const width = narrowedCardWidth(400, 380, 360, THUMB_RATIO, FLOOR_WIDTH);
+
+    expect(width).toBe(364);
+  });
+
+  it.each([Number.NaN, 0])('leaves the card alone when the thumbnail ratio is %j', (thumbRatio) => {
+    const width = narrowedCardWidth(343, 351, 212, thumbRatio, FLOOR_WIDTH);
+
+    expect(width).toBe(343);
   });
 });
 

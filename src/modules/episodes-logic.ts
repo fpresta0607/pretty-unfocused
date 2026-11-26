@@ -34,6 +34,14 @@ export function rowWidth(cardCount: number, cardWidth: number, gap: number): num
   return cardCount * cardWidth + (cardCount - 1) * gap;
 }
 
+export function narrowedCardWidth(cardWidth: number, cardHeight: number, hardHeight: number, thumbRatio: number, floorWidth: number): number {
+  const excessHeight = cardHeight - hardHeight;
+  if (!(excessHeight > 0) || !(thumbRatio > 0)) {
+    return cardWidth;
+  }
+  return Math.min(cardWidth, Math.max(floorWidth, Math.floor(cardWidth - excessHeight / thumbRatio)));
+}
+
 export interface FramePiece {
   top: number;
   height: number;

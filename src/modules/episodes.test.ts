@@ -1,4 +1,6 @@
 // @vitest-environment happy-dom
+import { readFileSync } from 'node:fs';
+
 import ModularApp from 'modujs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -289,6 +291,64 @@ describe('the card height', () => {
 
       expect(Number.parseFloat(readFit().height)).toBeLessThanOrEqual(600 - BAND_HEIGHT - GAP_TO_BAND);
     });
+
+    describe('on a phone row', () => {
+      const NATURAL_CARD_WIDTH = 343;
+      const FLOOR_CARD_WIDTH = 252;
+      const THUMB_RATIO = 0.5625;
+
+      function makeCardsFollowTheirWidth(): void {
+        const viewport = getElement<HTMLElement>('.episodes-viewport');
+        const readWidth = (): number => Number.parseFloat(viewport.style.getPropertyValue('--row-card-w')) || NATURAL_CARD_WIDTH;
+        getElement<HTMLElement>('#episodes').style.setProperty('--card-thumb', String(THUMB_RATIO));
+        Object.defineProperty(getElement('.episode-card'), 'offsetWidth', { get: readWidth });
+        document.querySelectorAll<HTMLElement>('.episode-card:not(.episode-card--all)').forEach((card) => {
+          Object.defineProperty(card, 'offsetHeight', { get: () => 200 + 400 + (readWidth() - NATURAL_CARD_WIDTH) * THUMB_RATIO });
+        });
+      }
+
+      function readRowCardWidth(): string {
+        return getElement<HTMLElement>('.episodes-viewport').style.getPropertyValue('--row-card-w');
+      }
+
+      it('narrows the cards until they clear the frame when they run past it at full width', () => {
+        limitStage(537);
+        vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(360);
+        makeCardsFollowTheirWidth();
+
+        mountEpisodes();
+
+        const width = Number.parseFloat(readRowCardWidth());
+        expect(width).toBeLessThan(NATURAL_CARD_WIDTH);
+        expect(width).toBeGreaterThan(FLOOR_CARD_WIDTH);
+        expect(Number.parseFloat(readFit().height)).toBeLessThanOrEqual(537 - BAND_HEIGHT - GAP_TO_BAND);
+      });
+
+      it('stops at the floor width when no narrower card would clear the frame, leaving the card running past it', () => {
+        limitStage(500);
+        vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(360);
+        makeCardsFollowTheirWidth();
+
+        mountEpisodes();
+
+        expect(readRowCardWidth()).toBe(`${FLOOR_CARD_WIDTH}px`);
+        expect(Number.parseFloat(readFit().height)).toBeGreaterThan(500 - BAND_HEIGHT - GAP_TO_BAND);
+      });
+
+      it.each([
+        ['a phone with room for the cards at full width', 360, 2000],
+        ['a phone whose cards end half a pixel past the frame, which the rounding up of their height explains', 360, 556.5],
+        ['a tablet, whose cards keep their width whatever the room', 700, 537],
+      ])('keeps the cards at their full width on %s', (_screen, width, height) => {
+        limitStage(height);
+        vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(width);
+        makeCardsFollowTheirWidth();
+
+        mountEpisodes();
+
+        expect(readRowCardWidth()).toBe('');
+      });
+    });
   });
 
   it('cuts a description that overruns its lines at a whole word and ends it with an ellipsis', () => {
@@ -342,6 +402,36 @@ describe('the card height', () => {
     mountEpisodes();
 
     expect(readFit()).toEqual({ height: '', lines: ['', '', '', '', '', '', ''] });
+  });
+});
+
+describe('the row of cards', () => {
+  const EPISODES_STYLES = readFileSync('src/styles/episodes.css', 'utf8');
+  const CARD_STYLES = readFileSync('src/styles/episode-card.css', 'utf8');
+
+  beforeEach(() => {
+    const stylesheet = document.createElement('style');
+    stylesheet.textContent = `${EPISODES_STYLES}
+${CARD_STYLES}`;
+    document.head.append(stylesheet);
+  });
+
+  afterEach(() => {
+    document.head.innerHTML = '';
+  });
+
+  it('never scrolls vertically, so a drag along it moves the page instead of cutting the cards off', () => {
+    const viewport = getElement('.episodes-viewport');
+
+    expect(getComputedStyle(viewport).overflowY).toBe('hidden');
+  });
+
+  it.each(['.episode-all', '.episode-all-panel'])('lets the All episodes card shrink %s with the card instead of hanging out past it', (selector) => {
+    expect(getComputedStyle(getElement(selector)).getPropertyValue('min-block-size')).toBe('0');
+  });
+
+  it('keeps the round button of the All episodes card at its full size while the panel gives up height', () => {
+    expect(getComputedStyle(getElement('.episode-all .round-button')).flexShrink).toBe('0');
   });
 });
 

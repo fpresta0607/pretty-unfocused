@@ -8,6 +8,7 @@ import {
   coveringCardCount,
   fitCards,
   frontCardIndex,
+  narrowedCardWidth,
   rowEndPadding,
   rowWidth,
   scrollTopForCard,
@@ -24,6 +25,8 @@ const MIN_STATIC_DESCRIPTION_LINES = 2;
 const MIN_SHORT_PHONE_DESCRIPTION_LINES = 1;
 const PHONE_MAX_WIDTH_PX = 599;
 const SHORT_PHONE_MAX_HEIGHT_PX = 760;
+const MIN_PHONE_CARD_WIDTH_PX = 252;
+const MAX_NARROWING_PASSES = 4;
 const MIN_PINNED_DESCRIPTION_LINES = 2;
 const MAX_DESCRIPTION_LINES = 6;
 const LINE_FIT_TOLERANCE_PX = 1;
@@ -114,8 +117,8 @@ export class Episodes extends Module {
     this.restoreTexts();
     this.fitCopyColumn();
     this.fitRow();
-    const titleLines = this.fitCardHeights();
-    this.trimTitles(titleLines);
+    const fit = this.fitCardsToRoom();
+    this.trimTitles(fit?.titleLines);
     this.trimDescriptions();
     this.placeDashes();
     this.measureCoverSteps();
@@ -215,7 +218,31 @@ export class Episodes extends Module {
     }
   }
 
-  private fitCardHeights(): number | undefined {
+  private fitCardsToRoom(): CardFit | undefined {
+    let fit = this.fitCardHeights();
+    for (let pass = 0; pass < MAX_NARROWING_PASSES && fit !== undefined && this.narrowCards(fit); pass += 1) {
+      fit = this.fitCardHeights();
+    }
+    return fit;
+  }
+
+  private narrowCards(fit: CardFit): boolean {
+    const firstCard = this.cards[0];
+    const hardHeight = this.availableCardHeight()?.hardHeight;
+    if (this.viewport === null || firstCard === undefined || hardHeight === undefined || fit.height <= hardHeight + LINE_FIT_TOLERANCE_PX || window.innerWidth > PHONE_MAX_WIDTH_PX || this.isPinnedLayout()) {
+      return false;
+    }
+    const cardWidth = firstCard.offsetWidth;
+    const thumbRatio = parseFloat(getComputedStyle(this.el).getPropertyValue('--card-thumb'));
+    const width = narrowedCardWidth(cardWidth, fit.height, hardHeight, thumbRatio, MIN_PHONE_CARD_WIDTH_PX);
+    if (!(width < cardWidth)) {
+      return false;
+    }
+    this.viewport.style.setProperty('--row-card-w', `${width}px`);
+    return true;
+  }
+
+  private fitCardHeights(): CardFit | undefined {
     const track = this.viewport?.querySelector<HTMLElement>('.episodes-track');
     this.el.style.removeProperty('--card-h');
     this.cards.forEach((card) => {
@@ -244,7 +271,7 @@ export class Episodes extends Module {
       }
     });
     this.el.style.setProperty('--card-h', `${Math.ceil(fit.height)}px`);
-    return fit.titleLines;
+    return fit;
   }
 
   private measureFit(room: CardRoom | undefined): CardFit | undefined {

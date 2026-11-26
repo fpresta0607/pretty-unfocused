@@ -48,8 +48,9 @@ export class Stain extends Module {
   private update(): void {
     const sectionRect = this.el.getBoundingClientRect();
     const shape = edgeShape(sectionRect.top, window.innerWidth, this.viewportHeight);
-    this.updateLift(sectionRect.top);
-    this.updateClip(sectionRect, shape);
+    const isSmoothScrollDevice = this.smoothScrollDevice.matches;
+    this.updateLift(sectionRect.top, isSmoothScrollDevice);
+    this.updateClip(sectionRect, shape, isSmoothScrollDevice);
     this.el.toggleAttribute('data-stain-swept', sweepProgress(sectionRect.top, window.innerHeight) >= 1 && sectionRect.bottom > 0);
 
     const set = window.innerWidth < NARROW_VIEWPORT_PX ? 'narrow' : 'wide';
@@ -74,8 +75,8 @@ export class Stain extends Module {
     return height;
   }
 
-  private updateLift(sectionTop: number): void {
-    if (!this.smoothScrollDevice.matches) {
+  private updateLift(sectionTop: number, isSmoothScrollDevice: boolean): void {
+    if (!isSmoothScrollDevice) {
       this.lift = 0;
       this.el.style.setProperty('--stain-lift', '0px');
       return;
@@ -94,8 +95,9 @@ export class Stain extends Module {
     this.el.style.setProperty('--stain-lift', `${this.lift.toFixed(1)}px`);
   }
 
-  private updateClip(sectionRect: DOMRect, shape: EdgeShape): void {
-    if (sweepProgress(sectionRect.top, this.viewportHeight) >= 1) {
+  private updateClip(sectionRect: DOMRect, shape: EdgeShape, isSmoothScrollDevice: boolean): void {
+    // Touch Safari stops repainting a changing clip-path on a section holding composited layers, so the edge is drawn by the svg alone.
+    if (!isSmoothScrollDevice || sweepProgress(sectionRect.top, this.viewportHeight) >= 1) {
       this.el.style.removeProperty('clip-path');
       return;
     }
