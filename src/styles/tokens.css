@@ -31,10 +31,13 @@
   --radius: 24px;
   --radius-pill: 999px;
   --round-size: 56px;
+  --mini-card-height: 93px;
+  --edge-rise: 20svh;
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-pop: cubic-bezier(0.17, 0.67, 0.3, 1.33);
   --ease-wipe: cubic-bezier(0.86, 0, 0.07, 1);
+  --ease-scrub: cubic-bezier(0.45, 0, 0.55, 1);
   --dur-ui: 400ms;
   --dur-move: 800ms;
 

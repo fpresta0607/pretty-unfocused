@@ -1,12 +1,17 @@
 // @vitest-environment happy-dom
+import { readFileSync } from 'node:fs';
+
 import ModularApp from 'modujs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderFrame } from '../render/render-frame.ts';
 import type { Show } from '../show/show-types.ts';
 import { Frame } from './frame.ts';
+import { edgeHeight, settledEdgeShape } from './stain-edge.ts';
 
 const VIEWPORT_HEIGHT = 800;
+const EDGE_RISE_PX = 160;
+const PAGE_WIDTH = 1000;
 const SECTIONS = [
   { id: 'home', label: 'Home' },
   { id: 'about', label: 'About' },
@@ -53,7 +58,15 @@ function getElement<ElementType extends Element>(selector: string): ElementType 
 }
 
 function placeSection(id: string, top: number, bottom: number): void {
-  getElement(`#${id}`).getBoundingClientRect = () => new DOMRect(0, top, 1200, bottom - top);
+  getElement(`#${id}`).getBoundingClientRect = () => new DOMRect(0, top, 1000, bottom - top);
+}
+
+function placePiece(selector: string, centerX: number, centerY: number): void {
+  getElement(selector).getBoundingClientRect = () => new DOMRect(centerX - 28, centerY - 28, 56, 56);
+}
+
+function readPieceSurface(selector: string): string | undefined {
+  return getElement<HTMLElement>(selector).dataset.frameSurface;
 }
 
 function reportHeroVisibleRatio(intersectionRatio: number): void {
@@ -71,6 +84,38 @@ async function scrollTo(placeSections: () => void): Promise<void> {
   await new Promise((resolve) => window.requestAnimationFrame(resolve));
 }
 
+interface Box {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+function readCoverShare(box: Box, aboutTop: number, edgeRise: number): number {
+  const shape = settledEdgeShape(PAGE_WIDTH, edgeRise);
+  let cream = 0;
+  for (let column = 0; column < 60; column += 1) {
+    const edgeY = aboutTop - edgeHeight((box.left + (box.width * (column + 0.5)) / 60) / PAGE_WIDTH, shape);
+    for (let row = 0; row < 8; row += 1) {
+      cream += box.top + (box.height * (row + 0.5)) / 8 >= edgeY ? 1 : 0;
+    }
+  }
+  return cream / 480;
+}
+
+function placeAboutAt(top: number): void {
+  placeSection('home', top - VIEWPORT_HEIGHT, top);
+  placeSection('about', top, top + 3000);
+}
+
+function setEdgeRise(pixels: number): void {
+  document.documentElement.style.setProperty('--edge-rise', `${pixels}px`);
+}
+
+function stubFontsReady(ready: Promise<unknown>): void {
+  Object.defineProperty(document, 'fonts', { configurable: true, value: { ready } });
+}
+
 function mountFrame(): void {
   app = new ModularApp({ modules: { frame: Frame } });
   app.init(app);
@@ -79,6 +124,9 @@ function mountFrame(): void {
 beforeEach(() => {
   vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver);
   window.innerHeight = VIEWPORT_HEIGHT;
+  window.innerWidth = PAGE_WIDTH;
+  setEdgeRise(EDGE_RISE_PX);
+  stubFontsReady(Promise.resolve());
   heroObserverCallback = undefined;
   observedElements = [];
   document.body.innerHTML = `${renderFrame(show, SECTIONS)}
@@ -90,54 +138,80 @@ beforeEach(() => {
 
 afterEach(() => {
   app.destroy();
+  delete document.documentElement.dataset.motion;
+  document.documentElement.style.removeProperty('--edge-rise');
+  Reflect.deleteProperty(document, 'fonts');
   vi.unstubAllGlobals();
   document.body.innerHTML = '';
 });
 
 describe('the frame', () => {
-  it('takes its surfaces and section name from the sections under its edges when it starts', () => {
-    placeSection('home', 0, VIEWPORT_HEIGHT / 2 + 100);
-    placeSection('about', VIEWPORT_HEIGHT / 2 + 100, 2000);
+  it('gives each piece the surface of the section under its centre when it starts', () => {
+    placePiece('.frame-button--menu', 68, 52);
+    placePiece('[data-frame="section"]', 120, 756);
+    placeSection('home', 0, 500);
+    placeSection('about', 500, 2000);
 
     mountFrame();
 
-    const frame = getElement<HTMLElement>('.frame');
-    expect(frame.dataset.surfaceTop).toBe('dark');
-    expect(frame.dataset.surfaceBottom).toBe('light');
-    expect(getElement('[data-frame="section"]').textContent).toBe('Home');
+    expect(readPieceSurface('.frame-button--menu')).toBe('dark');
+    expect(readPieceSurface('[data-frame="section"]')).toBe('light');
   });
 
-  it('follows the sections as the page scrolls', async () => {
-    placeSection('home', 0, VIEWPORT_HEIGHT);
-    placeSection('about', VIEWPORT_HEIGHT, 2000);
+  it('switches the section name at the very moment its own surface flips, never while it is over the old section', async () => {
+    placePiece('[data-frame="section"]', 120, 756);
+    placeSection('home', -VIEWPORT_HEIGHT, 757);
+    placeSection('about', 757, 2000);
     mountFrame();
-    const frame = getElement<HTMLElement>('.frame');
-    const initialSurfaces = [frame.dataset.surfaceTop, frame.dataset.surfaceBottom];
+    const nameWhileOverTheHero = getElement('[data-frame="section"]').textContent;
+    const surfaceWhileOverTheHero = readPieceSurface('[data-frame="section"]');
 
     await scrollTo(() => {
-      placeSection('home', -VIEWPORT_HEIGHT, 0);
-      placeSection('about', 0, 1200);
+      placeSection('home', -VIEWPORT_HEIGHT, 756);
+      placeSection('about', 756, 2000);
     });
 
-    expect(initialSurfaces).toEqual(['dark', 'dark']);
-    expect(frame.dataset.surfaceTop).toBe('light');
-    expect(frame.dataset.surfaceBottom).toBe('light');
+    expect(surfaceWhileOverTheHero).toBe('dark');
+    expect(nameWhileOverTheHero).toBe('Home');
+    expect(readPieceSurface('[data-frame="section"]')).toBe('light');
     expect(getElement('[data-frame="section"]').textContent).toBe('About');
   });
 
-  it('gives the top and bottom edges different surfaces when a section boundary sits between them', async () => {
+  it('turns a piece light only once the section edge has reached its centre', async () => {
+    placePiece('.frame-button--menu', 68, 52);
     placeSection('home', 0, VIEWPORT_HEIGHT);
     placeSection('about', VIEWPORT_HEIGHT, 2000);
     mountFrame();
-    const frame = getElement<HTMLElement>('.frame');
+
+    await scrollTo(() => {
+      placeSection('home', -748, 53);
+      placeSection('about', 53, 1200);
+    });
+    const surfaceJustBeforeTheEdge = readPieceSurface('.frame-button--menu');
+    await scrollTo(() => {
+      placeSection('home', -748, 52);
+      placeSection('about', 52, 1200);
+    });
+
+    expect(surfaceJustBeforeTheEdge).toBe('dark');
+    expect(readPieceSurface('.frame-button--menu')).toBe('light');
+  });
+
+  it('gives pieces on either side of a section boundary different surfaces and names the section in the middle', async () => {
+    placePiece('.frame-button--menu', 68, 52);
+    placePiece('[data-frame="section"]', 120, 756);
+    placeSection('home', 0, VIEWPORT_HEIGHT);
+    placeSection('about', VIEWPORT_HEIGHT, 2000);
+    mountFrame();
 
     await scrollTo(() => {
       placeSection('home', -VIEWPORT_HEIGHT, 100);
       placeSection('about', 100, 1200);
     });
 
-    expect(frame.dataset.surfaceTop).toBe('dark');
-    expect(frame.dataset.surfaceBottom).toBe('light');
+    expect(readPieceSurface('.frame-button--menu')).toBe('dark');
+    expect(readPieceSurface('[data-frame="section"]')).toBe('light');
+    expect(getElement('[data-frame="section"]').textContent).toBe('About');
   });
 
   it('watches the first section to decide when the hero has scrolled away', () => {
@@ -173,5 +247,322 @@ describe('the frame', () => {
     expect(observedElements).toEqual([]);
     expect(getElement('[data-frame="mini"]').hasAttribute('data-visible')).toBe(false);
     expect(getElement('.frame-mark').hasAttribute('data-hidden')).toBe(true);
+  });
+});
+
+describe('the frame with the stain edge drawn', () => {
+  const PIECE_Y = 700;
+  const PIECES = ['.frame-mark', '.frame-button--menu', '.frame-button--listen'];
+
+  function placeAbout(top: number): void {
+    placeSection('home', top - VIEWPORT_HEIGHT, top);
+    placeSection('about', top, top + 3000);
+  }
+
+  beforeEach(() => {
+    document.documentElement.dataset.motion = 'on';
+    getElement('#about').setAttribute('data-module-stain', '');
+    placePiece('.frame-mark', 500, PIECE_Y);
+    placePiece('.frame-button--menu', 68, PIECE_Y);
+    placePiece('.frame-button--listen', 932, PIECE_Y);
+  });
+
+  it('keeps every piece on the hero while the edge is still below the screen', () => {
+    placeAbout(VIEWPORT_HEIGHT);
+
+    mountFrame();
+
+    expect(PIECES.map(readPieceSurface)).toEqual(['dark', 'dark', 'dark']);
+  });
+
+  it('turns each piece light as the edge passes over it at its own x, the leaning side and the crest first', async () => {
+    placeAbout(VIEWPORT_HEIGHT);
+    mountFrame();
+
+    await scrollTo(() => placeAbout(VIEWPORT_HEIGHT - 15));
+    const whileOnlyTheLeadingEdgeHasPassed = PIECES.map(readPieceSurface);
+    await scrollTo(() => placeAbout(500));
+
+    expect(whileOnlyTheLeadingEdgeHasPassed).toEqual(['light', 'light', 'dark']);
+    expect(PIECES.map(readPieceSurface)).toEqual(['light', 'light', 'light']);
+  });
+
+  it('turns the pieces back to the hero surface when the page scrolls back up', async () => {
+    placeAbout(500);
+    mountFrame();
+
+    await scrollTo(() => placeAbout(VIEWPORT_HEIGHT));
+
+    expect(PIECES.map(readPieceSurface)).toEqual(['dark', 'dark', 'dark']);
+  });
+
+  it('shows the mini card and the ring mark from the moment the sweep has covered the screen, and hides them again on the way back', async () => {
+    const isMiniVisible = (): boolean => getElement('[data-frame="mini"]').hasAttribute('data-visible');
+    const isMarkShown = (): boolean => !getElement('.frame-mark').hasAttribute('data-hidden');
+    placeAbout(VIEWPORT_HEIGHT);
+    mountFrame();
+
+    await scrollTo(() => placeAbout(VIEWPORT_HEIGHT * 0.55));
+    reportHeroVisibleRatio(0);
+    const whileTheSweepRuns = [isMiniVisible(), isMarkShown()];
+    await scrollTo(() => placeAbout(VIEWPORT_HEIGHT * 0.5));
+    const onceTheSweepIsDone = [isMiniVisible(), isMarkShown()];
+    await scrollTo(() => placeAbout(VIEWPORT_HEIGHT * 0.55));
+
+    expect(whileTheSweepRuns).toEqual([false, false]);
+    expect(onceTheSweepIsDone).toEqual([true, true]);
+    expect([isMiniVisible(), isMarkShown()]).toEqual([false, false]);
+  });
+});
+
+describe('the frame with the settled edge of a page without motion', () => {
+  const PIECE_Y = 700;
+
+  function placeAbout(top: number): void {
+    placeSection('home', top - VIEWPORT_HEIGHT, top);
+    placeSection('about', top, top + 3000);
+  }
+
+  beforeEach(() => {
+    getElement('#about').setAttribute('data-module-stain', '');
+    placePiece('.frame-mark', 500, PIECE_Y);
+    placePiece('.frame-button--menu', 68, PIECE_Y);
+    placePiece('.frame-button--listen', 932, PIECE_Y);
+  });
+
+  it('keeps every piece on the hero while the tallest lobe is still below the piece', () => {
+    placeAbout(PIECE_Y + 200);
+
+    mountFrame();
+
+    expect(['.frame-mark', '.frame-button--menu', '.frame-button--listen'].map(readPieceSurface)).toEqual([
+      'dark',
+      'dark',
+      'dark',
+    ]);
+  });
+
+  it('turns a piece light where the still lobed edge crosses it, the tallest lobe first', () => {
+    placeAbout(PIECE_Y + 8);
+
+    mountFrame();
+
+    expect(readPieceSurface('.frame-mark')).toBe('light');
+  });
+});
+
+describe('the frame pieces and the pixels under them', () => {
+  const LABEL = { left: 20, top: 700, width: 300, height: 24 };
+  const CLEAR_MARGIN = 0.15;
+  const TOPS = Array.from({ length: 130 }, (_, index) => LABEL.top + 180 - index * 1.7);
+
+  function placeAbout(top: number): void {
+    placeSection('home', top - VIEWPORT_HEIGHT, top);
+    placeSection('about', top, top + 3000);
+  }
+
+  beforeEach(() => {
+    getElement('#about').setAttribute('data-module-stain', '');
+    getElement('[data-frame="section"]').getBoundingClientRect = () =>
+      new DOMRect(LABEL.left, LABEL.top, LABEL.width, LABEL.height);
+  });
+
+  it.each(TOPS.map((top) => [top.toFixed(1), top] as const))(
+    'gives the section name the colour that covers most of its box when the section top is at %s',
+    (_name, top) => {
+      const creamShare = readCoverShare(LABEL, top, EDGE_RISE_PX);
+      placeAbout(top);
+
+      mountFrame();
+
+      if (Math.abs(creamShare - 0.5) > CLEAR_MARGIN) {
+        const expectedSurface = creamShare > 0.5 ? 'light' : 'dark';
+        expect(readPieceSurface('[data-frame="section"]')).toBe(expectedSurface);
+        expect(getElement('[data-frame="section"]').textContent).toBe(expectedSurface === 'light' ? 'About' : 'Home');
+      }
+    },
+  );
+
+  it('flips the name from the hero to the section while the box crosses the edge, once and never back', async () => {
+    placeAbout(TOPS[0] ?? 0);
+    mountFrame();
+    const surfaces: (string | undefined)[] = [];
+
+    for (const top of TOPS) {
+      await scrollTo(() => placeAbout(top));
+      surfaces.push(readPieceSurface('[data-frame="section"]'));
+    }
+
+    const firstLight = surfaces.indexOf('light');
+    expect(firstLight).toBeGreaterThan(0);
+    expect(surfaces.slice(0, firstLight).every((surface) => surface === 'dark')).toBe(true);
+    expect(surfaces.slice(firstLight).every((surface) => surface === 'light')).toBe(true);
+  });
+});
+
+describe('the section name over the pixels under its own text', () => {
+  const LABEL = { left: 20, top: 700, height: 24 };
+  const WIDTH_OF = { Home: 50, About: 300 };
+  const TOPS = Array.from({ length: 130 }, (_, index) => LABEL.top + 180 - index * 1.7);
+  const CLEAR_MARGIN = 0.25;
+
+  function placeAbout(top: number): void {
+    placeSection('home', top - VIEWPORT_HEIGHT, top);
+    placeSection('about', top, top + 3000);
+  }
+
+  beforeEach(() => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      const width = WIDTH_OF[this.textContent === 'Home' ? 'Home' : 'About'];
+      return new DOMRect(LABEL.left, LABEL.top, width, LABEL.height);
+    });
+    getElement('#about').setAttribute('data-module-stain', '');
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it.each(TOPS.map((top) => [top.toFixed(1), top] as const))(
+    'shows the name whose own text lies mostly over its own colour when the section top is at %s',
+    (_name, top) => {
+      placeSection('home', top - VIEWPORT_HEIGHT, top);
+      placeSection('about', top, top + 3000);
+      const aboutShare = readCoverShare({ ...LABEL, width: WIDTH_OF.About }, top, EDGE_RISE_PX);
+      const homeShare = 1 - readCoverShare({ ...LABEL, width: WIDTH_OF.Home }, top, EDGE_RISE_PX);
+      placeAbout(top);
+
+      mountFrame();
+
+      if (Math.abs(aboutShare - homeShare) > CLEAR_MARGIN) {
+        expect(getElement('[data-frame="section"]').textContent).toBe(aboutShare > homeShare ? 'About' : 'Home');
+      }
+    },
+  );
+});
+
+describe('the section name measured at the width it is drawn', () => {
+  const LABEL = { left: 350, top: 700, height: 24 };
+  const TEXT_WIDTH = 300;
+  const SHRUNK = 0.4;
+  const TOPS = Array.from({ length: 130 }, (_, index) => LABEL.top + 180 - index * 1.7);
+  const CLEAR_MARGIN = 0.15;
+  let fontScale = 1;
+
+  function readExpectedName(top: number, widthScale: number): string | undefined {
+    const creamShare = readCoverShare({ ...LABEL, width: TEXT_WIDTH * widthScale }, top, EDGE_RISE_PX);
+    if (Math.abs(creamShare - 0.5) <= CLEAR_MARGIN) {
+      return undefined;
+    }
+    return creamShare > 0.5 ? 'About' : 'Home';
+  }
+
+  async function startIntroScaled(): Promise<void> {
+    document.documentElement.setAttribute('data-intro', '');
+    mountFrame();
+    await Promise.resolve();
+    document.documentElement.setAttribute('data-frame-ready', '');
+  }
+
+  async function startBeforeTheFontLoads(): Promise<void> {
+    let finishLoading = (): void => undefined;
+    stubFontsReady(
+      new Promise<void>((resolve) => {
+        finishLoading = resolve;
+      }),
+    );
+    fontScale = SHRUNK;
+    mountFrame();
+    fontScale = 1;
+    finishLoading();
+    await Promise.resolve();
+  }
+
+  beforeEach(() => {
+    const stylesheet = document.createElement('style');
+    stylesheet.textContent = readFileSync('src/styles/frame.css', 'utf8');
+    document.head.append(stylesheet);
+    fontScale = 1;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (!this.matches('[data-frame="section"]')) {
+        return new DOMRect();
+      }
+      const scale = Number.parseFloat(getComputedStyle(this).scale);
+      return new DOMRect(LABEL.left, LABEL.top, TEXT_WIDTH * fontScale * (Number.isFinite(scale) ? scale : 1), LABEL.height);
+    });
+    getElement('#about').setAttribute('data-module-stain', '');
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.head.innerHTML = '';
+    document.documentElement.removeAttribute('data-intro');
+    document.documentElement.removeAttribute('data-frame-ready');
+  });
+
+  it.each([
+    ['while the intro still holds it scaled down', startIntroScaled],
+    ['before the text font has loaded', startBeforeTheFontLoads],
+  ])('follows the colour under the whole name when the frame starts %s', async (_name, start) => {
+    placeAboutAt(TOPS[0] ?? 0);
+    await start();
+    const checks: { expected: string; shown: string | null; isTellingApart: boolean }[] = [];
+
+    for (const top of TOPS) {
+      await scrollTo(() => placeAboutAt(top));
+      const expected = readExpectedName(top, 1);
+      if (expected !== undefined) {
+        const shown = getElement('[data-frame="section"]').textContent;
+        const shrunkExpected = readExpectedName(top, SHRUNK);
+        checks.push({ expected, shown, isTellingApart: shrunkExpected !== undefined && shrunkExpected !== expected });
+      }
+    }
+
+    expect(checks.some((check) => check.isTellingApart)).toBe(true);
+    expect(checks.map((check) => check.shown)).toEqual(checks.map((check) => check.expected));
+  });
+});
+
+describe('the frame over the still edge at the height the stylesheet gives it', () => {
+  const MARK = { left: 472, top: 672, width: 56, height: 56 };
+  const STYLESHEET_RISE_PX = 120;
+  const WINDOW_RISE_PX = VIEWPORT_HEIGHT * 0.2;
+  const TOPS = Array.from({ length: 120 }, (_, index) => MARK.top + MARK.height + 150 - index * 1.5);
+  const CLEAR_MARGIN = 0.15;
+
+  function readExpectedSurface(top: number, edgeRise: number): string | undefined {
+    const creamShare = readCoverShare(MARK, top, edgeRise);
+    if (Math.abs(creamShare - 0.5) <= CLEAR_MARGIN) {
+      return undefined;
+    }
+    return creamShare > 0.5 ? 'light' : 'dark';
+  }
+
+  beforeEach(() => {
+    setEdgeRise(STYLESHEET_RISE_PX);
+    getElement('#about').setAttribute('data-module-stain', '');
+    placePiece('.frame-mark', MARK.left + MARK.width / 2, MARK.top + MARK.height / 2);
+  });
+
+  it('turns a piece light where the edge drawn at the stylesheet height crosses it, not at a fifth of the window', async () => {
+    placeAboutAt(TOPS[0] ?? 0);
+    mountFrame();
+    const checks: { expected: string; shown: string | undefined; isTellingApart: boolean }[] = [];
+
+    for (const top of TOPS) {
+      await scrollTo(() => placeAboutAt(top));
+      const expected = readExpectedSurface(top, STYLESHEET_RISE_PX);
+      if (expected !== undefined) {
+        const windowExpected = readExpectedSurface(top, WINDOW_RISE_PX);
+        checks.push({
+          expected,
+          shown: readPieceSurface('.frame-mark'),
+          isTellingApart: windowExpected !== undefined && windowExpected !== expected,
+        });
+      }
+    }
+
+    expect(checks.some((check) => check.isTellingApart)).toBe(true);
+    expect(checks.map((check) => check.shown)).toEqual(checks.map((check) => check.expected));
   });
 });
