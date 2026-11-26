@@ -58,6 +58,8 @@ export class Episodes extends Module {
   private endSteps = 0;
   private frontIndex = -1;
   private layoutFrame = 0;
+  private scrollFrame: number | undefined;
+  private frameClear = 0;
   private navigation: HTMLElement | null = null;
   private viewport: HTMLElement | null = null;
   private previousButton: HTMLButtonElement | null = null;
@@ -79,7 +81,7 @@ export class Episodes extends Module {
     this.setFront(0);
     this.setCovered(0);
     window.addEventListener(PROGRESS_EVENT, this.handleProgress);
-    window.addEventListener('scroll', this.handleScroll, { passive: true });
+    window.addEventListener('scroll', this.scheduleScroll, { passive: true });
     this.el.addEventListener('focusin', this.handleFocusIn);
     this.el.dataset.reveal = 'pending';
     this.handleScroll();
@@ -87,9 +89,10 @@ export class Episodes extends Module {
 
   destroy(): void {
     window.removeEventListener(PROGRESS_EVENT, this.handleProgress);
-    window.removeEventListener('scroll', this.handleScroll);
+    window.removeEventListener('scroll', this.scheduleScroll);
     window.removeEventListener('resize', this.handleResize);
     window.cancelAnimationFrame(this.layoutFrame);
+    window.cancelAnimationFrame(this.scrollFrame ?? 0);
     this.el.removeEventListener('focusin', this.handleFocusIn);
     document.documentElement.style.removeProperty('--episodes-active');
     this.viewport?.removeEventListener('scroll', this.updateNavigation);
@@ -105,7 +108,9 @@ export class Episodes extends Module {
     if (this.navigation !== null) {
       this.navigation.hidden = this.isPinnedLayout();
     }
-    this.endSteps = parseFloat(getComputedStyle(this.el).getPropertyValue('--end-steps')) || 0;
+    const sectionStyle = getComputedStyle(this.el);
+    this.endSteps = parseFloat(sectionStyle.getPropertyValue('--end-steps')) || 0;
+    this.frameClear = parseFloat(sectionStyle.getPropertyValue('--frame-clear'));
     this.restoreTexts();
     this.fitCopyColumn();
     this.fitRow();
@@ -411,13 +416,23 @@ export class Episodes extends Module {
     }
   };
 
-  private readonly handleScroll = (): void => {
+  private readonly scheduleScroll = (): void => {
+    if (this.scrollFrame !== undefined) {
+      return;
+    }
+    this.scrollFrame = window.requestAnimationFrame(() => {
+      this.scrollFrame = undefined;
+      this.handleScroll();
+    });
+  };
+
+  private handleScroll(): void {
     this.setArrived();
     if (this.el.dataset.reveal === 'pending' && sweepProgress(this.el.getBoundingClientRect().top, window.innerHeight) >= EPISODES_REVEAL_FROM_SWEEP_PROGRESS) {
       this.reveal();
     }
     this.setPinned();
-  };
+  }
 
   private setPinned(): void {
     const { top, bottom } = this.el.getBoundingClientRect();
@@ -429,8 +444,7 @@ export class Episodes extends Module {
     if (dashes === null) {
       return;
     }
-    const frameClear = parseFloat(getComputedStyle(this.el).getPropertyValue('--frame-clear'));
-    this.el.toggleAttribute('data-arrived', dashes.getBoundingClientRect().bottom <= window.innerHeight - frameClear);
+    this.el.toggleAttribute('data-arrived', dashes.getBoundingClientRect().bottom <= window.innerHeight - this.frameClear);
   }
 
   private readonly handleFocusIn = (event: FocusEvent): void => {

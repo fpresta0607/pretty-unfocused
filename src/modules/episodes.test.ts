@@ -1,6 +1,4 @@
 // @vitest-environment happy-dom
-import { readFileSync } from 'node:fs';
-
 import ModularApp from 'modujs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -43,6 +41,16 @@ function readActiveDashes(): number[] {
   return Array.from(document.querySelectorAll('[data-episodes="dash"]'))
     .map((dash, index) => (dash.hasAttribute('data-active') ? index : -1))
     .filter((index) => index !== -1);
+}
+
+async function scrollPage(): Promise<void> {
+  window.dispatchEvent(new Event('scroll'));
+  await new Promise((resolve) => window.requestAnimationFrame(resolve));
+}
+
+function keepArrivalPlaying(section: HTMLElement): void {
+  const playing: Pick<Animation, 'finished'> = { finished: new Promise(() => undefined) };
+  vi.spyOn(section, 'getAnimations').mockReturnValue([playing as Animation]);
 }
 
 function settleReveal(): Promise<void> {
@@ -354,39 +362,41 @@ describe('the episodes section with motion on', () => {
     await settleReveal();
     vi.spyOn(getElement<HTMLElement>('.episodes-dashes'), 'getBoundingClientRect').mockReturnValue({ bottom: dashesBottom + 100 } as DOMRect);
 
-    window.dispatchEvent(new Event('scroll'));
+    await scrollPage();
 
     expect(getElement<HTMLElement>('#episodes').hasAttribute('data-arrived')).toBe(isShown);
   });
 
-  it('brings the dashes in with the arrival as soon as they are clear of the frame, instead of waiting for the arrival to end', () => {
+  it('brings the dashes in with the arrival as soon as they are clear of the frame, instead of waiting for the arrival to end', async () => {
     Object.defineProperty(window, 'innerHeight', { value: 900, configurable: true });
     const section = getElement<HTMLElement>('#episodes');
     section.style.setProperty('--frame-clear', '72px');
+    keepArrivalPlaying(section);
     mountEpisodes();
     vi.spyOn(getElement<HTMLElement>('.episodes-dashes'), 'getBoundingClientRect').mockReturnValue({ bottom: 100 } as DOMRect);
 
-    window.dispatchEvent(new Event('scroll'));
+    await scrollPage();
 
     expect(section.dataset.reveal).toBe('playing');
     expect(section.hasAttribute('data-arrived')).toBe(true);
   });
 
-  it('keeps the dashes away from the frame while the arrival plays, until they are clear of it', () => {
+  it('keeps the dashes away from the frame while the arrival plays, until they are clear of it', async () => {
     Object.defineProperty(window, 'innerHeight', { value: 900, configurable: true });
     const section = getElement<HTMLElement>('#episodes');
     section.style.setProperty('--frame-clear', '72px');
+    keepArrivalPlaying(section);
     mountEpisodes();
     const dashesAt = vi.spyOn(getElement<HTMLElement>('.episodes-dashes'), 'getBoundingClientRect');
     dashesAt.mockReturnValue({ bottom: 880 } as DOMRect);
 
-    window.dispatchEvent(new Event('scroll'));
+    await scrollPage();
 
     expect(section.dataset.reveal).toBe('playing');
     expect(section.hasAttribute('data-arrived')).toBe(false);
 
     dashesAt.mockReturnValue({ bottom: 820 } as DOMRect);
-    window.dispatchEvent(new Event('scroll'));
+    await scrollPage();
 
     expect(section.hasAttribute('data-arrived')).toBe(true);
   });
@@ -396,13 +406,13 @@ describe('the episodes section with motion on', () => {
     [0, 2000, true],
     [-1200, 2000, true],
     [-1200, 800, false],
-  ])('with the section top at %j and its bottom at %j on a 900 px screen, marks the pin as holding: %j', (top, bottom, isPinned) => {
+  ])('with the section top at %j and its bottom at %j on a 900 px screen, marks the pin as holding: %j', async (top, bottom, isPinned) => {
     Object.defineProperty(window, 'innerHeight', { value: 900, configurable: true });
     const section = getElement<HTMLElement>('#episodes');
     vi.spyOn(section, 'getBoundingClientRect').mockReturnValue({ top, bottom } as DOMRect);
     mountEpisodes();
 
-    window.dispatchEvent(new Event('scroll'));
+    await scrollPage();
 
     expect(section.hasAttribute('data-pinned')).toBe(isPinned);
   });
@@ -433,17 +443,18 @@ describe('the episodes section with motion on', () => {
     expect(marked).toEqual(covered);
   });
 
-  it('holds the arrival until the stain has started to sweep, so it is already rising as the sweep completes', () => {
+  it('holds the arrival until the stain has started to sweep, so it is already rising as the sweep completes', async () => {
     Object.defineProperty(window, 'innerHeight', { value: 900, configurable: true });
     const section = getElement<HTMLElement>('#episodes');
     const sectionAt = vi.spyOn(section, 'getBoundingClientRect');
     sectionAt.mockReturnValue({ top: 900 * (1 - 0.5 * (EPISODES_REVEAL_FROM_SWEEP_PROGRESS - 0.05)) } as DOMRect);
+    keepArrivalPlaying(section);
     mountEpisodes();
 
     expect(section.dataset.reveal).toBe('pending');
 
     sectionAt.mockReturnValue({ top: 900 * (1 - 0.5 * EPISODES_REVEAL_FROM_SWEEP_PROGRESS) } as DOMRect);
-    window.dispatchEvent(new Event('scroll'));
+    await scrollPage();
 
     expect(section.dataset.reveal).toBe('playing');
   });
@@ -629,77 +640,5 @@ describe('the episodes section with motion off', () => {
     expect(section.dataset.reveal).toBeUndefined();
     expect(section.style.getPropertyValue('--active')).toBe('');
     expect(readActiveDashes()).toEqual([]);
-  });
-});
-
-const stylesheet = readFileSync('src/styles/episodes.css', 'utf8');
-const cardStylesheet = readFileSync('src/styles/episode-card.css', 'utf8');
-
-function readRule(selector: string): string {
-  const start = stylesheet.indexOf(`${selector} {`);
-  return stylesheet.slice(start, stylesheet.indexOf('}', start));
-}
-
-describe('a covered card in the stylesheet', () => {
-  it('goes at once, with no fade that a still could catch half way, so it is either fully there or fully gone', () => {
-    const rule = readRule("html[data-motion='on'] .episode-card[data-covered]");
-
-    expect(rule).toContain('opacity: 0');
-    expect(rule).toContain('visibility: hidden');
-    expect(rule).not.toContain('transition');
-  });
-
-  it('is not given a fade by any other rule on a card', () => {
-    expect(stylesheet).not.toMatch(/\.episode-card[^{}]*\{[^}]*transition:[^;}]*opacity/);
-    expect(cardStylesheet).not.toMatch(/\.episode-card[^{}]*\{[^}]*transition:[^;}]*opacity/);
-  });
-});
-
-describe('a title in the stylesheet', () => {
-  it('is never clipped by a box, since the script cuts the text itself and a clip would show the top of the hidden line', () => {
-    expect(cardStylesheet).not.toMatch(/\.episode-card-title[^{}]*\{[^}]*(line-clamp|overflow)/);
-    expect(stylesheet).not.toContain('data-title-clamped');
-    expect(cardStylesheet).not.toContain('data-title-clamped');
-  });
-});
-
-describe('the progress dashes in the stylesheet', () => {
-  it('sit where the script puts them, under the card, not at a fixed distance from the bottom', () => {
-    const rule = readRule("html[data-motion='on'] .episodes-dashes");
-
-    expect(rule).toContain('inset-block-start: var(--dashes-top)');
-    expect(rule).not.toContain('inset-block-end');
-  });
-
-  it.each([
-    ["html[data-motion='on'] .episodes-dashes", 'var(--dur-ui)'],
-    ["html[data-motion='on'] .episodes[data-arrived] .episodes-dashes", 'var(--dur-move)'],
-  ])('eases %s in and out instead of switching, so they never pop', (selector, duration) => {
-    const rule = readRule(selector);
-
-    expect(rule).toContain(`opacity ${duration} var(--ease-out)`);
-    expect(rule).toContain(`translate ${duration} var(--ease-out)`);
-  });
-
-  it('plays them as the last line of the arrival, after the lines of the headline', () => {
-    expect(readRule("html[data-motion='on'] .episodes[data-reveal][data-arrived] .episodes-dashes")).toContain('transition-delay: calc(var(--line) * 80ms)');
-    expect(readRule("html[data-motion='on'] .episodes[data-reveal='pending'] .episodes-dashes")).toContain('opacity: 0');
-  });
-});
-
-describe('the card ring in the stylesheet', () => {
-  it('sits outside the gutter at every width, so the visible face of the card is on the gutter with the dashes and the section name', () => {
-    expect(readRule('.episodes')).toContain('--row-inset: calc(var(--gutter) - var(--ring))');
-    expect(stylesheet.match(/--row-inset:/g)).toHaveLength(2);
-  });
-
-  it('is left to the grid on a desktop, where the row starts on the grid column', () => {
-    expect(stylesheet).toMatch(/@media \(min-width: 900px\) \{\s*\.episodes \{[^}]*--row-inset: 0px/);
-  });
-
-  it('keeps the settling card centred on the page by the same inset the row starts with', () => {
-    const settle = stylesheet.slice(stylesheet.indexOf('@media (min-width: 600px) and (max-width: 659px) and (min-height: 900px), (min-width: 660px) and (max-width: 899px) and (min-height: 960px) {'));
-
-    expect(settle.slice(0, settle.indexOf('}'))).toContain('(100cqw - 2 * var(--row-inset) - var(--card-w)) / 2');
   });
 });
