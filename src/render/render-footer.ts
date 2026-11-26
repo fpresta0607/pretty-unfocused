@@ -23,7 +23,7 @@ function renderHeading(): string {
 function renderPlatformList(): string {
   const links = PLATFORM_LINKS.map(
     (link) =>
-      `<li><a class="footer-link" href="${escapeHtml(link.url)}">${renderIcon(link.icon, 'brand-icon')}${escapeHtml(link.label)}</a></li>`,
+      `<li data-footer="link"><a class="footer-link" href="${escapeHtml(link.url)}">${renderIcon(link.icon, 'brand-icon')}${escapeHtml(link.label)}</a></li>`,
   ).join('');
   return `<ul class="footer-links" role="list">${links}</ul>`;
 }
@@ -38,14 +38,17 @@ export function renderFooter(): string {
   const email = escapeHtml(SHOW_EMAIL);
   return `<footer class="section section--wine footer" id="say-hi" data-section data-surface="dark" data-module-footer data-module-stain data-inert-on-menu aria-labelledby="footer-heading">
     ${renderStainEdge()}
-    <div class="footer-inner">
-      <div class="footer-copy" data-stain-landing>
-        ${renderHeading()}
-        <a class="footer-email" href="mailto:${email}">${email}</a>
+    <div class="footer-pin">
+      <div class="footer-inner">
+        <div class="footer-copy" data-stain-landing>
+          ${renderHeading()}
+          <a class="footer-email" data-footer="email" href="mailto:${email}">${email}</a>
+        </div>
+        ${renderPlatformList()}
+        <p class="label footer-note"><span>New episode every Monday, 6&nbsp;am CT</span><span>&copy; ${new Date().getFullYear()} Pretty Unfocused</span></p>
       </div>
-      ${renderPlatformList()}
-      <p class="label footer-note"><span>New episode every Monday, 6&nbsp;am CT</span><span>&copy; ${new Date().getFullYear()} Pretty Unfocused</span></p>
+      ${renderWord()}
     </div>
-    ${renderWord()}
+    <div class="footer-run" aria-hidden="true"></div>
   </footer>`;
 }

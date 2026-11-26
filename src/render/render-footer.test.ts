@@ -52,7 +52,7 @@ describe('renderFooter', () => {
   it("links the show's public email as a mailto link", () => {
     const markup = renderFooter();
 
-    expect(markup).toContain(`<a class="footer-email" href="mailto:${SHOW_EMAIL}">${SHOW_EMAIL}</a>`);
+    expect(markup).toContain(`<a class="footer-email" data-footer="email" href="mailto:${SHOW_EMAIL}">${SHOW_EMAIL}</a>`);
     expect(SHOW_EMAIL).toBe('prettyunfocused@gmail.com');
   });
 
@@ -60,7 +60,7 @@ describe('renderFooter', () => {
     const markup = renderFooter();
 
     expect(markup).toMatch(
-      new RegExp(`<a class="footer-link" href="${url}"><svg class="brand-icon"[^>]*><use href="#icon-${icon}"/></svg>${label}</a>`),
+      new RegExp(`<li data-footer="link"><a class="footer-link" href="${url}"><svg class="brand-icon"[^>]*><use href="#icon-${icon}"/></svg>${label}</a>`),
     );
   });
 
@@ -77,6 +77,13 @@ describe('renderFooter', () => {
     expect(markup).toMatch(
       /<div class="footer-word" aria-hidden="true">\s*<span class="footer-word-text"><span>UNF<\/span><img class="footer-ring"[^>]*alt=""[^>]*><span>CUSED<\/span>/,
     );
+  });
+
+  it('pins the content and the word on screen while an empty run of scroll drives the word up', () => {
+    const markup = renderFooter();
+
+    expect(markup).toMatch(/<div class="footer-pin">\s*<div class="footer-inner">/);
+    expect(markup).toMatch(/<\/div>\s*<div class="footer-word" aria-hidden="true">[\s\S]*<\/div>\s*<div class="footer-run" aria-hidden="true"><\/div>\s*<\/footer>/);
   });
 
   it('carries the coffee-stain hand-off, with the headline as its landing', () => {
