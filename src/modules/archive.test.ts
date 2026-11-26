@@ -148,6 +148,26 @@ describe('the every-episode rows', () => {
   });
 });
 
+describe('the Latest episode mini card', () => {
+  function readMiniCardIsHidden(): boolean {
+    return document.documentElement.hasAttribute('data-archive-in-view');
+  }
+
+  it.each([
+    ['is hidden while the list fills the screen', 0, 2000, true],
+    ['is hidden once the list has reached the lower part of the screen', VIEWPORT_HEIGHT * 0.8, 2000, true],
+    ['stays until the list comes into the screen', VIEWPORT_HEIGHT * 0.9, 2000, false],
+    ['comes back once the list has scrolled past', -1900, 2000, false],
+  ])('%s', async (_behavior, top, height, expected) => {
+    mountArchive();
+    getElement('#every-episode').getBoundingClientRect = () => new DOMRect(0, top, 1000, height);
+
+    await scrollPage();
+
+    expect(readMiniCardIsHidden()).toBe(expected);
+  });
+});
+
 describe('the every-episode arrival', () => {
   it('leaves the headline and every row in place when the page has no motion', () => {
     mountArchive();
@@ -166,6 +186,16 @@ describe('the every-episode arrival', () => {
       mountArchive();
 
       expect(document.querySelectorAll('[data-reveal="pending"]')).toHaveLength(EPISODE_COUNT + 1);
+    });
+
+    it('hides the sticker while the headline waits', () => {
+      getElement('#every-episode').getBoundingClientRect = () => new DOMRect(0, VIEWPORT_HEIGHT * 0.97, 1000, 2000);
+
+      mountArchive();
+
+      const sticker = getElement<HTMLElement>('[data-archive="sticker"]');
+      expect(sticker.style.opacity).toBe('0');
+      expect(sticker.style.transform).toContain('scale(0)');
     });
 
     it('lets the rows in view rise and keeps the ones below the line waiting', async () => {
@@ -208,6 +238,15 @@ describe('the every-episode arrival', () => {
       await scrollPage();
 
       expect(isWaiting).toBe(true);
+      expect(getRows()[0]?.hasAttribute('data-reveal')).toBe(false);
+    });
+
+    it('draws a row as soon as any part of it is on screen', async () => {
+      mountArchive();
+      placeRowsFrom(VIEWPORT_HEIGHT * 0.97, 80);
+
+      await scrollPage();
+
       expect(getRows()[0]?.hasAttribute('data-reveal')).toBe(false);
     });
 

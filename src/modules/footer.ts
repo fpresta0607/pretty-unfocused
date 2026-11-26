@@ -13,8 +13,9 @@ import {
 import { isFooterInView, riseProgress } from './footer-logic.ts';
 import { isMotionEnabled } from './motion-state.ts';
 import { EASE_OUT } from './motion-tokens.ts';
-import { EPISODES_REVEAL_FROM_SWEEP_PROGRESS, sweepProgress } from './stain-edge.ts';
+import { sweepProgress } from './stain-edge.ts';
 
+const REVEAL_FROM_SWEEP_PROGRESS = 0.4;
 const EMAIL_AT = SCRIPT_WIPE_AT + 120;
 const LINKS_AT = EMAIL_AT + 260;
 const LINK_STAGGER = 110;
@@ -24,7 +25,6 @@ const ITEM_HIDDEN_RISE = '0.6em';
 export class Footer extends Module {
   private isPending = false;
   private readonly heading = this.el.querySelector<HTMLElement>('[data-footer-group="heading"]');
-  private readonly word = this.el.querySelector<HTMLElement>('.footer-word');
   private readonly run = this.el.querySelector<HTMLElement>('.footer-run');
   private pendingFrame: number | undefined;
   private riseValue = '';
@@ -54,27 +54,16 @@ export class Footer extends Module {
     window.removeEventListener('resize', this.scheduleUpdate);
     window.cancelAnimationFrame(this.pendingFrame ?? 0);
     document.documentElement.removeAttribute('data-footer-in-view');
-    document.documentElement.removeAttribute('data-footer-word');
   }
 
   private update(): void {
     const footerTop = this.el.getBoundingClientRect().top;
     const root = document.documentElement;
     root.toggleAttribute('data-footer-in-view', isFooterInView(footerTop, window.innerHeight));
-    const isMotionOn = isMotionEnabled(root);
-    if (isMotionOn) {
+    if (isMotionEnabled(root)) {
       this.updateRise();
       this.updateReveal(footerTop);
     }
-    root.toggleAttribute('data-footer-word', this.isWordShown(isMotionOn));
-  }
-
-  private isWordShown(isMotionOn: boolean): boolean {
-    if (isMotionOn) {
-      return Number(this.riseValue) > 0;
-    }
-    const distanceToPageEnd = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
-    return this.word !== null && distanceToPageEnd < this.word.offsetHeight;
   }
 
   private updateRise(): void {
@@ -93,10 +82,7 @@ export class Footer extends Module {
     if (!this.isPending || this.heading === null) {
       return;
     }
-    if (sweepProgress(footerTop, window.innerHeight) < EPISODES_REVEAL_FROM_SWEEP_PROGRESS) {
-      return;
-    }
-    if (this.heading.getBoundingClientRect().top >= window.innerHeight) {
+    if (sweepProgress(footerTop, window.innerHeight) < REVEAL_FROM_SWEEP_PROGRESS) {
       return;
     }
     this.isPending = false;

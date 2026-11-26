@@ -48,6 +48,23 @@ html:not([data-motion='on']) .archive {
   --script-color: var(--roast);
 }
 
+.archive-head {
+  position: relative;
+  inline-size: fit-content;
+}
+
+.archive .section-heading-script-line {
+  margin-inline-start: -0.08em;
+}
+
+.archive-sticker {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: calc(100% - 1em);
+  border: 1px solid var(--roast);
+  font-size: clamp(16px, 1.6vw, 40px);
+}
+
 .archive-list {
   padding: 0;
   list-style: none;
@@ -99,15 +116,15 @@ html:not([data-motion='on']) .archive {
   grid-area: number;
   color: var(--roast);
   font-weight: 500;
-  font-size: 2rem;
-  font-variant-numeric: oldstyle-nums;
+  font-size: var(--size-h3);
+  font-variant-numeric: lining-nums;
   line-height: 1;
 }
 
 .archive-title {
   grid-area: title;
   font-weight: 700;
-  font-size: 1.1875rem;
+  font-size: var(--size-body);
   line-height: 1.15;
   text-wrap: balance;
 }
@@ -115,7 +132,8 @@ html:not([data-motion='on']) .archive {
 .archive-meta {
   grid-area: meta;
   color: var(--roast);
-  font-size: 1rem;
+  font-weight: 500;
+  font-size: var(--size-body);
   line-height: 1.2;
   white-space: nowrap;
 }
@@ -127,7 +145,7 @@ html:not([data-motion='on']) .archive {
   block-size: var(--toggle-size);
   border-radius: 50%;
   background: var(--wine);
-  transition: background-color var(--dur-ui) var(--ease-out);
+  transition: translate var(--dur-ui) var(--ease-out);
 }
 
 .archive-toggle::before,
@@ -155,8 +173,10 @@ html:not([data-motion='on']) .archive {
   scale: 1 0;
 }
 
-.archive-trigger:hover .archive-toggle {
-  background: var(--roast);
+@media (hover: hover) and (pointer: fine) {
+  .archive-trigger:hover .archive-toggle {
+    translate: 0 -2px;
+  }
 }
 
 .archive-panel {
@@ -201,10 +221,23 @@ html:not([data-motion='on']) .archive {
   scroll-margin-block: var(--frame-clearance-top) var(--frame-clearance-bottom);
 }
 
-.archive .pill:hover {
-  border-color: var(--wine);
-  background: var(--wine);
-  color: var(--cream);
+@media (hover: hover) and (pointer: fine) {
+  .archive .pill:hover {
+    border-color: var(--wine);
+    background: var(--wine);
+    color: var(--cream);
+  }
+}
+
+html[data-archive-in-view] .mini-card {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(var(--space-4));
+  pointer-events: none;
+  transition:
+    opacity var(--dur-ui) var(--ease-out),
+    transform var(--dur-ui) var(--ease-out),
+    visibility 0s linear var(--dur-ui);
 }
 
 @media (scripting: enabled) {
@@ -235,18 +268,6 @@ html:not([data-motion='on']) .archive {
     column-gap: var(--row-gap);
   }
 
-  .archive-number {
-    font-size: 2.5rem;
-  }
-
-  .archive-title {
-    font-size: 1.35rem;
-  }
-
-  .archive-meta {
-    font-size: 1.1875rem;
-  }
-
   .archive-panel-inner {
     padding-inline-end: calc(var(--toggle-size) + var(--row-gap));
   }
@@ -264,7 +285,7 @@ html:not([data-motion='on']) .archive {
     column-gap: var(--space-5);
   }
 
-  .archive .section-heading {
+  .archive-head {
     position: sticky;
     inset-block-start: var(--pin-top);
   }

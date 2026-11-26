@@ -68,6 +68,14 @@ describe('renderClips with the fixture show', () => {
     expect(cards).toHaveLength(show.clips.length);
   });
 
+  it('adds one progress dash per card for the phone row, the first one active and all hidden from assistive tech', () => {
+    const dashes = markup.match(/<div class="clips-dashes" aria-hidden="true">([\s\S]*?)<\/div>/)?.[1] ?? '';
+
+    expect(dashes.match(/data-clips="dash"/g)).toHaveLength(show.clips.length);
+    expect(dashes.match(/data-active/g)).toHaveLength(1);
+    expect(dashes.startsWith('<span class="clips-dash" data-clips="dash" data-active>')).toBe(true);
+  });
+
   it('gives each card a Play link to its clip carrying the tall player attributes', () => {
     show.clips.forEach((clip, index) => {
       const card = cards[index] ?? '';

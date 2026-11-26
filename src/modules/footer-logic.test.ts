@@ -27,6 +27,13 @@ describe('riseProgress', () => {
     expect(riseProgress(threeStepsBeforeEnd, RUN)).toBeLessThan(1);
   });
 
+  it('moves by the same amount for every equal step of scroll, so that no step looks stuck', () => {
+    const progressAfterEachStep = [0, 1, 2, 3, 4].map((step) => riseProgress(RUN - step * WHEEL_STEP, RUN));
+    const movedByEachStep = progressAfterEachStep.slice(1).map((progress, index) => progress - (progressAfterEachStep[index] ?? 0));
+
+    movedByEachStep.forEach((moved) => expect(moved).toBeCloseTo(WHEEL_STEP / RUN, 5));
+  });
+
   it('only grows as the page end gets nearer', () => {
     const samples = [RUN, RUN * 0.8, RUN * 0.5, RUN * 0.2, 0].map((distance) => riseProgress(distance, RUN));
 

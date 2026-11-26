@@ -67,7 +67,7 @@ describe('renderFooter', () => {
   it('shows the release time and the build year', () => {
     const markup = renderFooter();
 
-    expect(markup).toContain('New episode every Monday, 6&nbsp;am CT');
+    expect(markup).toContain('New episode every Monday, 6&nbsp;am&nbsp;CT');
     expect(markup).toContain('&copy; 2031 Pretty Unfocused');
   });
 
@@ -86,12 +86,12 @@ describe('renderFooter', () => {
     expect(markup).toMatch(/<\/div>\s*<div class="footer-word" aria-hidden="true">[\s\S]*<\/div>\s*<div class="footer-run" aria-hidden="true"><\/div>\s*<\/footer>/);
   });
 
-  it('carries the coffee-stain hand-off, with the headline as its landing', () => {
+  it('carries the coffee-stain hand-off', () => {
     const markup = renderFooter();
 
     expect(markup).toContain('data-module-stain');
     expect(markup).toContain('data-stain-set="wide"');
     expect(markup).toContain('data-stain-set="narrow"');
-    expect(markup).toMatch(/<div class="footer-copy" data-stain-landing>/);
+    expect(markup).toMatch(/<div class="footer-copy">/);
   });
 });

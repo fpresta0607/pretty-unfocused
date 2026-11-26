@@ -15,8 +15,6 @@
   --ring: 3px;
   --pad-top: calc(var(--space-7) - var(--space-2));
   --pad-bottom: calc(var(--round-size) + var(--space-4) + var(--space-3));
-  --overlap: 0.45;
-  --fan-turn: 4.5deg;
 
   z-index: 4;
   display: grid;
@@ -43,7 +41,7 @@ html:not([data-motion='on']) .clips {
 .clips-inner {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr auto auto;
   align-content: start;
   inline-size: 100%;
   min-block-size: calc(100svh - var(--pad-top) - var(--pad-bottom));
@@ -62,11 +60,11 @@ html:not([data-motion='on']) .clips {
   z-index: 1;
   align-self: center;
   margin-inline: calc(var(--gutter) * -1);
-  margin-block: calc(var(--space-5) * -1 - var(--space-2));
-  padding-block: calc(var(--space-5) + var(--space-2));
+  padding-block: var(--space-1);
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--gutter);
   scrollbar-width: none;
 }
 
@@ -75,28 +73,32 @@ html:not([data-motion='on']) .clips {
 }
 
 .clips-fan-list {
-  --card-w: clamp(5.5rem, min(38vw, calc((100svh - 28.5rem) * 9 / 16)), 11.5rem);
-  --fan-drop: calc(var(--card-w) * 0.016);
+  --card-w: clamp(5.5rem, min(40vw, calc((100svh - 29.5rem) * 9 / 16)), 11.5rem);
+  --card-pad: clamp(var(--space-2), calc(var(--card-w) * 0.07), var(--space-3));
+  --overlap: -0.08;
+  --fan-turn: 0deg;
+  --fan-drop: 0px;
+  --enter: 3.5rem;
+  --gather: 0;
   --fan-pitch: calc(var(--card-w) * (1 - var(--overlap)));
 
   display: flex;
   inline-size: max-content;
   margin-inline: auto;
-  padding-inline: calc(var(--gutter) + var(--card-w) * 0.1);
+  padding-inline: var(--gutter);
 }
 
 .clip-card {
   --deal: 1;
-  --gather: 0;
 
   position: relative;
   z-index: var(--fan-layer);
   flex: none;
   inline-size: var(--card-w);
   aspect-ratio: 9 / 16;
-  scroll-snap-align: center;
+  scroll-snap-align: start;
   translate: calc(var(--fan-position) * var(--fan-pitch) * (var(--deal) - 1) * var(--gather))
-    calc(var(--fan-position) * var(--fan-position) * var(--fan-drop) * var(--deal));
+    calc(var(--fan-position) * var(--fan-position) * var(--fan-drop) * var(--deal) + (1 - var(--deal)) * var(--enter));
   rotate: calc(var(--fan-position) * var(--fan-turn) * var(--deal));
 }
 
@@ -113,10 +115,10 @@ html:not([data-motion='on']) .clips {
   gap: var(--space-2);
   inline-size: 100%;
   block-size: 100%;
-  padding: clamp(var(--space-2), calc(var(--card-w) * 0.07), var(--space-3));
-  border: var(--ring) solid var(--gold);
+  padding: var(--card-pad);
   border-radius: var(--radius);
-  background: var(--wine);
+  outline: var(--ring) solid var(--gold);
+  background: var(--gold);
   color: var(--cream);
   overflow: hidden;
   translate: 0 calc(var(--lift) * var(--space-4) * -1);
@@ -143,11 +145,12 @@ html:not([data-motion='on']) .clips {
 
 .clip-card-title {
   display: -webkit-box;
-  max-inline-size: 100%;
+  max-inline-size: min(100%, calc(var(--fan-pitch) - var(--card-pad) - var(--ring) - var(--card-w) * 0.04));
   overflow: hidden;
   font-weight: 700;
-  font-size: clamp(0.8125rem, calc(var(--card-w) * 0.075), 1.0625rem);
+  font-size: var(--size-body);
   line-height: 1.2;
+  overflow-wrap: anywhere;
   text-wrap: balance;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -175,13 +178,27 @@ html:not([data-motion='on']) .clips {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .clip-card:hover {
-    z-index: 20;
-  }
-
   .clip-card:hover .clip-card-face {
     --lift: 1;
   }
+}
+
+.clips-dashes {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.clips-dash {
+  flex: 0 0 12px;
+  block-size: 3px;
+  border-radius: 2px;
+  background: var(--wine);
+  transition: flex-basis var(--dur-ui) var(--ease-out);
+}
+
+.clips-dash[data-active] {
+  flex-basis: 44px;
 }
 
 .clips-tiktok {
@@ -199,7 +216,6 @@ html:not([data-motion='on']) .clips {
   column-gap: var(--space-3);
   row-gap: var(--space-1);
   padding: var(--space-2) var(--space-3) var(--space-3);
-  border: var(--ring) solid var(--gold);
   border-radius: var(--radius);
   background: var(--wine);
   color: var(--cream);
@@ -233,6 +249,12 @@ html:not([data-motion='on']) .clips {
   grid-area: pill;
 }
 
+@media (max-width: 599px) {
+  .clips {
+    --pad-top: calc(var(--space-7) - var(--space-4));
+  }
+}
+
 @media (max-width: 359px) {
   .clips-inner {
     row-gap: var(--space-3);
@@ -240,6 +262,10 @@ html:not([data-motion='on']) .clips {
 
   .clips-tiktok-line {
     font-size: 1rem;
+  }
+
+  .clips-tiktok-handle {
+    font-size: 0.8125rem;
   }
 
   .clips-tiktok {
@@ -258,17 +284,23 @@ html:not([data-motion='on']) .clips {
   .clips-fan {
     container-type: inline-size;
     margin-inline: 0;
+    padding-block: var(--space-4) var(--space-6);
+    overflow: visible;
   }
 
   .clips-fan-list {
+    --card-w: min(calc(100cqi / 5.9), calc((100svh - 17rem) * 9 / 16), 22rem);
+    --overlap: 0.1;
+    --fan-turn: 3deg;
     --fan-drop: calc(var(--card-w) * 0.032);
-    --card-w: min(calc(100cqi / 4), calc((100svh - 17rem) * 9 / 16), 22rem);
+    --enter: 0px;
+    --gather: 1;
 
-    padding-inline: calc(var(--card-w) * 0.1);
+    padding-inline: calc(var(--card-w) * 0.18);
   }
 
-  .clip-card {
-    --gather: 1;
+  .clips-dashes {
+    display: none;
   }
 
   .clips-tiktok {
@@ -277,7 +309,36 @@ html:not([data-motion='on']) .clips {
   }
 }
 
-@media (min-width: 900px) {
+@media (min-width: 900px) and (max-width: 1499px) {
+  .clips-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'heading tiktok'
+      'fan fan';
+  }
+
+  .clips .section-heading {
+    grid-area: heading;
+  }
+
+  .clips-fan {
+    grid-area: fan;
+  }
+
+  .clips-fan-list {
+    --card-w: min(calc(100cqi / 5.9), calc((100svh - 16.5rem - 2.7 * var(--size-h2)) * 0.469), 22rem);
+  }
+
+  .clips-tiktok {
+    grid-area: tiktok;
+    align-self: end;
+    justify-self: end;
+    inline-size: 22rem;
+  }
+}
+
+@media (min-width: 1500px) {
   .clips {
     --pad-top: calc(var(--space-4) + var(--round-size) + var(--space-3));
   }

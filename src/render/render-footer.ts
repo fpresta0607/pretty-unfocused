@@ -40,12 +40,12 @@ export function renderFooter(): string {
     ${renderStainEdge()}
     <div class="footer-pin">
       <div class="footer-inner">
-        <div class="footer-copy" data-stain-landing>
+        <div class="footer-copy">
           ${renderHeading()}
           <a class="footer-email" data-footer="email" href="mailto:${email}">${email}</a>
         </div>
         ${renderPlatformList()}
-        <p class="label footer-note"><span>New episode every Monday, 6&nbsp;am CT</span><span>&copy; ${new Date().getFullYear()} Pretty Unfocused</span></p>
+        <p class="label footer-note"><span>New episode every Monday, 6&nbsp;am&nbsp;CT</span><span>&copy; ${new Date().getFullYear()} Pretty Unfocused</span></p>
       </div>
       ${renderWord()}
     </div>

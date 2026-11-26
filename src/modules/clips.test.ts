@@ -19,6 +19,8 @@ vi.mock('animejs', async (importOriginal) => {
 
 const VIEWPORT_HEIGHT = 800;
 const CLIP_COUNT = 6;
+const FAN_OFFSET = 100;
+const DEAL_SPAN_FRACTION = 0.45;
 let app: ModularApp;
 let isFinePointer = true;
 let sectionTop = VIEWPORT_HEIGHT;
@@ -44,6 +46,10 @@ function getElement<ElementType extends Element>(selector: string): ElementType 
   return element;
 }
 
+function readStainLift(): number {
+  return Number.parseFloat(getElement<HTMLElement>('#clips').style.getPropertyValue('--stain-lift')) || 0;
+}
+
 function readDeals(): number[] {
   return Array.from(document.querySelectorAll<HTMLElement>('[data-clips="card"]'), (card) => Number(card.style.getPropertyValue('--deal')));
 }
@@ -60,6 +66,10 @@ async function scrollSectionTo(top: number, headingTop = top): Promise<void> {
   await new Promise((resolve) => window.requestAnimationFrame(resolve));
 }
 
+async function scrollFanTo(fanTop: number): Promise<void> {
+  await scrollSectionTo(fanTop - FAN_OFFSET);
+}
+
 function mountClips(): void {
   app = new ModularApp({ modules: { clips: Clips } });
   app.init(app);
@@ -72,6 +82,7 @@ beforeEach(() => {
   window.innerHeight = VIEWPORT_HEIGHT;
   document.body.innerHTML = renderClips(show);
   getElement('#clips').getBoundingClientRect = () => new DOMRect(0, sectionTop, 1000, 2000);
+  getElement('[data-clips="fan"]').getBoundingClientRect = () => new DOMRect(0, sectionTop + FAN_OFFSET - readStainLift(), 1000, 600);
   getElement('[data-heading-group]').getBoundingClientRect = () => new DOMRect(0, VIEWPORT_HEIGHT * 2, 100, 100);
 });
 
@@ -97,16 +108,16 @@ describe('the clips fan with motion', () => {
     document.documentElement.dataset.motion = 'on';
   });
 
-  it('keeps the cards stacked in the middle while the section is still below the deal line', () => {
+  it('keeps the cards stacked in the middle while the fan is still below the bottom of the screen', () => {
     mountClips();
 
     expect(readDeals()).toEqual(Array(CLIP_COUNT).fill(0));
   });
 
-  it('deals every card out to its place once the section has scrolled up to the top', async () => {
+  it('deals every card out to its place once the fan has scrolled well into the screen', async () => {
     mountClips();
 
-    await scrollSectionTo(0);
+    await scrollFanTo(VIEWPORT_HEIGHT * 0.5);
 
     expect(readDeals()).toEqual(Array(CLIP_COUNT).fill(1));
   });
@@ -114,19 +125,28 @@ describe('the clips fan with motion', () => {
   it.each([0.1, 0.25, 0.5, 0.75])('follows the scroll position, so scroll progress %j puts every card exactly where the curve says', async (progress) => {
     mountClips();
 
-    await scrollSectionTo(VIEWPORT_HEIGHT * (0.9 - 0.4 * progress));
+    await scrollFanTo(VIEWPORT_HEIGHT * (1 - DEAL_SPAN_FRACTION * progress));
 
     expect(readDeals()).toEqual(expectedDeals(progress));
   });
 
+  it('deals by where the fan would sit without the stain lift, so the lift does not rush the deal', async () => {
+    mountClips();
+    getElement<HTMLElement>('#clips').style.setProperty('--stain-lift', '300px');
+
+    await scrollFanTo(VIEWPORT_HEIGHT * (1 - DEAL_SPAN_FRACTION * 0.5));
+
+    expect(readDeals()).toEqual(expectedDeals(0.5));
+  });
+
   it('deals half way for half a scroll step, and back again when the page scrolls up', async () => {
     mountClips();
-    await scrollSectionTo(VIEWPORT_HEIGHT * 0.7);
+    await scrollFanTo(VIEWPORT_HEIGHT * 0.85);
     const halfWay = readDeals();
 
-    await scrollSectionTo(0);
+    await scrollFanTo(VIEWPORT_HEIGHT * 0.5);
     const dealt = readDeals();
-    await scrollSectionTo(VIEWPORT_HEIGHT * 0.7);
+    await scrollFanTo(VIEWPORT_HEIGHT * 0.85);
     const afterScrollingBack = readDeals();
 
     expect(halfWay.some((deal) => deal > 0 && deal < 1)).toBe(true);
@@ -137,7 +157,7 @@ describe('the clips fan with motion', () => {
   it('deals the middle cards before the outer ones', async () => {
     mountClips();
 
-    await scrollSectionTo(VIEWPORT_HEIGHT * 0.75);
+    await scrollFanTo(VIEWPORT_HEIGHT * 0.88);
 
     const [leftmost, , middleLeft, middleRight, , rightmost] = readDeals();
     expect(middleLeft).toBeGreaterThan(leftmost ?? 0);
@@ -167,5 +187,32 @@ describe('the clips fan with motion', () => {
     await scrollSectionTo(VIEWPORT_HEIGHT, VIEWPORT_HEIGHT * 0.9);
 
     expect(getElement('[data-heading-group]').hasAttribute('data-reveal')).toBe(false);
+  });
+});
+
+describe('the clips progress dashes', () => {
+  function scrollFanSideways(scrollLeft: number): void {
+    const fan = getElement<HTMLElement>('[data-clips="fan"]');
+    Object.defineProperty(fan, 'scrollWidth', { value: 1000, configurable: true });
+    Object.defineProperty(fan, 'clientWidth', { value: 500, configurable: true });
+    fan.scrollLeft = scrollLeft;
+    fan.dispatchEvent(new Event('scroll'));
+  }
+
+  function activeDashIndex(): number {
+    return Array.from(document.querySelectorAll('[data-clips="dash"]')).findIndex((dash) => dash.hasAttribute('data-active'));
+  }
+
+  it('lights the dash for the card the row has scrolled to, even without motion', () => {
+    mountClips();
+    const atStart = activeDashIndex();
+
+    scrollFanSideways(250);
+    const atMiddle = activeDashIndex();
+    scrollFanSideways(500);
+
+    expect(atStart).toBe(0);
+    expect(atMiddle).toBe(3);
+    expect(activeDashIndex()).toBe(CLIP_COUNT - 1);
   });
 });

@@ -11,11 +11,13 @@ function renderFan(clips: Show['clips']): string {
     const position = index - (clips.length - 1) / 2;
     return renderClipCard(clip, position, index + 1);
   });
+  const dashes = clips.map((_, index) => `<span class="clips-dash" data-clips="dash"${index === 0 ? ' data-active' : ''}></span>`);
   return `<div class="clips-fan" data-clips="fan" data-stain-landing>
       <ul class="clips-fan-list" role="list" aria-label="Latest clips">
         ${cards.join('\n        ')}
       </ul>
-    </div>`;
+    </div>
+    <div class="clips-dashes" aria-hidden="true">${dashes.join('')}</div>`;
 }
 
 export function renderClips(show: Show): string {

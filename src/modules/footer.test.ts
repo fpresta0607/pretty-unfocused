@@ -7,7 +7,6 @@ import { Footer } from './footer.ts';
 
 const VIEWPORT_HEIGHT = 800;
 const RUN_HEIGHT = 480;
-const WORD_HEIGHT = 200;
 const PAGE_HEIGHT = 5000;
 const PAGE_END_SCROLL = PAGE_HEIGHT - VIEWPORT_HEIGHT;
 let app: ModularApp;
@@ -45,7 +44,6 @@ function start(isMotionOn: boolean): void {
   document.body.innerHTML = renderFooter();
   Object.defineProperty(window, 'innerHeight', { configurable: true, value: VIEWPORT_HEIGHT });
   Object.defineProperty(document.documentElement, 'scrollHeight', { configurable: true, value: PAGE_HEIGHT });
-  Object.defineProperty(getPart('.footer-word'), 'offsetHeight', { configurable: true, value: WORD_HEIGHT });
   Object.defineProperty(getPart('.footer-run'), 'offsetHeight', { configurable: true, value: RUN_HEIGHT });
   placeFooter(PAGE_HEIGHT, PAGE_HEIGHT);
   app = new ModularApp({ modules: { footer: Footer } });
@@ -62,7 +60,6 @@ afterEach(() => {
   document.body.innerHTML = '';
   delete document.documentElement.dataset.motion;
   document.documentElement.removeAttribute('data-footer-in-view');
-  document.documentElement.removeAttribute('data-footer-word');
 });
 
 describe('Footer with motion on', () => {
@@ -72,26 +69,18 @@ describe('Footer with motion on', () => {
     expect(getFooter().dataset.reveal).toBe('pending');
   });
 
-  it('releases the footer once the stain has begun and the headline is on screen', async () => {
+  it('releases the footer once the stain has reached the headline', async () => {
     start(true);
 
-    await scrollTo(PAGE_END_SCROLL - VIEWPORT_HEIGHT, VIEWPORT_HEIGHT * 0.85, VIEWPORT_HEIGHT * 0.95);
+    await scrollTo(PAGE_END_SCROLL - VIEWPORT_HEIGHT, VIEWPORT_HEIGHT * 0.6, VIEWPORT_HEIGHT * 0.7);
 
     expect(getFooter().dataset.reveal).toBeUndefined();
   });
 
-  it('keeps everything back while the stain has barely begun', async () => {
+  it('keeps everything back while the stain has not yet reached the headline', async () => {
     start(true);
 
-    await scrollTo(PAGE_END_SCROLL - VIEWPORT_HEIGHT, VIEWPORT_HEIGHT * 0.98, VIEWPORT_HEIGHT * 0.99);
-
-    expect(getFooter().dataset.reveal).toBe('pending');
-  });
-
-  it('keeps everything back while the headline is still below the screen', async () => {
-    start(true);
-
-    await scrollTo(PAGE_END_SCROLL - VIEWPORT_HEIGHT, VIEWPORT_HEIGHT * 0.85, VIEWPORT_HEIGHT * 1.2);
+    await scrollTo(PAGE_END_SCROLL - VIEWPORT_HEIGHT, VIEWPORT_HEIGHT * 0.8, VIEWPORT_HEIGHT * 0.9);
 
     expect(getFooter().dataset.reveal).toBe('pending');
   });
@@ -99,7 +88,7 @@ describe('Footer with motion on', () => {
   it('starts the email and the links hidden, so that the headline arrives first', async () => {
     start(true);
 
-    await scrollTo(PAGE_END_SCROLL - VIEWPORT_HEIGHT, VIEWPORT_HEIGHT * 0.85, VIEWPORT_HEIGHT * 0.95);
+    await scrollTo(PAGE_END_SCROLL - VIEWPORT_HEIGHT, VIEWPORT_HEIGHT * 0.6, VIEWPORT_HEIGHT * 0.7);
 
     expect(getPart('[data-footer="email"]').style.opacity).toBe('0');
     expect(getPart('[data-footer="link"]').style.opacity).toBe('0');
@@ -108,6 +97,7 @@ describe('Footer with motion on', () => {
   it.each([
     ['well before the run', PAGE_END_SCROLL - RUN_HEIGHT * 2, '0.000'],
     ['half way through the run', PAGE_END_SCROLL - RUN_HEIGHT / 2, '0.500'],
+    ['a quarter of the way in', PAGE_END_SCROLL - RUN_HEIGHT * 0.75, '0.250'],
     ['at the page end', PAGE_END_SCROLL, '1.000'],
   ])('sets the word rise %s', async (_name, scrollY, expected) => {
     start(true);
@@ -115,16 +105,6 @@ describe('Footer with motion on', () => {
     await scrollTo(scrollY, 0, 0);
 
     expect(getFooter().style.getPropertyValue('--footer-rise')).toBe(expected);
-  });
-
-  it('shows the word, and so hides the frame name, only once it has begun to rise', async () => {
-    start(true);
-
-    await scrollTo(PAGE_END_SCROLL - RUN_HEIGHT * 2, 0, 0);
-    expect(document.documentElement.hasAttribute('data-footer-word')).toBe(false);
-
-    await scrollTo(PAGE_END_SCROLL - RUN_HEIGHT / 2, 0, 0);
-    expect(document.documentElement.hasAttribute('data-footer-word')).toBe(true);
   });
 });
 
@@ -138,15 +118,6 @@ describe('Footer with motion off', () => {
     expect(getFooter().style.getPropertyValue('--footer-rise')).toBe('');
   });
 
-  it('still shows the word, and hides the frame name, when the word is on screen', async () => {
-    start(false);
-
-    await scrollTo(PAGE_END_SCROLL - WORD_HEIGHT * 3, 0, 0);
-    expect(document.documentElement.hasAttribute('data-footer-word')).toBe(false);
-
-    await scrollTo(PAGE_END_SCROLL - WORD_HEIGHT / 2, 0, 0);
-    expect(document.documentElement.hasAttribute('data-footer-word')).toBe(true);
-  });
 });
 
 describe.each([

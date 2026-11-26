@@ -20,7 +20,10 @@ export function renderArchive(show: Show): string {
   return `<section class="section section--cream archive" id="every-episode" data-section data-surface="light" data-module-archive data-module-stain aria-labelledby="archive-heading">
     ${renderStainEdge()}
     <div class="archive-inner">
-      ${renderSectionHeading({ id: 'archive-heading', accessibleName: 'Every episode, so far', lines: ['Every', 'episode,'], script: 'so far' })}
+      <div class="archive-head">
+        ${renderSectionHeading({ id: 'archive-heading', accessibleName: 'Every episode, so far', lines: ['Every', 'episode,'], script: 'so far' })}
+        <span class="sticker archive-sticker" data-archive="sticker" aria-hidden="true">🎙️🩷</span>
+      </div>
       <ol class="archive-list" role="list" data-archive="list">
         ${rows.join('\n        ')}
       </ol>

@@ -28,11 +28,11 @@ function renderActions(episode: Episode): string {
   const watch =
     episode.youtubeUrl === undefined
       ? ''
-      : `<a class="pill pill--solid" href="${escapeHtml(episode.youtubeUrl)}"${renderPlayerAttributes(episode.youtubeVideoId, episode.title)}>${renderIcon('youtube', 'brand-icon')}Watch on YouTube<span class="visually-hidden">: ${title}</span></a>`;
+      : `<a class="pill" href="${escapeHtml(episode.youtubeUrl)}"${renderPlayerAttributes(episode.youtubeVideoId, episode.title)}>${renderIcon('youtube', 'brand-icon')}Watch on YouTube<span class="visually-hidden">: ${title}</span></a>`;
   const listen =
     episode.spotifyUrl === undefined
       ? ''
-      : `<a class="pill" href="${escapeHtml(episode.spotifyUrl)}">${renderIcon('spotify', 'brand-icon')}Listen on Spotify<span class="visually-hidden">: ${title}</span></a>`;
+      : `<a class="pill pill--solid" href="${escapeHtml(episode.spotifyUrl)}">${renderIcon('spotify', 'brand-icon')}Listen on Spotify<span class="visually-hidden">: ${title}</span></a>`;
   return `${watch}${listen}`;
 }
 

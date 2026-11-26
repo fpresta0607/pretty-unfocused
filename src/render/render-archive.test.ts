@@ -73,6 +73,10 @@ describe('renderArchive with the fixture show', () => {
     expect(markup).toContain('aria-labelledby="archive-heading"');
   });
 
+  it('tucks a decorative sticker against the headline, outside the h2', () => {
+    expect(markup).toMatch(/<\/h2>\s*<span class="sticker archive-sticker" data-archive="sticker" aria-hidden="true">[^<]+<\/span>/);
+  });
+
   it('lists every episode in an ordered list, newest first', () => {
     expect(markup).toContain('<ol class="archive-list" role="list"');
     expect(rows).toHaveLength(show.episodes.length);
@@ -128,7 +132,7 @@ describe('renderArchive rows', () => {
   it('offers Watch on YouTube with the player attributes only for an episode with a YouTube video', () => {
     const rows = readRows(renderArchive(makeShow([makeEpisode(1), omit(omit(makeEpisode(2), 'youtubeUrl'), 'youtubeVideoId')])));
 
-    expect(rows[0]).toMatch(/<a class="pill pill--solid" href="https:\/\/www\.youtube\.com\/watch\?v=video1" data-player="video1" data-player-title="Episode 1">/);
+    expect(rows[0]).toMatch(/<a class="pill" href="https:\/\/www\.youtube\.com\/watch\?v=video1" data-player="video1" data-player-title="Episode 1">/);
     expect(rows[0]).not.toContain('data-player-shape');
     expect(rows[0]).toContain('Watch on YouTube');
     expect(rows[1]).not.toContain('Watch on YouTube');

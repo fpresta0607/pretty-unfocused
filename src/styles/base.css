@@ -198,10 +198,12 @@ main:focus {
     border-color var(--dur-ui) var(--ease-out);
 }
 
-.pill:hover {
-  border-color: var(--cream);
-  background: var(--cream);
-  color: var(--wine);
+@media (hover: hover) and (pointer: fine) {
+  .pill:hover {
+    border-color: var(--cream);
+    background: var(--cream);
+    color: var(--wine);
+  }
 }
 
 .pill--solid {

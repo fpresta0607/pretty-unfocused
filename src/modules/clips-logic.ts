@@ -1,15 +1,15 @@
 import { EASE_POP } from './motion-tokens.ts';
 
-export const DEAL_START_FRACTION = 0.9;
-export const DEAL_SPAN_FRACTION = 0.4;
+export const DEAL_START_FRACTION = 1;
+export const DEAL_SPAN_FRACTION = 0.45;
 export const DEAL_WINDOW = 0.5;
 
 function clamp(value: number, lowest: number, highest: number): number {
   return Math.min(Math.max(value, lowest), highest);
 }
 
-export function dealProgress(sectionTop: number, viewportHeight: number): number {
-  return clamp((DEAL_START_FRACTION - sectionTop / viewportHeight) / DEAL_SPAN_FRACTION, 0, 1);
+export function dealProgress(fanTop: number, viewportHeight: number): number {
+  return clamp((DEAL_START_FRACTION - fanTop / viewportHeight) / DEAL_SPAN_FRACTION, 0, 1);
 }
 
 export function dealRanks(positions: readonly number[]): number[] {
