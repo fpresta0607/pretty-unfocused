@@ -38,6 +38,7 @@ export class Stain extends Module {
   }
 
   destroy(): void {
+    this.el.removeAttribute('data-stain-swept');
     window.removeEventListener('scroll', this.scheduleUpdate);
     window.removeEventListener('resize', this.remeasure);
     window.cancelAnimationFrame(this.pendingFrame ?? 0);
@@ -48,6 +49,7 @@ export class Stain extends Module {
     const shape = edgeShape(sectionRect.top, window.innerWidth, this.viewportHeight);
     this.updateLift(sectionRect.top);
     this.updateClip(sectionRect, shape);
+    this.el.toggleAttribute('data-stain-swept', sweepProgress(sectionRect.top, window.innerHeight) >= 1 && sectionRect.bottom > 0);
 
     const set = window.innerWidth < NARROW_VIEWPORT_PX ? 'narrow' : 'wide';
     const edge = this.el.querySelector(`[data-stain-set="${set}"]`);

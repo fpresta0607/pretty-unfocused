@@ -1,6 +1,7 @@
 import ModularApp from 'modujs';
 
 import { About } from './modules/about.ts';
+import { Episodes } from './modules/episodes.ts';
 import { Frame } from './modules/frame.ts';
 import { Hero } from './modules/hero.ts';
 import { Intro } from './modules/intro.ts';
@@ -14,6 +15,7 @@ import './styles/main.css';
 const app = new ModularApp({
   modules: {
     about: About,
+    episodes: Episodes,
     frame: Frame,
     hero: Hero,
     intro: Intro,
