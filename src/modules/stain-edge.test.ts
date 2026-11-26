@@ -10,6 +10,7 @@ import {
   edgeHeight,
   edgeProfile,
   edgeShape,
+  SECTION_REACH_SCALE,
   settledEdgeShape,
   STATIC_VIEWS,
   SWEEP_END_PROGRESS,
@@ -320,6 +321,123 @@ describe.each(VIEWPORTS)('the stain sweep on %s', (_name, viewport, fewestDomes,
     expect(countSubpaths(clip)).toBe(1);
     expect(Math.min(...ys)).toBeCloseTo(-Math.max(...POSITIONS.map((position) => edgeHeight(position, shape))), 0);
     expect(Math.max(...ys)).toBe(1800);
+  });
+});
+
+describe('the stain sweep on a smooth-scroll device', () => {
+  it.each([
+    ['a wide screen', WIDE, 700, 0.4444, 201.589, 270, 12],
+    ['a wide screen, later', WIDE, 560, 0.7556, 446.271, 222.911, -20.445],
+    ['a phone', NARROW, 700, 0.3412, 109.983, 177.24, 16.08],
+    ['a phone, later', NARROW, 500, 0.8152, 442.712, 112.314, -4.717],
+  ])('keeps the shape and timing it always had on %s (section top %j)', (_name, viewport, sectionTop, progress, rise, relief, tilt) => {
+    const shape = edgeShape(sectionTop, viewport.width, viewport.height);
+
+    expect(sweepProgress(sectionTop, viewport.height)).toBeCloseTo(progress, 4);
+    expect(shape.rise).toBeCloseTo(rise, 3);
+    expect(shape.relief).toBeCloseTo(relief, 3);
+    expect(shape.tilt).toBeCloseTo(tilt, 3);
+    expect(edgeShape(sectionTop, viewport.width, viewport.height, 'screen')).toEqual(shape);
+  });
+});
+
+describe.each(VIEWPORTS.map(([name, viewport]) => [name, viewport] as const))('the stain sweep that stays close to the section on %s', (_name, viewport) => {
+  const HEADLINE_HEIGHT = viewport.height * 0.2;
+  const MAX_LEAD_OVER_FIRST_CONTENT = HEADLINE_HEIGHT * 1.5;
+  const FIRST_CONTENT_OFFSETS_PX = [64, 96];
+  const SWEEP_END_TOP = viewport.height * (1 - SWEEP_END_PROGRESS) * SECTION_REACH_SCALE;
+  const SECTION_TOPS = Array.from({ length: 2 * Math.round(viewport.height / 4) + 1 }, (_, index) => viewport.height - index * 2);
+
+  function touchTopAt(progress: number): number {
+    return viewport.height - progress * (viewport.height - SWEEP_END_TOP);
+  }
+
+  function touchShapeAt(sectionTop: number): EdgeShape {
+    return edgeShape(sectionTop, viewport.width, viewport.height, 'section');
+  }
+
+  function highestEdgeHeight(shape: EdgeShape): number {
+    return Math.max(...POSITIONS.map((position) => edgeHeight(position, shape)));
+  }
+
+  function lowestEdgeHeight(shape: EdgeShape): number {
+    return Math.min(...POSITIONS.map((position) => edgeHeight(position, shape)));
+  }
+
+  it.each(FIRST_CONTENT_OFFSETS_PX)('never leads the first content, %j px below the section top, by more than one and a half headlines', (offset) => {
+    SECTION_TOPS.forEach((sectionTop) => {
+      const leadingEdge = sectionTop - highestEdgeHeight(touchShapeAt(sectionTop));
+
+      expect(sectionTop + offset - leadingEdge).toBeLessThanOrEqual(MAX_LEAD_OVER_FIRST_CONTENT);
+    });
+  });
+
+  it('keeps the whole edge, rim included, below the bottom of the screen until the section top enters it', () => {
+    [0, 1, 2].forEach((pixelsAbove) => {
+      const sectionTop = viewport.height - pixelsAbove;
+
+      expect(sectionTop - highestEdgeHeight(touchShapeAt(sectionTop))).toBeGreaterThanOrEqual(viewport.height);
+    });
+  });
+
+  it('is not done while the wave still leaves the screen above the section uncovered', () => {
+    SECTION_TOPS.forEach((sectionTop) => {
+      const isDone = sweepProgress(sectionTop, viewport.height, 'section') >= 1;
+      const uncoveredAbove = sectionTop - lowestEdgeHeight(touchShapeAt(sectionTop));
+
+      if (isDone) {
+        expect(uncoveredAbove).toBeLessThanOrEqual(0);
+      }
+    });
+  });
+
+  it('is done with the wave covering the screen, with a margin, where the section top is at a fifth of its desktop height', () => {
+    expect(sweepProgress(SWEEP_END_TOP, viewport.height, 'section')).toBe(1);
+    expect(SWEEP_END_TOP - lowestEdgeHeight(touchShapeAt(SWEEP_END_TOP))).toBeLessThanOrEqual(-viewport.height * 0.01);
+    expect(sweepProgress(SWEEP_END_TOP + 1, viewport.height, 'section')).toBeLessThan(1);
+  });
+
+  it('rises with every step of the scroll, never stalling and never running away from it', () => {
+    const step = 4;
+    const sweepTops = SECTION_TOPS.filter((sectionTop) => sectionTop <= viewport.height - 2 * step && sectionTop >= SWEEP_END_TOP);
+    const speeds = sweepTops.map((sectionTop) => {
+      const before = sectionTop - highestEdgeHeight(touchShapeAt(sectionTop + step));
+      const after = sectionTop - step - highestEdgeHeight(touchShapeAt(sectionTop));
+      return (before - after) / step;
+    });
+
+    expect(Math.min(...speeds)).toBeGreaterThan(0.2);
+    expect(Math.max(...speeds)).toBeLessThan(4);
+  });
+
+  it('keeps the character of the desktop wave: the same domes and the same lean, only drawn lower', () => {
+    [0.1, 0.4, 0.7, 1].forEach((progress) => {
+      const touch = touchShapeAt(touchTopAt(progress));
+      const desktop = shapeAt(progress, viewport);
+
+      expect(touch.domes).toHaveLength(desktop.domes.length);
+      touch.domes.forEach((dome, index) => {
+        expect(dome.centre).toBeCloseTo(desktop.domes[index]?.centre ?? Number.NaN, 6);
+        expect(dome.halfWidth).toBeCloseTo(desktop.domes[index]?.halfWidth ?? Number.NaN, 6);
+        expect(dome.height).toBeCloseTo(desktop.domes[index]?.height ?? Number.NaN, 6);
+      });
+      expect(touch.relief).toBeCloseTo(desktop.relief * SECTION_REACH_SCALE, 6);
+      expect(touch.tilt).toBeCloseTo(desktop.tilt * SECTION_REACH_SCALE, 6);
+    });
+  });
+
+  it('eases to a stop as the sweep ends, following the scrub ease', () => {
+    const steps = Array.from({ length: 10 }, (_, index) => touchShapeAt(touchTopAt((index + 1) / 10)).rise - touchShapeAt(touchTopAt(index / 10)).rise);
+
+    expect(steps[9]).toBeLessThan(Math.max(...steps) * 0.3);
+  });
+
+  it('keeps its relief while it is on the screen, never a straight line', () => {
+    [0.2, 0.4, 0.6, 0.8].forEach((progress) => {
+      const shape = touchShapeAt(touchTopAt(progress));
+
+      expect(highestEdgeHeight(shape) - lowestEdgeHeight(shape)).toBeGreaterThan(viewport.height * 0.02);
+    });
   });
 });
 

@@ -2,7 +2,17 @@ import { module as Module } from 'modujs';
 
 import { isMotionEnabled, SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
 import { EASE_LIFT } from './motion-tokens.ts';
-import { buildClipPath, buildEdgePath, buildRimPath, edgeShape, NARROW_VIEWPORT_PX, SWEEP_END_PROGRESS, sweepProgress, type EdgeShape } from './stain-edge.ts';
+import {
+  buildClipPath,
+  buildEdgePath,
+  buildRimPath,
+  edgeShape,
+  NARROW_VIEWPORT_PX,
+  SWEEP_END_PROGRESS,
+  sweepProgress,
+  waveReachFor,
+  type EdgeShape,
+} from './stain-edge.ts';
 
 const LANDING_TOP_FRACTION = 0.25;
 const LONGEST_LIFT_SHARE = 0.19;
@@ -47,11 +57,14 @@ export class Stain extends Module {
 
   private update(): void {
     const sectionRect = this.el.getBoundingClientRect();
-    const shape = edgeShape(sectionRect.top, window.innerWidth, this.viewportHeight);
     const isSmoothScrollDevice = this.smoothScrollDevice.matches;
+    const reach = waveReachFor(isSmoothScrollDevice);
+    const shape = edgeShape(sectionRect.top, window.innerWidth, this.viewportHeight, reach);
     this.updateLift(sectionRect.top, isSmoothScrollDevice);
     this.updateClip(sectionRect, shape, isSmoothScrollDevice);
-    this.el.toggleAttribute('data-stain-swept', sweepProgress(sectionRect.top, window.innerHeight) >= 1 && sectionRect.bottom > 0);
+    // On touch the page background switches only once the wave drawn at the small viewport covers the screen, so it is read at that height.
+    const sweptHeight = isSmoothScrollDevice ? window.innerHeight : this.viewportHeight;
+    this.el.toggleAttribute('data-stain-swept', sweepProgress(sectionRect.top, sweptHeight, reach) >= 1 && sectionRect.bottom > 0);
 
     const set = window.innerWidth < NARROW_VIEWPORT_PX ? 'narrow' : 'wide';
     const edge = this.el.querySelector(`[data-stain-set="${set}"]`);

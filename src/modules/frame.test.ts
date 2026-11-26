@@ -7,7 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderFrame } from '../render/render-frame.ts';
 import type { Show } from '../show/show-types.ts';
 import { Frame } from './frame.ts';
-import { edgeHeight, settledEdgeShape } from './stain-edge.ts';
+import { SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
+import { edgeHeight, SECTION_REACH_SCALE, settledEdgeShape } from './stain-edge.ts';
 
 const VIEWPORT_HEIGHT = 800;
 const EDGE_RISE_PX = 160;
@@ -114,6 +115,10 @@ function setEdgeRise(pixels: number): void {
 
 function stubFontsReady(ready: Promise<unknown>): void {
   Object.defineProperty(document, 'fonts', { configurable: true, value: { ready } });
+}
+
+function stubPointer(isFine: boolean): void {
+  vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === SMOOTH_SCROLL_DEVICE_QUERY && isFine }));
 }
 
 function mountFrame(): void {
@@ -293,6 +298,7 @@ describe('the frame with the stain edge drawn', () => {
 
   beforeEach(() => {
     document.documentElement.dataset.motion = 'on';
+    stubPointer(true);
     getElement('#about').setAttribute('data-module-stain', '');
     placePiece('.frame-mark', 500, PIECE_Y);
     placePiece('.frame-button--menu', 68, PIECE_Y);
@@ -344,6 +350,58 @@ describe('the frame with the stain edge drawn', () => {
     expect(whileTheSweepRuns).toEqual([false, false]);
     expect(onceTheSweepIsDone).toEqual([true, true]);
     expect([isMiniVisible(), isMarkShown()]).toEqual([false, false]);
+  });
+});
+
+describe('the frame with the stain edge drawn on a touch screen', () => {
+  const PIECE_Y = 100;
+  const PIECES = ['.frame-mark', '.frame-button--menu', '.frame-button--listen'];
+  const SWEEP_END_TOP = VIEWPORT_HEIGHT * 0.5 * SECTION_REACH_SCALE;
+
+  function placeAbout(top: number): void {
+    placeSection('home', top - VIEWPORT_HEIGHT, top);
+    placeSection('about', top, top + 3000);
+  }
+
+  beforeEach(() => {
+    document.documentElement.dataset.motion = 'on';
+    stubPointer(false);
+    getElement('#about').setAttribute('data-module-stain', '');
+    placePiece('.frame-mark', 500, PIECE_Y);
+    placePiece('.frame-button--menu', 68, PIECE_Y);
+    placePiece('.frame-button--listen', 932, PIECE_Y);
+  });
+
+  it('keeps every piece near the top on the hero while the wave drawn close ahead of the section is still below them, where the full wave would already have covered them', async () => {
+    placeAbout(VIEWPORT_HEIGHT);
+    mountFrame();
+
+    await scrollTo(() => placeAbout(VIEWPORT_HEIGHT * 0.5));
+
+    expect(PIECES.map(readPieceSurface)).toEqual(['dark', 'dark', 'dark']);
+  });
+
+  it('turns every piece light once the wave has covered the screen, never before', async () => {
+    placeAbout(VIEWPORT_HEIGHT);
+    mountFrame();
+
+    await scrollTo(() => placeAbout(SWEEP_END_TOP));
+
+    expect(PIECES.map(readPieceSurface)).toEqual(['light', 'light', 'light']);
+  });
+
+  it('shows the mini card and the ring mark only from the moment the wave has covered the screen', async () => {
+    const isMiniVisible = (): boolean => getElement('[data-frame="mini"]').hasAttribute('data-visible');
+    placeAbout(VIEWPORT_HEIGHT);
+    mountFrame();
+
+    await scrollTo(() => placeAbout(VIEWPORT_HEIGHT * 0.5));
+    reportHeroVisibleRatio(0);
+    const whileTheWaveIsStillRising = isMiniVisible();
+    await scrollTo(() => placeAbout(SWEEP_END_TOP));
+
+    expect(whileTheWaveIsStillRising).toBe(false);
+    expect(isMiniVisible()).toBe(true);
   });
 });
 

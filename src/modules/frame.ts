@@ -1,8 +1,8 @@
 import { module as Module } from 'modujs';
 
-import { isMotionEnabled } from './motion-state.ts';
+import { isMotionEnabled, SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
 import { pickSectionAtLine, readSurface, shouldShowMiniCard, type Surface, type VerticalSpan } from './section-logic.ts';
-import { edgeHeight, edgeShape, settledEdgeShape, sweepProgress, type EdgeShape } from './stain-edge.ts';
+import { edgeHeight, edgeShape, settledEdgeShape, sweepProgress, waveReachFor, type EdgeShape, type WaveReach } from './stain-edge.ts';
 
 const HERO_THRESHOLDS = [0, 0.05, 0.1, 0.15, 0.2];
 const SAMPLES_ACROSS = 7;
@@ -22,6 +22,7 @@ export class Frame extends Module {
   private labelWidths = new Map<string, number>();
   private edgeRise = 0;
   private pendingFrame: number | undefined;
+  private readonly smoothScrollDevice = window.matchMedia(SMOOTH_SCROLL_DEVICE_QUERY);
 
   private readonly scheduleUpdate = (): void => {
     if (this.pendingFrame !== undefined) {
@@ -102,7 +103,7 @@ export class Frame extends Module {
   private updateHeroAway(): void {
     const stain = this.stainSection();
     if (stain !== undefined) {
-      this.showHeroAway(sweepProgress(stain.getBoundingClientRect().top, window.innerHeight) >= 1);
+      this.showHeroAway(sweepProgress(stain.getBoundingClientRect().top, window.innerHeight, this.waveReach()) >= 1);
     }
   }
 
@@ -165,6 +166,10 @@ export class Frame extends Module {
     return measured === undefined || measured === 0 ? box.width : measured;
   }
 
+  private waveReach(): WaveReach {
+    return waveReachFor(this.smoothScrollDevice.matches);
+  }
+
   private readEdges(): SectionEdge[] {
     const isEdgeScrubbed = isMotionEnabled(document.documentElement);
     return this.sections.map((section) => {
@@ -173,7 +178,7 @@ export class Frame extends Module {
         return { rect, shape: undefined };
       }
       const shape = isEdgeScrubbed
-        ? edgeShape(rect.top, window.innerWidth, window.innerHeight)
+        ? edgeShape(rect.top, window.innerWidth, window.innerHeight, this.waveReach())
         : settledEdgeShape(window.innerWidth, this.edgeRise);
       return { rect, shape };
     });

@@ -2,6 +2,7 @@
 import ModularApp from 'modujs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { SECTION_REACH_SCALE } from './stain-edge.ts';
 import { Stain } from './stain.ts';
 
 const VIEWPORT = { width: 1000, height: 800 };
@@ -51,6 +52,13 @@ async function walkDownThePage(step: number): Promise<{ lifts: number[]; positio
     positions.push(getElement('[data-stain-landing]').getBoundingClientRect().top);
   }
   return { lifts, positions };
+}
+
+function readLowestPoint(): number {
+  const path = readPath('wide') ?? '';
+  const curve = path.slice(0, path.indexOf('L'));
+  const heights = (curve.match(/-?\d+(\.\d+)?/g) ?? []).map(Number).filter((_, index) => index % 2 === 1);
+  return Math.max(...heights);
 }
 
 function mountStain(): void {
@@ -357,13 +365,57 @@ describe('the stain edge', () => {
     await scrollTo(VIEWPORT.height * 0.7);
     const isSweptMidSweep = getElement('#about').hasAttribute('data-stain-swept');
     const later = readPath('wide');
-    await scrollTo(VIEWPORT.height / 2);
+    await scrollTo(VIEWPORT.height * 0.5 * SECTION_REACH_SCALE);
 
     expect(earlier).toMatch(/^M-100\.0.*Z$/);
     expect(later).toMatch(/^M-100\.0.*Z$/);
     expect(later).not.toBe(earlier);
     expect(isSweptMidSweep).toBe(false);
     expect(getElement('#about').hasAttribute('data-stain-swept')).toBe(true);
+  });
+
+  it('draws a touch screen wave low, where the wave of a mouse screen would already cover the screen above the section', async () => {
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+    await scrollTo(VIEWPORT.height / 2);
+    const lowestPointOfTheWideWave = readLowestPoint();
+
+    isFinePointer = false;
+    await scrollTo(VIEWPORT.height / 2 + 1);
+    await scrollTo(VIEWPORT.height / 2);
+
+    expect(lowestPointOfTheWideWave).toBeLessThanOrEqual(VIEWPORT.height / 2);
+    expect(getElement('#about').hasAttribute('data-stain-swept')).toBe(false);
+    expect(readLowestPoint()).toBeGreaterThan(VIEWPORT.height / 2);
+  });
+
+  it('marks a touch screen section as swept only once the wave drawn at the small viewport covers the screen above it', async () => {
+    isFinePointer = false;
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+
+    const tops = Array.from({ length: 81 }, (_, index) => VIEWPORT.height - index * 10);
+    const states: { top: number; isSwept: boolean; lowestPoint: number }[] = [];
+    for (const top of tops) {
+      await scrollTo(top);
+      states.push({ top, isSwept: getElement('#about').hasAttribute('data-stain-swept'), lowestPoint: readLowestPoint() });
+    }
+
+    expect(states.some(({ isSwept }) => isSwept)).toBe(true);
+    states.filter(({ isSwept }) => isSwept).forEach(({ top, lowestPoint }) => {
+      expect(lowestPoint).toBeLessThanOrEqual(VIEWPORT.height - top);
+    });
+  });
+
+  it('reads the swept mark at the small viewport on a touch screen, not at the height the browser reports while its toolbar moves', async () => {
+    isFinePointer = false;
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+    window.innerHeight = VIEWPORT.height + 120;
+
+    await scrollTo(VIEWPORT.height * 0.5 * SECTION_REACH_SCALE + 1);
+
+    expect(getElement('#about').hasAttribute('data-stain-swept')).toBe(false);
   });
 
   it('lifts the content on a mouse or trackpad screen, where the page scrolls from the same script', async () => {
