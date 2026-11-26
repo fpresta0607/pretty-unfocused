@@ -25,7 +25,7 @@ const LINK_WIPE_DURATION = 350;
 export class Footer extends Module {
   private isPending = false;
   private readonly heading = this.el.querySelector<HTMLElement>('[data-footer-group="heading"]');
-  private readonly run = this.el.querySelector<HTMLElement>('.footer-run');
+  private readonly word = this.el.querySelector<HTMLElement>('.footer-word');
   private pendingFrame: number | undefined;
   private riseValue = '';
 
@@ -67,11 +67,12 @@ export class Footer extends Module {
   }
 
   private updateRise(): void {
-    if (this.run === null) {
+    if (this.word === null) {
       return;
     }
     const distanceToPageEnd = document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
-    const value = riseProgress(distanceToPageEnd, this.run.offsetHeight).toFixed(3);
+    const restTop = this.word.getBoundingClientRect().top - distanceToPageEnd;
+    const value = riseProgress(distanceToPageEnd, window.innerHeight - restTop).toFixed(3);
     if (value !== this.riseValue) {
       this.riseValue = value;
       this.el.style.setProperty('--footer-rise', value);

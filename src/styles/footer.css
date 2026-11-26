@@ -1,7 +1,7 @@
 .footer {
   --pad-top: 5.25rem;
   --word-clear: calc(var(--round-size) + var(--space-3) + 1.75rem);
-  --footer-run: 25svh;
+  --edge-rim: 4px;
   --focus-ring: var(--gold);
   --stain-fill: var(--wine);
 
@@ -16,8 +16,6 @@ html[data-motion='on'] .footer {
 }
 
 .footer-pin {
-  position: sticky;
-  inset-block-start: 0;
   display: flex;
   flex-direction: column;
   min-block-size: 100svh;
@@ -29,12 +27,29 @@ html[data-motion='on'] .footer-pin {
   margin-block-start: -50svh;
 }
 
-.footer-run {
-  block-size: 0;
+html[data-motion='on'] .footer::before {
+  content: '';
+  position: absolute;
+  inset: -100svh 0 0;
+  z-index: -2;
+  background: var(--wine);
 }
 
-html[data-motion='on'] .footer-run {
-  block-size: var(--footer-run);
+html[data-motion='on'] .footer .stain-edge {
+  z-index: 1;
+  clip-path: inset(0 -20% 0);
+}
+
+html[data-motion='on'] .footer .stain-edge-fill {
+  display: none;
+}
+
+html[data-motion='on'] .footer .stain-edge-rim {
+  translate: 0 calc(var(--edge-rim) / 2);
+  fill: none;
+  stroke: var(--roast);
+  stroke-width: var(--edge-rim);
+  vector-effect: non-scaling-stroke;
 }
 
 html[data-motion='on']:has(.footer[data-stain-swept]) {
@@ -169,15 +184,7 @@ html[data-motion='on']:has(.footer[data-stain-swept]) {
 }
 
 .footer-word {
-  --word-room: 0.12em;
-  --word-slack: 0.05em;
-  --word-peek: 0em;
-
-  box-sizing: border-box;
-  block-size: calc(0.85em + var(--word-room) + var(--word-slack));
-  margin-block: calc(var(--word-room) * -1) calc(var(--word-clear) - var(--word-slack));
-  padding-block-start: var(--word-room);
-  overflow-y: clip;
+  margin-block-end: var(--word-clear);
   color: var(--cream);
   font-family: var(--font-display);
   font-size: var(--size-giant);
@@ -193,7 +200,6 @@ html[data-motion='on']:has(.footer[data-stain-swept]) {
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  translate: 0 calc((1 - var(--footer-rise, 1)) * (1em - var(--word-peek)));
 }
 
 .footer-word-text > span {
@@ -237,11 +243,6 @@ html[data-footer-in-view] .mini-card {
   .footer {
     --pad-top: clamp(5.25rem, 14svh, 9.5rem);
     --word-clear: 3.75rem;
-    --footer-run: 35svh;
-  }
-
-  .footer-word {
-    --word-peek: 0.45em;
   }
 
   .footer-inner {
@@ -326,6 +327,7 @@ html[data-footer-in-view] .mini-card {
 @media (max-width: 599px) and (max-height: 600px) {
   .footer {
     --pad-top: 3.75rem;
+    --word-clear: calc(var(--round-size) + var(--space-3) + 1.625rem);
   }
 
   .footer-heading {

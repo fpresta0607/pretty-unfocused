@@ -1,7 +1,7 @@
 export const IN_VIEW_FROM_FRACTION = 0.85;
 
-export function riseProgress(distanceToPageEnd: number, runLength: number): number {
-  const linear = 1 - distanceToPageEnd / runLength;
+export function riseProgress(distanceToPageEnd: number, riseLength: number): number {
+  const linear = 1 - distanceToPageEnd / riseLength;
   return Math.min(Math.max(linear, 0), 1);
 }
 

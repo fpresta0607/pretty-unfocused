@@ -214,6 +214,22 @@ describe('the frame', () => {
     expect(getElement('[data-frame="section"]').textContent).toBe('About');
   });
 
+  it('colours each letter of the section name by the section right under that letter', async () => {
+    placePiece('[data-frame="section"]', 120, 400);
+    placeSection('home', 0, 400);
+    placeSection('about', 400, 2000);
+    mountFrame();
+    const letters = Array.from(document.querySelectorAll<HTMLElement>('[data-frame="letter"]'));
+    letters.forEach((letter, index) => {
+      letter.getBoundingClientRect = () => new DOMRect(index * 10, index < 2 ? 380 : 410, 8, 8);
+    });
+
+    await scrollTo(() => placeSection('about', 400, 2000));
+
+    expect(letters.map((letter) => letter.dataset.frameSurface)).toEqual(['dark', 'dark', ...Array(letters.length - 2).fill('light')]);
+    expect(getElement('[data-frame="section"]').textContent).toBe(letters.map((letter) => letter.textContent).join(''));
+  });
+
   it('watches the first section to decide when the hero has scrolled away', () => {
     mountFrame();
 

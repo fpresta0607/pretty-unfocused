@@ -31,6 +31,11 @@ html[data-motion='on']:has(.clips[data-stain-swept]) {
   background-color: var(--gold);
 }
 
+html[data-motion='on'] .clips {
+  min-block-size: 190svh;
+  align-content: start;
+}
+
 html:not([data-motion='on']) .clips {
   --edge-room: round(down, var(--edge-rise), 1px);
 
@@ -49,6 +54,12 @@ html:not([data-motion='on']) .clips {
   margin-inline: auto;
   row-gap: var(--space-3);
   translate: 0 calc(var(--stain-lift, 0px) * -1);
+}
+
+html[data-motion='on'] .clips-inner {
+  position: sticky;
+  inset-block-start: var(--pad-top);
+  align-self: start;
 }
 
 .clips .section-heading {
@@ -75,12 +86,11 @@ html:not([data-motion='on']) .clips {
 .clips-fan-list {
   --card-w: clamp(5.5rem, min(40vw, calc((100svh - 29.5rem) * 9 / 16)), 11.5rem);
   --card-pad: clamp(var(--space-2), calc(var(--card-w) * 0.07), var(--space-3));
-  --overlap: -0.08;
+  --card-gap: var(--space-3);
   --fan-turn: 0deg;
   --fan-drop: 0px;
   --enter: 3.5rem;
-  --gather: 0;
-  --fan-pitch: calc(var(--card-w) * (1 - var(--overlap)));
+  --fan-pitch: calc(var(--card-w) + var(--card-gap));
 
   display: flex;
   inline-size: max-content;
@@ -97,13 +107,12 @@ html:not([data-motion='on']) .clips {
   inline-size: var(--card-w);
   aspect-ratio: 9 / 16;
   scroll-snap-align: start;
-  translate: calc(var(--fan-position) * var(--fan-pitch) * (var(--deal) - 1) * var(--gather))
-    calc(var(--fan-position) * var(--fan-position) * var(--fan-drop) * var(--deal) + (1 - var(--deal)) * var(--enter));
+  translate: 0 calc(var(--fan-position) * var(--fan-position) * var(--fan-drop) * var(--deal) + (1 - var(--deal)) * var(--enter));
   rotate: calc(var(--fan-position) * var(--fan-turn) * var(--deal));
 }
 
 .clip-card + .clip-card {
-  margin-inline-start: calc(var(--card-w) * var(--overlap) * -1);
+  margin-inline-start: var(--card-gap);
 }
 
 .clip-card-face {
@@ -144,7 +153,7 @@ html:not([data-motion='on']) .clips {
 }
 
 .clip-card-title {
-  display: -webkit-box;
+  max-block-size: 2.4em;
   max-inline-size: min(100%, calc(var(--fan-pitch) - var(--card-pad) - var(--ring) - var(--card-w) * 0.04));
   overflow: hidden;
   font-weight: 700;
@@ -152,8 +161,6 @@ html:not([data-motion='on']) .clips {
   line-height: 1.2;
   overflow-wrap: anywhere;
   text-wrap: balance;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
 }
 
 .clip-card-play {
@@ -281,26 +288,12 @@ html:not([data-motion='on']) .clips {
     --pad-bottom: calc(var(--mini-card-height) + var(--space-4) + var(--space-3));
   }
 
-  .clips-fan {
-    container-type: inline-size;
-    margin-inline: 0;
-    padding-block: var(--space-4) var(--space-6);
-    overflow: visible;
-  }
-
   .clips-fan-list {
-    --card-w: min(calc(100cqi / 5.9), calc((100svh - 17rem) * 9 / 16), 22rem);
-    --overlap: 0.1;
-    --fan-turn: 3deg;
-    --fan-drop: calc(var(--card-w) * 0.032);
-    --enter: 0px;
-    --gather: 1;
-
-    padding-inline: calc(var(--card-w) * 0.18);
+    --card-w: max(10.5rem, min(28vw, calc((100svh - 26.5rem - 1.6 * var(--size-h2)) * 9 / 16), 15rem));
   }
 
-  .clips-dashes {
-    display: none;
+  .clips .section-heading-mask {
+    display: inline-block;
   }
 
   .clips-tiktok {
@@ -309,85 +302,63 @@ html:not([data-motion='on']) .clips {
   }
 }
 
-@media (min-width: 900px) and (max-width: 1499px) {
-  .clips-inner {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: auto 1fr;
-    grid-template-areas:
-      'heading tiktok'
-      'fan fan';
-  }
-
-  .clips .section-heading {
-    grid-area: heading;
-  }
-
-  .clips-fan {
-    grid-area: fan;
-  }
-
-  .clips-fan-list {
-    --card-w: min(calc(100cqi / 5.9), calc((100svh - 16.5rem - 2.7 * var(--size-h2)) * 0.469), 22rem);
-  }
-
-  .clips-tiktok {
-    grid-area: tiktok;
-    align-self: end;
-    justify-self: end;
-    inline-size: 22rem;
-  }
-}
-
-@media (min-width: 1500px) {
+@media (min-width: 900px) {
   .clips {
     --pad-top: calc(var(--space-4) + var(--round-size) + var(--space-3));
   }
 
   .clips-inner {
-    grid-template-columns: minmax(16rem, auto) minmax(0, 1fr);
-    grid-template-rows: auto auto;
+    grid-template-columns: auto auto 1fr;
+    grid-template-rows: auto 1fr;
     grid-template-areas:
-      'heading fan'
-      'tiktok fan';
+      'heading tiktok .'
+      'fan fan fan';
     column-gap: var(--space-5);
-    row-gap: var(--space-4);
-    align-content: center;
+    align-items: end;
   }
 
   .clips .section-heading {
     grid-area: heading;
-    align-self: start;
   }
 
   .clips-fan {
     grid-area: fan;
   }
 
+  .clips-dashes {
+    grid-column: 1 / -1;
+  }
+
+  .clips-fan-list {
+    --card-w: max(10.5rem, min(28vw, calc((100svh - 18rem - 1.6 * var(--size-h2)) * 9 / 16), 15rem));
+  }
+
   .clips-tiktok {
     grid-area: tiktok;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'label'
-      'handle'
-      'line'
-      'pill';
-    align-self: start;
-    justify-self: stretch;
-    inline-size: auto;
-    contain: inline-size;
-    row-gap: var(--space-2);
-    padding: var(--space-4);
-  }
-
-  .clips-tiktok-handle {
-    font-size: 1.2rem;
-  }
-
-  .clips-tiktok-line {
-    margin-block-end: var(--space-2);
-  }
-
-  .clips-tiktok-pill {
     justify-self: start;
+    inline-size: 22rem;
+  }
+}
+
+@media (min-width: 1100px) {
+  .clips-dashes {
+    display: none;
+  }
+
+  .clips-fan {
+    container-type: inline-size;
+    margin-inline: 0;
+    padding-block: var(--space-4);
+    overflow: visible;
+  }
+
+  .clips-fan-list {
+    --card-w: min(calc(100cqi / 5.9), calc((100svh - 18.8rem - 1.6 * var(--size-h2)) * 0.43), 22rem);
+    --card-gap: calc(var(--card-w) * -0.1);
+    --fan-turn: 3deg;
+    --fan-drop: calc(var(--card-w) * 0.032);
+    --enter: 6rem;
+
+    padding-inline: calc(var(--card-w) * 0.18);
   }
 }

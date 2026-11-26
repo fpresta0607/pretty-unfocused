@@ -6,7 +6,8 @@ import { renderFooter } from '../render/render-footer.ts';
 import { Footer } from './footer.ts';
 
 const VIEWPORT_HEIGHT = 800;
-const RUN_HEIGHT = 480;
+const WORD_REST_TOP = 560;
+const RISE_LENGTH = VIEWPORT_HEIGHT - WORD_REST_TOP;
 const PAGE_HEIGHT = 5000;
 const PAGE_END_SCROLL = PAGE_HEIGHT - VIEWPORT_HEIGHT;
 let app: ModularApp;
@@ -30,6 +31,8 @@ function getPart(selector: string): HTMLElement {
 function placeFooter(footerTop: number, headingTop: number): void {
   getFooter().getBoundingClientRect = () => new DOMRect(0, footerTop, 1024, VIEWPORT_HEIGHT);
   getPart('[data-footer-group="heading"]').getBoundingClientRect = () => new DOMRect(0, headingTop, 600, 300);
+  const wordTop = WORD_REST_TOP + (PAGE_END_SCROLL - window.scrollY);
+  getPart('.footer-word').getBoundingClientRect = () => new DOMRect(0, wordTop, 600, 120);
 }
 
 async function scrollTo(scrollY: number, footerTop: number, headingTop: number): Promise<void> {
@@ -44,7 +47,6 @@ function start(isMotionOn: boolean): void {
   document.body.innerHTML = renderFooter();
   Object.defineProperty(window, 'innerHeight', { configurable: true, value: VIEWPORT_HEIGHT });
   Object.defineProperty(document.documentElement, 'scrollHeight', { configurable: true, value: PAGE_HEIGHT });
-  Object.defineProperty(getPart('.footer-run'), 'offsetHeight', { configurable: true, value: RUN_HEIGHT });
   placeFooter(PAGE_HEIGHT, PAGE_HEIGHT);
   app = new ModularApp({ modules: { footer: Footer } });
   app.init(app);
@@ -95,9 +97,10 @@ describe('Footer with motion on', () => {
   });
 
   it.each([
-    ['well before the run', PAGE_END_SCROLL - RUN_HEIGHT * 2, '0.000'],
-    ['half way through the run', PAGE_END_SCROLL - RUN_HEIGHT / 2, '0.500'],
-    ['a quarter of the way in', PAGE_END_SCROLL - RUN_HEIGHT * 0.75, '0.250'],
+    ['well before the word is on screen', PAGE_END_SCROLL - RISE_LENGTH * 2, '0.000'],
+    ['as the word reaches the bottom edge', PAGE_END_SCROLL - RISE_LENGTH, '0.000'],
+    ['a quarter of the way in', PAGE_END_SCROLL - RISE_LENGTH * 0.75, '0.250'],
+    ['half way in', PAGE_END_SCROLL - RISE_LENGTH / 2, '0.500'],
     ['at the page end', PAGE_END_SCROLL, '1.000'],
   ])('sets the word rise %s', async (_name, scrollY, expected) => {
     start(true);

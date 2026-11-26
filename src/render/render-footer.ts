@@ -49,6 +49,5 @@ export function renderFooter(): string {
       </div>
       ${renderWord()}
     </div>
-    <div class="footer-run" aria-hidden="true"></div>
   </footer>`;
 }

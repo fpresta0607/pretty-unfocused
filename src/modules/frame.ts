@@ -128,6 +128,34 @@ export class Frame extends Module {
       if (label !== undefined && piece.textContent !== label) {
         piece.textContent = label;
       }
+      if (isLabel) {
+        this.colourLabelLetters(piece, edges);
+      }
+    });
+  }
+
+  private colourLabelLetters(label: HTMLElement, edges: readonly SectionEdge[]): void {
+    if (label.firstElementChild === null) {
+      label.replaceChildren(
+        ...Array.from(label.textContent ?? '', (character) => {
+          const letter = document.createElement('span');
+          letter.dataset.frame = 'letter';
+          letter.textContent = character;
+          return letter;
+        }),
+      );
+    }
+    const letters = Array.from(label.querySelectorAll<HTMLElement>('[data-frame="letter"]'));
+    const surfaces = letters.map((letter) => {
+      const { left, top, width, height } = letter.getBoundingClientRect();
+      const under = this.sectionAt(edges, left + width / 2, top + height / 2);
+      return under === undefined ? undefined : readSurface(under.dataset.surface);
+    });
+    letters.forEach((letter, index) => {
+      const surface = surfaces[index];
+      if (surface !== undefined) {
+        letter.dataset.frameSurface = surface;
+      }
     });
   }
 

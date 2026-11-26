@@ -79,11 +79,12 @@ describe('renderFooter', () => {
     );
   });
 
-  it('pins the content and the word on screen while an empty run of scroll drives the word up', () => {
+  it('lays the content and then the word out in one block that reaches above the footer top', () => {
     const markup = renderFooter();
 
     expect(markup).toMatch(/<div class="footer-pin">\s*<div class="footer-inner">/);
-    expect(markup).toMatch(/<\/div>\s*<div class="footer-word" aria-hidden="true">[\s\S]*<\/div>\s*<div class="footer-run" aria-hidden="true"><\/div>\s*<\/footer>/);
+    expect(markup).toMatch(/<\/div>\s*<div class="footer-word" aria-hidden="true">[\s\S]*<\/div>\s*<\/div>\s*<\/footer>/);
+    expect(markup).not.toContain('footer-run');
   });
 
   it('carries the coffee-stain hand-off', () => {
