@@ -4,13 +4,19 @@
   --card-tilt: 2.5deg;
   --card-offset: calc(var(--size-giant) * -0.22);
   --card-inset: var(--space-3);
+  --edge-room: 0px;
 
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto 1fr auto;
-  min-block-size: 100svh;
+  min-block-size: calc(100svh + var(--edge-room));
   padding: 4.5rem var(--gutter) 5rem;
+  border-block-end: var(--edge-room) solid transparent;
   overflow: clip;
+}
+
+html:not([data-motion='on']) .hero {
+  --edge-room: round(down, var(--edge-rise), 1px);
 }
 
 .hero-title {
@@ -235,6 +241,7 @@ html[data-hero-state='pending'] .hero-card-mask {
 
 .text-line {
   display: block;
+  white-space: nowrap;
 }
 
 .hero-card-watch {
@@ -536,7 +543,7 @@ html[data-hero-state='pending'] .hero-schedule .pill {
 
 @media (min-aspect-ratio: 2 / 1) and (min-width: 600px) {
   .hero {
-    min-block-size: calc(100svh + 2.76 * var(--size-h2) + clamp(3.25rem, 8svh, 10rem) + var(--space-7));
+    min-block-size: calc(100svh + var(--edge-room) + 2.76 * var(--size-h2) + clamp(3.25rem, 8svh, 10rem) + var(--space-7));
   }
 }
 

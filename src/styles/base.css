@@ -105,6 +105,11 @@ main:focus {
   color: var(--cream);
 }
 
+.section--cream {
+  background: var(--cream);
+  color: var(--wine);
+}
+
 .label {
   font-family: var(--font-text);
   font-weight: 700;
