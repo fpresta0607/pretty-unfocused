@@ -121,7 +121,7 @@ html[data-motion='on'] .about-edge {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: var(--space-1);
+  gap: var(--space-2);
   inline-size: var(--host-width);
   aspect-ratio: 5 / 6;
   padding: var(--space-3) var(--space-3) var(--space-4);
@@ -146,10 +146,6 @@ html[data-motion='on'] .about-edge {
   background: var(--wine);
 }
 
-.about-host-ring {
-  inline-size: 54%;
-}
-
 .about-host-name {
   margin-block-start: -0.1em;
   font-family: var(--font-display);
@@ -160,14 +156,12 @@ html[data-motion='on'] .about-edge {
   -webkit-text-stroke: var(--display-stroke) currentcolor;
 }
 
-.about-host-pill {
-  padding: 0.4em 0.6em;
-  border: 1px solid currentcolor;
-  letter-spacing: 0.08em;
-  border-radius: var(--radius-pill);
-  text-align: center;
-  white-space: nowrap;
-  margin-block-end: var(--space-2);
+.about-host-photo {
+  flex: none;
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 5 / 6;
+  border-radius: var(--space-3);
 }
 
 .about-copy {

@@ -2,7 +2,7 @@ import type { Show } from '../show/show-types.ts';
 import { buildSettledEdgePath, buildSettledRimPath, STATIC_VIEWS } from '../modules/stain-edge.ts';
 import { readAboutDescription } from './about-description.ts';
 import { escapeHtml } from './escape-html.ts';
-import { RING_SIZE, RING_SRC, RING_SRCSET } from './ring-asset.ts';
+import { HOST_PHOTO_HEIGHT, HOST_PHOTO_WIDTH, HOST_PHOTOS } from './host-photo-asset.ts';
 
 const HOSTS = [
   { name: 'Maya', modifier: 'maya' },
@@ -10,7 +10,7 @@ const HOSTS = [
 ] as const;
 const TOPICS = ['ADHD', 'Creativity', 'Money habits', 'Self-growth', 'The messy middle'] as const;
 const HYPHENATED_WORD = /[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)+/gu;
-const RING_IMAGE_SIZES = '(min-width: 900px) 9vw, 14vw';
+const HOST_PHOTO_SIZES = '(min-width: 1200px) 260px, (min-width: 900px) 23vw, (min-width: 600px) 232px, 145px';
 
 function renderHeadingLine(line: string): string {
   return `<span class="about-mask"><span class="about-line" data-about="line">${line}</span></span>`;
@@ -30,7 +30,7 @@ function renderHeading(): string {
 function renderHosts(): string {
   const cards = HOSTS.map(
     ({ name, modifier }) =>
-      `<li class="about-host about-host--${modifier}" data-about="host"><span class="about-host-name">${name}</span><span class="about-host-pill label">Photo to come</span><img class="about-host-ring" src="${RING_SRC}" srcset="${RING_SRCSET}" sizes="${RING_IMAGE_SIZES}" width="${RING_SIZE}" height="${RING_SIZE}" alt="" loading="lazy" decoding="async"></li>`,
+      `<li class="about-host about-host--${modifier}" data-about="host"><span class="about-host-name" aria-hidden="true">${name}</span><img class="about-host-photo" src="${HOST_PHOTOS[modifier].src}" srcset="${HOST_PHOTOS[modifier].srcset}" sizes="${HOST_PHOTO_SIZES}" width="${HOST_PHOTO_WIDTH}" height="${HOST_PHOTO_HEIGHT}" alt="${name}" loading="lazy" decoding="async"></li>`,
   ).join('\n        ');
   return `<ul class="about-hosts" role="list" data-about-group="hosts" data-stain-landing>
         ${cards}
