@@ -1,0 +1,332 @@
+@property --lift {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+.section--gold {
+  background: var(--gold);
+  color: var(--wine);
+}
+
+.clips {
+  --focus-ring: var(--wine);
+  --stain-fill: var(--gold);
+  --ring: 3px;
+  --pad-top: calc(var(--space-7) - var(--space-2));
+  --pad-bottom: calc(var(--space-7) + var(--space-3));
+  --card-w: clamp(8.75rem, 38vw, 11.5rem);
+  --overlap: 0.55;
+  --fan-turn: 4.5deg;
+  --fan-drop: calc(var(--card-w) * 0.032);
+  --fan-pitch: calc(var(--card-w) * (1 - var(--overlap)));
+  --fan-room: calc(var(--card-w) * 0.45);
+
+  z-index: 4;
+  display: grid;
+  padding: var(--pad-top) var(--gutter) var(--pad-bottom);
+  overflow-x: clip;
+  isolation: isolate;
+}
+
+html[data-motion='on'] .clips {
+  box-shadow: 0 var(--space-4) 0 var(--gold);
+}
+
+html[data-motion='on']:has(.clips[data-stain-swept]) {
+  background-color: var(--gold);
+}
+
+html:not([data-motion='on']) .clips {
+  --edge-room: round(down, var(--edge-rise), 1px);
+
+  min-block-size: calc(100svh + var(--edge-room));
+  border-block-end: var(--edge-room) solid transparent;
+}
+
+.clips-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  align-content: start;
+  inline-size: 100%;
+  min-block-size: calc(100svh - var(--pad-top) - var(--pad-bottom));
+  max-inline-size: calc(120rem - 2 * var(--gutter));
+  margin-inline: auto;
+  row-gap: var(--space-3);
+  translate: 0 calc(var(--stain-lift, 0px) * -1);
+}
+
+.clips .section-heading {
+  --script-color: var(--wine);
+}
+
+.clips-fan {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  margin-inline: calc(var(--gutter) * -1);
+  margin-block: calc(var(--fan-room) * -0.5);
+  padding-block: var(--fan-room);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.clips-fan::-webkit-scrollbar {
+  display: none;
+}
+
+.clips-fan-list {
+  display: flex;
+  inline-size: max-content;
+  margin-inline: auto;
+  padding-inline: max(var(--gutter), calc(var(--card-w) * 0.22));
+}
+
+.clip-card {
+  --deal: 1;
+
+  position: relative;
+  z-index: var(--fan-layer);
+  flex: none;
+  inline-size: var(--card-w);
+  aspect-ratio: 9 / 16;
+  scroll-snap-align: center;
+  translate: calc(var(--fan-position) * var(--fan-pitch) * (var(--deal) - 1))
+    calc(var(--fan-position) * var(--fan-position) * var(--fan-drop) * var(--deal));
+  rotate: calc(var(--fan-position) * var(--fan-turn) * var(--deal));
+  will-change: translate, rotate;
+}
+
+.clip-card + .clip-card {
+  margin-inline-start: calc(var(--card-w) * var(--overlap) * -1);
+}
+
+.clip-card-face {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: var(--space-2);
+  inline-size: 100%;
+  block-size: 100%;
+  padding: var(--space-3);
+  border: var(--ring) solid var(--gold);
+  border-radius: var(--radius);
+  background: var(--wine);
+  color: var(--cream);
+  overflow: hidden;
+  translate: 0 calc(var(--lift) * var(--space-4) * -1);
+  rotate: calc(var(--lift) * var(--fan-position) * var(--fan-turn) * var(--deal) * -1);
+  transition: --lift var(--dur-ui) var(--ease-out);
+}
+
+.clip-card-face::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgb(70 2 31 / 0) 25%, var(--wine) 72%);
+}
+
+.clip-card-image {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.clip-card-title {
+  position: relative;
+  display: -webkit-box;
+  overflow: hidden;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  line-height: 1.15;
+  text-wrap: balance;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.clip-card-play {
+  --round-size: 44px;
+}
+
+.clip-card-play:hover {
+  translate: none;
+}
+
+.clip-card-play::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.clip-card:has(:focus-visible) {
+  z-index: 20;
+  --lift: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .clip-card:hover {
+    z-index: 20;
+  }
+
+  .clip-card:hover .clip-card-face {
+    --lift: 1;
+  }
+}
+
+.clips-tiktok {
+  --focus-ring: var(--gold);
+
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  background: var(--wine);
+  color: var(--cream);
+}
+
+.clips-tiktok-label,
+.clips-tiktok-line {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.clips-tiktok-handle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.clips-tiktok-pill {
+  --focus-ring: var(--cream);
+}
+
+@media (min-width: 600px) {
+  .clips {
+    --card-w: clamp(10rem, 22vw, 14rem);
+  }
+
+  .clips-tiktok {
+    justify-self: start;
+    inline-size: min(100%, 26rem);
+  }
+}
+
+@media (min-width: 900px) {
+  .clips {
+    --pad-top: calc(var(--space-4) + var(--round-size) + var(--space-3));
+    --pad-bottom: calc(var(--space-4) + var(--mini-card-height) + var(--space-3));
+    --card-w: clamp(10rem, min(16vw, calc((100svh - 29rem) * 9 / 16)), 22rem);
+  }
+
+  .clips-inner {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      'heading fan'
+      'tiktok tiktok';
+    column-gap: var(--space-5);
+    align-content: center;
+  }
+
+  .clips .section-heading {
+    grid-area: heading;
+    align-self: start;
+  }
+
+  .clips-fan {
+    grid-area: fan;
+    align-self: start;
+    margin-inline: 0;
+  }
+
+  .clips-tiktok {
+    grid-area: tiktok;
+    justify-self: end;
+  }
+}
+
+@media (min-width: 1360px) {
+  .clips {
+    --card-w: clamp(10rem, min(16vw, calc((100svh - 24rem) * 9 / 16)), 22rem);
+  }
+
+  .clips-inner {
+    grid-template-rows: auto;
+    grid-template-areas: 'heading fan';
+  }
+
+  .clips-tiktok {
+    --tilt: 2deg;
+
+    grid-area: fan;
+    grid-template-columns: minmax(0, 1fr);
+    align-self: end;
+    justify-self: end;
+    inline-size: 18.5rem;
+    padding: var(--space-4);
+    row-gap: var(--space-2);
+    rotate: var(--tilt);
+  }
+
+  .clips-tiktok-label,
+  .clips-tiktok-line {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    margin: 0;
+    clip-path: none;
+    white-space: normal;
+  }
+
+  .clips-tiktok-label {
+    color: var(--gold);
+  }
+
+  .clips-tiktok-handle {
+    margin-block: var(--space-2);
+    font-size: 1.3rem;
+  }
+
+  .clips-tiktok-line {
+    margin-block-end: var(--space-2);
+  }
+
+  .clips-tiktok-pill {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 599px) {
+  .clip-card-play {
+    --round-size: 40px;
+  }
+
+  .clip-card-title {
+    font-size: 0.9375rem;
+  }
+
+  .clips-tiktok {
+    padding-inline-start: var(--space-3);
+  }
+}

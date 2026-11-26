@@ -80,6 +80,14 @@
   object-fit: cover;
 }
 
+.player[data-shape='vertical'] .player-box {
+  inline-size: min(100%, calc((100svh - 12rem) * 9 / 16));
+}
+
+.player[data-shape='vertical'] .player-stage {
+  aspect-ratio: 9 / 16;
+}
+
 .player-stage iframe {
   position: relative;
   display: block;

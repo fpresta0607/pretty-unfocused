@@ -19,7 +19,16 @@ const SHOW: Show = {
       thumbnail: { src: 'https://example.com/art.jpg', width: 1400, height: 1400 },
     },
   ],
-  clips: [],
+  clips: [
+    {
+      id: 'clip',
+      title: 'Clip',
+      publishedAt: '2026-10-02T00:00:00.000Z',
+      youtubeUrl: 'https://www.youtube.com/shorts/clip',
+      youtubeVideoId: 'clip',
+      thumbnail: { src: 'https://i.ytimg.com/vi/clip/hqdefault.jpg', width: 480, height: 360 },
+    },
+  ],
 };
 
 async function buildPage(): Promise<string> {
@@ -72,6 +81,18 @@ describe('showDataPlugin', () => {
     expect(page).toContain('href="#episodes" data-menu="link"');
     expect(page).toContain('<span class="menu-link-label">Episodes</span>');
     expect(page).toContain('<dialog class="player"');
+  });
+
+  it('ends with the clips and every-episode sections, in that order, each in the frame menu', async () => {
+    const page = await buildPage();
+
+    expect(page.indexOf('id="episodes"')).toBeLessThan(page.indexOf('id="clips"'));
+    expect(page.indexOf('id="clips"')).toBeLessThan(page.indexOf('id="every-episode"'));
+    expect(page).toContain('href="#clips" data-menu="link"');
+    expect(page).toContain('<span class="menu-link-label">Clips</span>');
+    expect(page).toContain('href="#every-episode" data-menu="link"');
+    expect(page).toContain('<span class="menu-link-label">Every episode</span>');
+    expect(page).toContain('<a class="episode-all" href="#every-episode">');
   });
 
   it('puts the intro in place of its marker', async () => {

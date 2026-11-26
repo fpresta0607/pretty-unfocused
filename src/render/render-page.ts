@@ -1,5 +1,7 @@
 import type { Show } from '../show/show-types.ts';
 import { renderAbout } from './render-about.ts';
+import { renderArchive } from './render-archive.ts';
+import { renderClips } from './render-clips.ts';
 import { renderEpisodes } from './render-episodes.ts';
 import { renderFrame } from './render-frame.ts';
 import { renderHero } from './render-hero.ts';
@@ -15,6 +17,8 @@ export const SECTION_RENDERERS: readonly SectionRenderer[] = [
   { id: 'home', label: 'Home', render: renderHero },
   { id: 'about', label: 'About the show', render: renderAbout },
   { id: 'episodes', label: 'Episodes', render: renderEpisodes },
+  { id: 'clips', label: 'Clips', render: renderClips },
+  { id: 'every-episode', label: 'Every episode', render: renderArchive },
 ];
 
 export function renderSections(show: Show): string {
@@ -22,6 +26,7 @@ export function renderSections(show: Show): string {
 }
 
 export function renderPageFrame(show: Show): string {
-  return `${renderFrame(show, SECTION_RENDERERS)}
+  const presentSections = SECTION_RENDERERS.filter((section) => section.render(show) !== '');
+  return `${renderFrame(show, presentSections)}
   ${renderPlayer()}`;
 }

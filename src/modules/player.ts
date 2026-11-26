@@ -39,7 +39,7 @@ export class Player extends Module {
     this.el.removeEventListener('close', this.handleClose);
   }
 
-  private open(videoId: string, title: string, opener: HTMLElement): void {
+  private open(videoId: string, title: string, shape: string | undefined, opener: HTMLElement): void {
     if (this.dialog === undefined || this.stage === undefined || this.dialog.open) {
       return;
     }
@@ -64,6 +64,9 @@ export class Player extends Module {
     this.stage.replaceChildren(poster, frame);
 
     this.opener = opener;
+    if (shape === 'vertical') {
+      this.dialog.dataset.shape = shape;
+    }
     opener.focus({ preventScroll: true });
     document.documentElement.dataset.playerOpen = '';
     this.call('lock', 'scroll');
@@ -80,7 +83,7 @@ export class Player extends Module {
       return;
     }
     event.preventDefault();
-    this.open(videoId, link.dataset.playerTitle ?? '', link);
+    this.open(videoId, link.dataset.playerTitle ?? '', link.dataset.playerShape, link);
   };
 
   private readonly handleDialogClick = (event: MouseEvent): void => {
@@ -100,6 +103,7 @@ export class Player extends Module {
 
   private readonly handleClose = (): void => {
     this.stage?.replaceChildren();
+    delete this.dialog?.dataset.shape;
     delete document.documentElement.dataset.playerOpen;
     this.call('unlock', 'scroll');
     this.opener?.focus({ preventScroll: true });

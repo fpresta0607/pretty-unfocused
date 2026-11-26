@@ -39,6 +39,13 @@ html[data-motion='on']:has(.episodes[data-stain-swept]) {
   background-color: var(--ember);
 }
 
+html:not([data-motion='on']) .episodes {
+  --edge-room: round(down, var(--edge-rise), 1px);
+
+  min-block-size: calc(100svh + var(--edge-room));
+  border-block-end: var(--edge-room) solid transparent;
+}
+
 @media (max-width: 599px) {
   .episodes {
     --sweep-reach: 169px;
