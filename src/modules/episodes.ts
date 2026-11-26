@@ -63,6 +63,7 @@ export class Episodes extends Module {
   private layoutFrame = 0;
   private scrollFrame: number | undefined;
   private frameClear = 0;
+  private smallViewportHeight = 0;
   private navigation: HTMLElement | null = null;
   private viewport: HTMLElement | null = null;
   private previousButton: HTMLButtonElement | null = null;
@@ -114,6 +115,7 @@ export class Episodes extends Module {
     const sectionStyle = getComputedStyle(this.el);
     this.endSteps = parseFloat(sectionStyle.getPropertyValue('--end-steps')) || 0;
     this.frameClear = parseFloat(sectionStyle.getPropertyValue('--frame-clear'));
+    this.smallViewportHeight = this.measureSmallViewportHeight();
     this.restoreTexts();
     this.fitCopyColumn();
     this.fitRow();
@@ -308,7 +310,7 @@ export class Episodes extends Module {
     if (this.isPinnedLayout()) {
       return MIN_PINNED_DESCRIPTION_LINES;
     }
-    const isShortPhone = window.innerWidth <= PHONE_MAX_WIDTH_PX && window.innerHeight <= SHORT_PHONE_MAX_HEIGHT_PX;
+    const isShortPhone = window.innerWidth <= PHONE_MAX_WIDTH_PX && this.smallViewportHeight <= SHORT_PHONE_MAX_HEIGHT_PX;
     return isShortPhone ? MIN_SHORT_PHONE_DESCRIPTION_LINES : MIN_STATIC_DESCRIPTION_LINES;
   }
 
@@ -338,13 +340,24 @@ export class Episodes extends Module {
     const stackedHeight = isStacked ? copy.offsetHeight + parseFloat(pinStyle.rowGap) : 0;
     const spaceAbove = parseFloat(pinStyle.paddingTop) + parseFloat(trackStyle.paddingTop) + stackedHeight;
     const spaceBelow = parseFloat(pinStyle.paddingBottom) + parseFloat(trackStyle.paddingBottom);
-    const preferredHeight = window.innerHeight - spaceAbove - spaceBelow;
+    const preferredHeight = this.smallViewportHeight - spaceAbove - spaceBelow;
     const bandHeight = this.frameBandHeight();
-    const hardHeight = bandHeight === undefined ? Number.NaN : window.innerHeight - bandHeight - FRAME_BAND_GAP_PX - spaceAbove;
+    const hardHeight = bandHeight === undefined ? Number.NaN : this.smallViewportHeight - bandHeight - FRAME_BAND_GAP_PX - spaceAbove;
     return {
       preferredHeight: Number.isFinite(preferredHeight) ? preferredHeight : undefined,
       hardHeight: Number.isFinite(hardHeight) ? hardHeight : undefined,
     };
+  }
+
+  private measureSmallViewportHeight(): number {
+    const probe = document.createElement('div');
+    probe.style.position = 'absolute';
+    probe.style.visibility = 'hidden';
+    probe.style.blockSize = '100svh';
+    this.el.append(probe);
+    const { height } = probe.getBoundingClientRect();
+    probe.remove();
+    return height;
   }
 
   private frameBandHeight(): number | undefined {
