@@ -1,12 +1,8 @@
-import { fileURLToPath } from 'node:url';
-
-import { build } from 'vite';
 import { describe, expect, it } from 'vitest';
 
+import { SITE_URL } from '../show/show-links.ts';
 import type { Show } from '../show/show-types.ts';
-import { showDataPlugin } from './show-data-plugin.ts';
-
-const SITE_ROOT = fileURLToPath(new URL('../..', import.meta.url));
+import { buildTestPage } from './build-test-page.ts';
 
 const SHOW: Show = {
   description: 'About the show',
@@ -32,21 +28,7 @@ const SHOW: Show = {
 };
 
 async function buildPage(): Promise<string> {
-  const result = await build({
-    root: SITE_ROOT,
-    configFile: false,
-    logLevel: 'silent',
-    plugins: [showDataPlugin(() => SHOW)],
-    build: { write: false },
-  });
-  if (Array.isArray(result) || !('output' in result)) {
-    throw new Error('Expected a single build output');
-  }
-  const page = result.output.find((file) => file.fileName === 'index.html');
-  if (page?.type !== 'asset' || typeof page.source !== 'string') {
-    throw new Error('Expected the build to emit index.html');
-  }
-  return page.source;
+  return (await buildTestPage(SHOW)).page;
 }
 
 describe('showDataPlugin', () => {
@@ -93,6 +75,32 @@ describe('showDataPlugin', () => {
     expect(page).toContain('href="#every-episode" data-menu="link"');
     expect(page).toContain('<span class="menu-link-label">Every episode</span>');
     expect(page).toContain('<a class="episode-all" href="#every-episode">');
+  });
+
+  it('closes the page with the footer after main, with its menu link and the frame label', async () => {
+    const page = await buildPage();
+
+    expect(page.indexOf('</main>')).toBeLessThan(page.indexOf('id="say-hi"'));
+    expect(page.indexOf('id="episodes"')).toBeLessThan(page.indexOf('id="say-hi"'));
+    expect(page).toMatch(/<footer class="section section--wine footer" id="say-hi"/);
+    expect(page).toContain('href="#say-hi" data-menu="link"');
+    expect(page).toContain('<span class="menu-link-label">Say hi</span>');
+    expect(page).not.toContain('<!--render:footer-->');
+  });
+
+  it('names the share image, the page address and the canonical link by one absolute address', async () => {
+    const page = await buildPage();
+
+    expect(page).toContain(`<meta property="og:image" content="${SITE_URL}/og-image.jpg" />`);
+    expect(page).toContain(`<meta property="og:url" content="${SITE_URL}/" />`);
+    expect(page).toContain(`<link rel="canonical" href="${SITE_URL}/" />`);
+    expect(page).not.toContain('%SITE_URL%');
+  });
+
+  it('writes the merged show it built as show.json beside the page', async () => {
+    const { showJson } = await buildTestPage(SHOW);
+
+    expect(JSON.parse(showJson)).toEqual(SHOW);
   });
 
   it('puts the intro in place of its marker', async () => {

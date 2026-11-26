@@ -4,6 +4,7 @@ import { About } from './modules/about.ts';
 import { Archive } from './modules/archive.ts';
 import { Clips } from './modules/clips.ts';
 import { Episodes } from './modules/episodes.ts';
+import { Footer } from './modules/footer.ts';
 import { Frame } from './modules/frame.ts';
 import { Hero } from './modules/hero.ts';
 import { Intro } from './modules/intro.ts';
@@ -20,6 +21,7 @@ const app = new ModularApp({
     archive: Archive,
     clips: Clips,
     episodes: Episodes,
+    footer: Footer,
     frame: Frame,
     hero: Hero,
     intro: Intro,

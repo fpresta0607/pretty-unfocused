@@ -1,0 +1,20 @@
+{
+  "crons": [{ "path": "/api/rebuild", "schedule": "0 12 * * *" }],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'sha256-DyJnYP5uULl/WKZ4UKJdqyHR+jqmIyGTlpmZgQV6uQI='; style-src 'self' 'sha256-t0zlP2vy+4YN6MJ7a6ZqT8I92lNGXhVXLcBIXv/n0UI='; style-src-attr 'unsafe-inline'; img-src 'self' https://i.ytimg.com https://d3t3ozftmdmh3i.cloudfront.net; font-src 'self'; connect-src 'self'; frame-src https://www.youtube-nocookie.com; media-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'"
+        },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        {
+          "key": "Permissions-Policy",
+          "value": "accelerometer=(), bluetooth=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), serial=(), usb=()"
+        }
+      ]
+    }
+  ]
+}
