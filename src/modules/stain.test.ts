@@ -41,6 +41,18 @@ async function resizeTo(innerHeight: number): Promise<void> {
   await new Promise((resolve) => window.requestAnimationFrame(resolve));
 }
 
+async function walkDownThePage(step: number): Promise<{ lifts: number[]; positions: number[] }> {
+  const tops = Array.from({ length: Math.round((VIEWPORT.height * 1.1) / step) + 1 }, (_, index) => VIEWPORT.height - index * step);
+  const lifts: number[] = [];
+  const positions: number[] = [];
+  for (const top of tops) {
+    await scrollTo(top);
+    lifts.push(readLift());
+    positions.push(getElement('[data-stain-landing]').getBoundingClientRect().top);
+  }
+  return { lifts, positions };
+}
+
 function mountStain(): void {
   app = new ModularApp({ modules: { stain: Stain } });
   app.init(app);
@@ -161,14 +173,46 @@ describe('the stain edge', () => {
       return [...earlier, readLift()];
     }, Promise.resolve([]));
 
-    expect(lifts[1]).toBeCloseTo((lifts[0] ?? 0) / 2, 0);
+    expect(lifts[1]).toBeGreaterThan(0);
+    expect(lifts[1]).toBeLessThan(lifts[0] ?? 0);
     expect(lifts[2]).toBe(0);
     expect(lifts[3]).toBe(0);
   });
 
+  it('changes the lift smoothly over the whole hand-over, with no corner at the end of the sweep or at the top of the screen', async () => {
+    landingOffset = 100;
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+
+    const step = 8;
+    const { lifts } = await walkDownThePage(step);
+    const slopes = lifts.slice(1).map((lift, index) => ((lifts[index] ?? 0) - lift) / step);
+    const slopeChanges = slopes.slice(1).map((slope, index) => Math.abs(slope - (slopes[index] ?? 0)));
+
+    expect(Math.max(...lifts)).toBeGreaterThan(100);
+    expect(Math.max(...slopeChanges)).toBeLessThan(0.1);
+  });
+
   it.each([
-    ['sits low enough to be lifted to the landing line', 100, VIEWPORT.height * 0.25],
-    ['sits too far below the landing line to reach it, so it is lifted as far as the limit allows', 300, VIEWPORT.height * 0.45],
+    ['content that is lifted to the landing line', -100],
+    ['content that is held back by the limit', 100],
+    ['content that sits far below the landing line', 500],
+  ])('moves %s at between half and one and four fifths of the scroll speed, never stalling and never rushing', async (_name, offset) => {
+    landingOffset = offset;
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+
+    const step = 8;
+    const { positions } = await walkDownThePage(step);
+    const speeds = positions.slice(1).map((position, index) => ((positions[index] ?? 0) - position) / step);
+
+    expect(Math.min(...speeds)).toBeGreaterThanOrEqual(0.45);
+    expect(Math.max(...speeds)).toBeLessThanOrEqual(1.8);
+  });
+
+  it.each([
+    ['sits near enough to the landing line to be lifted to it', -100, VIEWPORT.height * 0.25],
+    ['sits too far below the landing line to reach it, so it is lifted as far as the limit allows', 300, VIEWPORT.height * 0.685],
   ])('puts the highest content, when it %s, where it belongs when the sweep ends', async (_name, offset, expectedTop) => {
     landingOffset = offset;
     document.documentElement.dataset.motion = 'on';
@@ -205,7 +249,7 @@ describe('the stain edge', () => {
     const hosts = document.createElement('ul');
     hosts.setAttribute('data-stain-landing', '');
     getElement('#about').append(hosts);
-    hosts.getBoundingClientRect = () => new DOMRect(0, sectionTop + 100 - readLift(), 100, 100);
+    hosts.getBoundingClientRect = () => new DOMRect(0, sectionTop - 100 - readLift(), 100, 100);
     document.documentElement.dataset.motion = 'on';
     mountStain();
 
