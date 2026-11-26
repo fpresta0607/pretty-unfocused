@@ -90,8 +90,8 @@ describe('Footer with motion on', () => {
 
     await scrollTo(PAGE_END_SCROLL - VIEWPORT_HEIGHT, VIEWPORT_HEIGHT * 0.6, VIEWPORT_HEIGHT * 0.7);
 
-    expect(getPart('[data-footer="email"]').style.opacity).toBe('0');
-    expect(getPart('[data-footer="link"]').style.opacity).toBe('0');
+    expect(getPart('[data-footer="email"]').style.clipPath).toContain('100%');
+    expect(getPart('[data-footer="link"]').style.clipPath).toContain('100%');
   });
 
   it.each([

@@ -16,11 +16,11 @@ import { EASE_OUT } from './motion-tokens.ts';
 import { sweepProgress } from './stain-edge.ts';
 
 const REVEAL_FROM_SWEEP_PROGRESS = 0.4;
-const EMAIL_AT = SCRIPT_WIPE_AT + 120;
-const LINKS_AT = EMAIL_AT + 260;
-const LINK_STAGGER = 110;
-const ITEM_DURATION = 600;
-const ITEM_HIDDEN_RISE = '0.6em';
+const EMAIL_AT = SCRIPT_WIPE_AT + 100;
+const EMAIL_WIPE_DURATION = 450;
+const LINKS_AT = EMAIL_AT + 100;
+const LINK_STAGGER = 80;
+const LINK_WIPE_DURATION = 350;
 
 export class Footer extends Module {
   private isPending = false;
@@ -97,7 +97,7 @@ export class Footer extends Module {
     const items = [...email, ...links];
     utils.set(lines, { translateY: MASK_HIDDEN });
     utils.set(script, { clipPath: SCRIPT_HIDDEN });
-    utils.set(items, { opacity: 0, translateY: ITEM_HIDDEN_RISE });
+    utils.set(items, { clipPath: SCRIPT_HIDDEN });
     this.el.removeAttribute('data-reveal');
 
     createTimeline({
@@ -105,15 +105,12 @@ export class Footer extends Module {
       onComplete: () => {
         lines.forEach((line) => line.style.removeProperty('transform'));
         script.forEach((word) => word.style.removeProperty('clip-path'));
-        items.forEach((item) => {
-          item.style.removeProperty('opacity');
-          item.style.removeProperty('transform');
-        });
+        items.forEach((item) => item.style.removeProperty('clip-path'));
       },
     })
       .add(lines, { translateY: [MASK_HIDDEN, '0%'], delay: stagger(LINE_STAGGER) }, 0)
       .add(script, { clipPath: [SCRIPT_HIDDEN, SCRIPT_SHOWN], duration: SCRIPT_WIPE_DURATION }, SCRIPT_WIPE_AT)
-      .add(email, { opacity: [0, 1], translateY: [ITEM_HIDDEN_RISE, '0em'], duration: ITEM_DURATION }, EMAIL_AT)
-      .add(links, { opacity: [0, 1], translateY: [ITEM_HIDDEN_RISE, '0em'], duration: ITEM_DURATION, delay: stagger(LINK_STAGGER) }, LINKS_AT);
+      .add(email, { clipPath: [SCRIPT_HIDDEN, SCRIPT_SHOWN], duration: EMAIL_WIPE_DURATION }, EMAIL_AT)
+      .add(links, { clipPath: [SCRIPT_HIDDEN, SCRIPT_SHOWN], duration: LINK_WIPE_DURATION, delay: stagger(LINK_STAGGER) }, LINKS_AT);
   }
 }
