@@ -21,7 +21,7 @@ function withLatestEpisode(overrides: Partial<Episode>): Show {
   };
 }
 
-function withoutLatestEpisodeLink(link: 'spotifyUrl' | 'youtubeUrl'): Show {
+function withoutLatestEpisodeLink(link: 'spotifyUrl' | 'youtubeUrl' | 'youtubeVideoId'): Show {
   const show = buildFixtureShow();
   const latestEpisode = { ...getLatestEpisode(show) };
   delete latestEpisode[link];
@@ -80,6 +80,14 @@ describe('renderHero with the fixture show', () => {
     expect(markup).toContain('alt=""');
   });
 
+  it('opens the in-place player from the thumbnail and from the play disc with Watch', () => {
+    const playerAttributes = `data-player="${latestEpisode.youtubeVideoId}" data-player-title="${latestEpisode.title}"`;
+
+    expect(markup).toContain(`class="hero-card-media" href="${latestEpisode.youtubeUrl}" ${playerAttributes} tabindex="-1"`);
+    expect(markup).toContain(`class="hero-card-watch" href="${latestEpisode.youtubeUrl}" ${playerAttributes}>`);
+    expect(markup.match(/data-player=/g)).toHaveLength(2);
+  });
+
   it('makes the play disc and the Watch pill one link, named after the episode', () => {
     const watchLink = markup.match(/<a class="hero-card-watch"[^>]*>.*?<\/a>/s)?.[0] ?? '';
 
@@ -118,6 +126,13 @@ describe('renderHero edge cases', () => {
 
     expect(markup).not.toContain('Listen<span');
     expect(markup).toContain('Watch<span');
+  });
+
+  it('leaves the links plain when the episode has no video id for the player', () => {
+    const markup = renderHero(withoutLatestEpisodeLink('youtubeVideoId'));
+
+    expect(markup).not.toContain('data-player');
+    expect(markup).toContain('class="hero-card-watch"');
   });
 
   it('leaves out Watch and the play button when the episode has no YouTube link', () => {

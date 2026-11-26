@@ -1,8 +1,8 @@
 import type { Show } from '../show/show-types.ts';
-import { buildSettledEdgePath, buildSettledRimPath, STATIC_VIEWS } from '../modules/stain-edge.ts';
 import { readAboutDescription } from './about-description.ts';
 import { escapeHtml } from './escape-html.ts';
 import { HOST_PHOTO_HEIGHT, HOST_PHOTO_WIDTH, HOST_PHOTOS } from './host-photo-asset.ts';
+import { renderStainEdge } from './render-stain-edge.ts';
 
 const HOSTS = [
   { name: 'Maya', modifier: 'maya' },
@@ -55,18 +55,9 @@ function renderCopy(description: string): string {
       </div>`;
 }
 
-function renderEdgeSet(name: 'wide' | 'narrow'): string {
-  const { width, height } = STATIC_VIEWS[name];
-  return `<svg class="about-edge about-edge--${name}" data-stain-set="${name}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="about-edge-rim" d="${buildSettledRimPath(name === 'narrow')}"/><path class="about-edge-fill" d="${buildSettledEdgePath(name === 'narrow')}"/></svg>`;
-}
-
-function renderEdge(): string {
-  return `${renderEdgeSet('wide')}${renderEdgeSet('narrow')}`;
-}
-
 export function renderAbout(show: Show): string {
   return `<section class="section section--cream about" id="about" data-section data-surface="light" data-module-about data-module-stain aria-label="About the show">
-    ${renderEdge()}
+    ${renderStainEdge()}
     <div class="about-inner">
       ${renderHeading()}
       ${renderHosts()}

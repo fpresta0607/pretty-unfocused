@@ -38,6 +38,7 @@ export class Stain extends Module {
   }
 
   destroy(): void {
+    this.el.removeAttribute('data-stain-swept');
     window.removeEventListener('scroll', this.scheduleUpdate);
     window.removeEventListener('resize', this.remeasure);
     window.cancelAnimationFrame(this.pendingFrame ?? 0);
@@ -48,6 +49,7 @@ export class Stain extends Module {
     const shape = edgeShape(sectionRect.top, window.innerWidth, this.viewportHeight);
     this.updateLift(sectionRect.top);
     this.updateClip(sectionRect, shape);
+    this.el.toggleAttribute('data-stain-swept', sweepProgress(sectionRect.top, window.innerHeight) >= 1 && sectionRect.bottom > 0);
 
     const set = window.innerWidth < NARROW_VIEWPORT_PX ? 'narrow' : 'wide';
     const edge = this.el.querySelector(`[data-stain-set="${set}"]`);
@@ -56,8 +58,8 @@ export class Stain extends Module {
     }
     const { width, height } = edge.getBoundingClientRect();
     edge.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    edge.querySelector('.about-edge-rim')?.setAttribute('d', buildRimPath(shape, { width, height }));
-    edge.querySelector('.about-edge-fill')?.setAttribute('d', buildEdgePath(shape, { width, height }));
+    edge.querySelector('.stain-edge-rim')?.setAttribute('d', buildRimPath(shape, { width, height }));
+    edge.querySelector('.stain-edge-fill')?.setAttribute('d', buildEdgePath(shape, { width, height }));
   }
 
   private measureViewportHeight(): number {
@@ -88,7 +90,7 @@ export class Stain extends Module {
     const isSweeping = sweepProgress(sectionTop, this.viewportHeight) < 1;
     const share = isSweeping ? sweepGrowth(sectionTop, this.viewportHeight) : Math.min(Math.max(sectionTop / sectionTopAtSweepEnd, 0), 1);
     this.lift = fullLift * share;
-    this.el.style.setProperty('--about-lift', `${this.lift.toFixed(1)}px`);
+    this.el.style.setProperty('--stain-lift', `${this.lift.toFixed(1)}px`);
   }
 
   private updateClip(sectionRect: DOMRect, shape: EdgeShape): void {

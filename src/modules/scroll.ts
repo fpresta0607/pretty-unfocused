@@ -23,6 +23,14 @@ export class Scroll extends Module {
     this.locomotiveScroll?.destroy();
   }
 
+  lock(): void {
+    this.locomotiveScroll?.stop();
+  }
+
+  unlock(): void {
+    this.locomotiveScroll?.start();
+  }
+
   private async start(): Promise<void> {
     const { default: LocomotiveScrollConstructor } = await import('locomotive-scroll');
     if (!this.isDestroyed) {

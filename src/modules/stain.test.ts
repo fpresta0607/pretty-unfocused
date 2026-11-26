@@ -21,7 +21,7 @@ let smallViewportHeight = VIEWPORT.height;
 let isFinePointer = true;
 
 function readLift(): number {
-  return parseFloat(getElement('#about').style.getPropertyValue('--about-lift') || '0');
+  return parseFloat(getElement('#about').style.getPropertyValue('--stain-lift') || '0');
 }
 
 function placeSectionTop(top: number): void {
@@ -47,7 +47,7 @@ function mountStain(): void {
 }
 
 function readPath(set: string): string | null {
-  return getElement(`[data-stain-set="${set}"] .about-edge-fill`).getAttribute('d');
+  return getElement(`[data-stain-set="${set}"] .stain-edge-fill`).getAttribute('d');
 }
 
 beforeEach(() => {
@@ -59,8 +59,8 @@ beforeEach(() => {
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => new DOMRect(0, 0, 0, smallViewportHeight));
   document.body.innerHTML = `<section id="about" data-module-stain>
     <h2 data-stain-landing>Cozy chaos only.</h2>
-    <svg data-stain-set="wide"><path class="about-edge-rim"/><path class="about-edge-fill"/></svg>
-    <svg data-stain-set="narrow"><path class="about-edge-rim"/><path class="about-edge-fill"/></svg>
+    <svg data-stain-set="wide"><path class="stain-edge-rim"/><path class="stain-edge-fill"/></svg>
+    <svg data-stain-set="narrow"><path class="stain-edge-rim"/><path class="stain-edge-fill"/></svg>
   </section>`;
   landingOffset = 300;
   placeSectionTop(VIEWPORT.height);
@@ -252,7 +252,7 @@ describe('the stain edge', () => {
     await scrollTo(VIEWPORT.height * 0.75);
 
     expect(getElement('#about').style.getPropertyValue('clip-path')).toBe('');
-    expect(getElement('#about').style.getPropertyValue('--about-lift')).toBe('');
+    expect(getElement('#about').style.getPropertyValue('--stain-lift')).toBe('');
   });
 
   it('keeps the content where it belongs on a touch screen, so nothing shakes against the browser own scroll', async () => {
@@ -323,5 +323,39 @@ describe('the stain edge', () => {
 
     expect(readPath('narrow')).toMatch(/^M-40\.0/);
     expect(readPath('wide')).toBeNull();
+  });
+
+  it.each([
+    { top: VIEWPORT.height * 0.9, isSwept: false },
+    { top: VIEWPORT.height * 0.5 + 1, isSwept: false },
+    { top: VIEWPORT.height * 0.5, isSwept: true },
+    { top: 0, isSwept: true },
+    { top: -1999, isSwept: true },
+    { top: -2000, isSwept: false },
+  ])('marks the section as swept only while its sweep is done and it is still on screen (top $top)', async ({ top, isSwept }) => {
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+
+    await scrollTo(top);
+
+    expect(getElement('#about').hasAttribute('data-stain-swept')).toBe(isSwept);
+  });
+
+  it('drops the swept mark when scrolling back above the sweep', async () => {
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+    await scrollTo(0);
+
+    await scrollTo(VIEWPORT.height * 0.8);
+
+    expect(getElement('#about').hasAttribute('data-stain-swept')).toBe(false);
+  });
+
+  it('never marks the section when the page has no motion', async () => {
+    mountStain();
+
+    await scrollTo(0);
+
+    expect(getElement('#about').hasAttribute('data-stain-swept')).toBe(false);
   });
 });

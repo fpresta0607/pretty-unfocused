@@ -64,6 +64,12 @@ describe('showDataPlugin', () => {
     expect(page).not.toContain('<!--render:frame-->');
   });
 
+  it('adds the in-place player to the page', async () => {
+    const page = await buildPage();
+
+    expect(page).toContain('<dialog class="player"');
+  });
+
   it('puts the intro in place of its marker', async () => {
     const page = await buildPage();
 

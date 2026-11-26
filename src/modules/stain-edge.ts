@@ -2,6 +2,7 @@ import { EASE_SCRUB } from './motion-tokens.ts';
 
 export const NARROW_VIEWPORT_PX = 600;
 export const SWEEP_END_PROGRESS = 0.5;
+export const REVEAL_FROM_SWEEP_PROGRESS = 0.7;
 export const STATIC_POSE = 0.5;
 export const STATIC_REACH_FRACTION = 0.92;
 export const STATIC_VIEWS = {
@@ -28,6 +29,8 @@ const SPREAD_AT_END = 1.1;
 const WIDTH_AT_START = 0.86;
 const WIDTH_AT_END = 1.12;
 const SMALL_DOME_HEIGHT_AT_START = 0.85;
+const HIDDEN_DEPTH_PX = 14;
+const HIDDEN_DEPTH_RELEASE_PROGRESS = 0.05;
 const CURVE_PULL = 3;
 
 interface Dome {
@@ -149,7 +152,8 @@ export function edgeShape(sectionTop: number, viewportWidth: number, viewportHei
   }
   const set = setFor(viewportWidth);
   const progress = sweepProgress(sectionTop, viewportHeight);
-  const rise = viewportHeight * RISE_AT_END_FRACTION * sweepGrowth(sectionTop, viewportHeight);
+  const hiddenDepth = HIDDEN_DEPTH_PX * (1 - smoothStep(progress / HIDDEN_DEPTH_RELEASE_PROGRESS));
+  const rise = viewportHeight * RISE_AT_END_FRACTION * sweepGrowth(sectionTop, viewportHeight) - hiddenDepth;
   const taper = 1 - (1 - RELIEF_AT_END) * smoothStep((progress - RELIEF_TAPER_START) / (1 - RELIEF_TAPER_START));
   const relief = viewportHeight * set.reliefFraction * smoothStep(progress / RELIEF_RAMP_PROGRESS) * taper;
   const tiltFade = 1 - smoothStep((progress - TILT_FADE_START) / TILT_FADE_SPAN);
