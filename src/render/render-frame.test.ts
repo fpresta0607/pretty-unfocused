@@ -55,6 +55,12 @@ describe('renderFrame', () => {
     expect(markup).toContain(`>${latestEpisode?.title}</span>`);
   });
 
+  it('opens the in-place player from the mini card when the newest episode has a video', () => {
+    expect(markup).toContain(
+      `data-player="${latestEpisode?.youtubeVideoId}" data-player-title="${latestEpisode?.title}">`,
+    );
+  });
+
   it('links the mini card to Spotify when the newest episode is not on YouTube yet', () => {
     const podcastOnlyEpisode: Episode = {
       id: 'podcast-only',
@@ -72,6 +78,7 @@ describe('renderFrame', () => {
     );
     expect(spotifyMarkup).toContain('>Monday drop</span>');
     expect(spotifyMarkup).not.toContain('on YouTube"');
+    expect(spotifyMarkup).not.toContain('data-player');
   });
 
   it('leaves out the mini card when the newest episode has neither a YouTube nor a Spotify link', () => {

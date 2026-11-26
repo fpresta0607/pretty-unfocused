@@ -21,7 +21,7 @@ let smallViewportHeight = VIEWPORT.height;
 let isFinePointer = true;
 
 function readLift(): number {
-  return parseFloat(getElement('#about').style.getPropertyValue('--about-lift') || '0');
+  return parseFloat(getElement('#about').style.getPropertyValue('--stain-lift') || '0');
 }
 
 function placeSectionTop(top: number): void {
@@ -47,7 +47,7 @@ function mountStain(): void {
 }
 
 function readPath(set: string): string | null {
-  return getElement(`[data-stain-set="${set}"] .about-edge-fill`).getAttribute('d');
+  return getElement(`[data-stain-set="${set}"] .stain-edge-fill`).getAttribute('d');
 }
 
 beforeEach(() => {
@@ -55,12 +55,16 @@ beforeEach(() => {
   window.innerHeight = VIEWPORT.height;
   smallViewportHeight = VIEWPORT.height;
   isFinePointer = true;
-  vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(hover: hover) and (pointer: fine)' && isFinePointer }));
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    get matches() {
+      return query === '(hover: hover) and (pointer: fine)' && isFinePointer;
+    },
+  }));
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => new DOMRect(0, 0, 0, smallViewportHeight));
   document.body.innerHTML = `<section id="about" data-module-stain>
     <h2 data-stain-landing>Cozy chaos only.</h2>
-    <svg data-stain-set="wide"><path class="about-edge-rim"/><path class="about-edge-fill"/></svg>
-    <svg data-stain-set="narrow"><path class="about-edge-rim"/><path class="about-edge-fill"/></svg>
+    <svg data-stain-set="wide"><path class="stain-edge-rim"/><path class="stain-edge-fill"/></svg>
+    <svg data-stain-set="narrow"><path class="stain-edge-rim"/><path class="stain-edge-fill"/></svg>
   </section>`;
   landingOffset = 300;
   placeSectionTop(VIEWPORT.height);
@@ -252,14 +256,16 @@ describe('the stain edge', () => {
     await scrollTo(VIEWPORT.height * 0.75);
 
     expect(getElement('#about').style.getPropertyValue('clip-path')).toBe('');
-    expect(getElement('#about').style.getPropertyValue('--about-lift')).toBe('');
+    expect(getElement('#about').style.getPropertyValue('--stain-lift')).toBe('');
   });
 
   it('keeps the content where it belongs on a touch screen, so nothing shakes against the browser own scroll', async () => {
-    isFinePointer = false;
     document.documentElement.dataset.motion = 'on';
     mountStain();
+    await scrollTo(VIEWPORT.height * 0.7);
+    const liftWithTrackpad = readLift();
 
+    isFinePointer = false;
     const tops = [VIEWPORT.height * 0.9, VIEWPORT.height * 0.7, VIEWPORT.height / 2, VIEWPORT.height / 4];
     const lifts = await tops.reduce<Promise<number[]>>(async (done, top) => {
       const earlier = await done;
@@ -267,6 +273,7 @@ describe('the stain edge', () => {
       return [...earlier, readLift()];
     }, Promise.resolve([]));
 
+    expect(liftWithTrackpad).toBeGreaterThan(0);
     expect(lifts).toEqual([0, 0, 0, 0]);
   });
 
@@ -324,4 +331,5 @@ describe('the stain edge', () => {
     expect(readPath('narrow')).toMatch(/^M-40\.0/);
     expect(readPath('wide')).toBeNull();
   });
+
 });

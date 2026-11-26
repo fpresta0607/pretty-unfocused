@@ -3,6 +3,7 @@ import { escapeHtml } from './escape-html.ts';
 import { formatShortDate } from './format-date.ts';
 import { renderIcon } from './icons.ts';
 import { renderPlatformPills } from './platform-links.ts';
+import { renderPlayerAttributes } from './render-player-attributes.ts';
 import { RING_SIZE, RING_SRC, RING_SRCSET } from './ring-asset.ts';
 import { TAGLINE_LINES } from './tagline-lines.ts';
 
@@ -48,15 +49,16 @@ function renderEpisodeCard(episode: Episode): string {
   const spotifyUrl = episode.spotifyUrl === undefined ? undefined : escapeHtml(episode.spotifyUrl);
 
   const image = `<img class="hero-card-image" src="${escapeHtml(thumbnail.src)}"${srcset} sizes="${CARD_IMAGE_SIZES}" width="${thumbnail.width}" height="${thumbnail.height}" alt="">`;
+  const playerAttributes = renderPlayerAttributes(episode.youtubeVideoId, episode.title);
   const media =
     youtubeUrl === undefined
       ? image
-      : `<a class="hero-card-media" href="${youtubeUrl}" tabindex="-1" aria-hidden="true">${image}</a>`;
+      : `<a class="hero-card-media" href="${youtubeUrl}"${playerAttributes} tabindex="-1" aria-hidden="true">${image}</a>`;
 
   const watchLink =
     youtubeUrl === undefined
       ? ''
-      : `<a class="hero-card-watch" href="${youtubeUrl}"><span class="round-button round-button--gold" aria-hidden="true">${renderIcon('play')}</span><span class="pill">${renderIcon('youtube', 'brand-icon')}Watch<span class="visually-hidden"> ${title} on YouTube</span></span></a>`;
+      : `<a class="hero-card-watch" href="${youtubeUrl}"${playerAttributes}><span class="round-button round-button--gold" aria-hidden="true">${renderIcon('play')}</span><span class="pill">${renderIcon('youtube', 'brand-icon')}Watch<span class="visually-hidden"> ${title} on YouTube</span></span></a>`;
   const listenPill =
     spotifyUrl === undefined
       ? ''
