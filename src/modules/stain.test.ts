@@ -332,4 +332,37 @@ describe('the stain edge', () => {
     expect(readPath('wide')).toBeNull();
   });
 
+  it.each([
+    { top: VIEWPORT.height * 0.9, isSwept: false },
+    { top: VIEWPORT.height * 0.5 + 1, isSwept: false },
+    { top: VIEWPORT.height * 0.5, isSwept: true },
+    { top: 0, isSwept: true },
+    { top: -1999, isSwept: true },
+    { top: -2000, isSwept: false },
+  ])('marks the section as swept only while its sweep is done and it is still on screen (top $top)', async ({ top, isSwept }) => {
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+
+    await scrollTo(top);
+
+    expect(getElement('#about').hasAttribute('data-stain-swept')).toBe(isSwept);
+  });
+
+  it('drops the swept mark when scrolling back above the sweep', async () => {
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+    await scrollTo(0);
+
+    await scrollTo(VIEWPORT.height * 0.8);
+
+    expect(getElement('#about').hasAttribute('data-stain-swept')).toBe(false);
+  });
+
+  it('never marks the section when the page has no motion', async () => {
+    mountStain();
+
+    await scrollTo(0);
+
+    expect(getElement('#about').hasAttribute('data-stain-swept')).toBe(false);
+  });
 });

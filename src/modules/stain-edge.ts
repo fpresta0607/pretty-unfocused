@@ -3,6 +3,7 @@ import { EASE_SCRUB } from './motion-tokens.ts';
 export const NARROW_VIEWPORT_PX = 600;
 export const SWEEP_END_PROGRESS = 0.5;
 export const REVEAL_FROM_SWEEP_PROGRESS = 0.7;
+export const EPISODES_REVEAL_FROM_SWEEP_PROGRESS = 0.1;
 export const STATIC_POSE = 0.5;
 export const STATIC_REACH_FRACTION = 0.92;
 export const STATIC_VIEWS = {

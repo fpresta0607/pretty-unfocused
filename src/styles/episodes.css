@@ -1,0 +1,624 @@
+.episodes {
+  --ring: 3px;
+  --gap: calc(var(--space-4) - 2 * var(--ring));
+  --row-inset: calc(var(--gutter) - var(--ring));
+  --card-share: 84cqw;
+  --card-floor: 15.75rem;
+  --card-cap: 22rem;
+  --card-fit: 1000rem;
+  --card-lines: 3;
+  --card-thumb: 0.5625;
+  --card-k: 300px;
+  --card-extra: var(--card-k);
+  --pin-top: 4rem;
+  --pin-bottom: 6.25rem;
+  --dashes-bottom: calc(var(--pin-bottom) - 19px);
+  --frame-clear: 72px;
+  --scroll-per-card: 60svh;
+  --end-steps: 0.4;
+  --raw-step: calc(var(--progress, 0) * (var(--card-count) - 1 + var(--end-steps)));
+  --step: clamp(0, calc(var(--raw-step) * 1.005), calc(var(--card-count) - 1));
+  --sweep-reach: 180px;
+  --sweep-ms: 600ms;
+  --cover-edge: #590334;
+  --tone: color-mix(in srgb, var(--wine) calc(mod(var(--active, 0), 2) * 100%), var(--ember));
+  --settle: clamp(0, calc((var(--raw-step) - (var(--card-count) - 1)) / max(var(--end-steps), 0.001)), 1);
+  --settle-ease: calc(var(--settle) * var(--settle) * (3 - 2 * var(--settle)));
+
+  --stain-fill: var(--ember);
+
+  z-index: 3;
+  container-type: inline-size;
+  isolation: isolate;
+  overflow-x: clip;
+  background: var(--ember);
+  color: var(--cream);
+}
+
+html[data-motion='on']:has(.episodes[data-stain-swept]) {
+  background-color: var(--ember);
+}
+
+@media (max-width: 599px) {
+  .episodes {
+    --sweep-reach: 169px;
+  }
+}
+
+.episodes::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  block-size: 1px;
+  background-color: var(--tone);
+  transition: background-color var(--sweep-ms) var(--ease-out);
+  pointer-events: none;
+}
+
+.episodes::after {
+  inset-block-end: -1px;
+}
+
+.episodes-sweeps {
+  display: none;
+}
+
+.episodes-pin {
+  translate: 0 calc(var(--stain-lift, 0px) * -1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  justify-content: center;
+  min-block-size: 100svh;
+  padding-block: var(--pin-top) var(--pin-bottom);
+  will-change: transform;
+}
+
+.episodes-copy {
+  padding-inline: var(--gutter);
+}
+
+.episodes-heading {
+  font-weight: 400;
+}
+
+.episodes-heading-visual {
+  display: grid;
+  color: var(--cream);
+  font-family: var(--font-display);
+  font-size: var(--size-h2);
+  line-height: 0.92;
+  text-transform: uppercase;
+  -webkit-text-stroke: var(--display-stroke) currentcolor;
+}
+
+.episodes-line-mask {
+  display: block;
+  padding-block: 0.2em;
+  margin-block: -0.2em;
+}
+
+.episodes-heading-visual .episodes-line-mask {
+  padding-inline-end: 0.3em;
+  margin-inline-end: -0.3em;
+}
+
+.episodes-line {
+  display: block;
+}
+
+.episodes-comma {
+  margin-inline-start: -0.16em;
+}
+
+.episodes-line-mask--script {
+  position: relative;
+  z-index: 1;
+  padding-block: 0;
+  margin-block: 0.18em -0.04em;
+}
+
+.episodes-script {
+  inline-size: max-content;
+  margin-inline-start: 0.08em;
+  color: var(--gold);
+  font-family: var(--font-script);
+  font-size: max(3rem, calc(var(--size-h2) * 0.925));
+  line-height: 1;
+  text-transform: none;
+  rotate: -8deg;
+  transform-origin: left bottom;
+  -webkit-text-stroke: 0;
+}
+
+.episodes-lead-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.episodes-lead {
+  flex: 1 1 0;
+  inline-size: 0;
+  min-inline-size: 0;
+  font-size: var(--size-body);
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.episodes-lead .episodes-line-mask {
+  padding-block: 0.3em;
+  margin-block: -0.3em;
+}
+
+.episodes-viewport {
+  container: stage / inline-size;
+  position: relative;
+  min-inline-size: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  margin-inline-start: var(--row-inset);
+  max-inline-size: none;
+  scrollbar-color: var(--gold) transparent;
+  scrollbar-width: thin;
+}
+
+.episodes-track {
+  display: flex;
+  gap: var(--gap);
+  inline-size: max-content;
+  padding-block: 6px var(--space-3);
+}
+
+.episodes-track,
+.episode-card {
+  --card-w: round(nearest, var(--row-card-w, clamp(var(--card-floor), min(var(--card-share), var(--card-fit)), var(--card-cap))), 1px);
+}
+
+.episodes-nav {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: none;
+  gap: var(--space-2);
+}
+
+.episodes-nav[hidden] {
+  display: none;
+}
+
+.episodes-nav-button--previous svg {
+  rotate: 180deg;
+}
+
+.episodes-nav-button:hover {
+  translate: none;
+}
+
+.episodes-nav-button:not(:disabled):hover {
+  --focus-ring: var(--cream);
+
+  background: var(--gold);
+}
+
+.episodes-nav-button:disabled {
+  border: 2px solid var(--rose);
+  background: transparent;
+  color: var(--rose);
+  cursor: default;
+}
+
+.episodes-dashes {
+  display: none;
+}
+
+@media (min-width: 600px) {
+  .episodes {
+    --card-share: 52cqw;
+    --card-floor: 21rem;
+    --card-cap: 28rem;
+    --pin-top: 7.5rem;
+    --pin-bottom: 9rem;
+  }
+
+  .episodes-track {
+    padding-inline-end: var(--row-end, var(--gutter));
+  }
+}
+
+@media (max-width: 599px) {
+  .episodes-viewport {
+    max-inline-size: var(--row-w, none);
+  }
+
+  .episodes {
+    --end-steps: 0;
+    --pin-top: 4rem;
+    --dashes-bottom: calc(var(--frame-clear) + var(--space-4));
+    --pin-bottom: calc(var(--frame-clear) + var(--space-4));
+    --card-cap: calc(100cqw - var(--row-inset));
+    --card-share: var(--card-cap);
+    --card-floor: var(--card-cap);
+  }
+
+  .episodes-pin {
+    gap: var(--space-3);
+    justify-content: flex-start;
+  }
+
+  .episodes-track {
+    padding-block-end: 6px;
+  }
+
+  .episodes-copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .episodes-heading {
+    grid-area: 1 / 1 / 2 / 3;
+  }
+
+  .episodes-lead-row {
+    display: contents;
+  }
+
+  .episodes-lead {
+    grid-area: 2 / 1 / 3 / 3;
+    inline-size: auto;
+    margin-block-start: var(--space-3);
+  }
+
+  .episodes-nav {
+    grid-area: 1 / 2;
+    align-self: end;
+  }
+}
+
+@media (max-width: 359px) {
+  .episodes-nav-button {
+    inline-size: 44px;
+    block-size: 44px;
+  }
+}
+
+@media (max-width: 479px) and (min-height: 810px), (min-width: 480px) and (max-width: 599px) and (min-height: 920px) {
+  html[data-motion='on'] .episodes {
+    --pin-gap: var(--space-2);
+    --pin-bottom: calc(var(--dashes-bottom) + 3px + var(--space-4));
+    --card-cap: calc(100cqw - 2 * var(--row-inset));
+  }
+}
+
+@media (max-width: 599px) and (max-height: 900px) {
+  .episodes {
+    --card-lines: 2;
+  }
+}
+
+@media (max-width: 599px) and (max-height: 800px) {
+  .episodes {
+    --card-lines: 2;
+    --card-extra: 246px;
+  }
+}
+
+@media (max-width: 599px) and (max-height: 760px) {
+  .episodes {
+    --card-lines: 1;
+    --card-extra: 218px;
+  }
+
+  .episodes-pin {
+    gap: var(--space-2);
+  }
+
+  .episodes-lead {
+    margin-block-start: var(--space-2);
+  }
+
+  .episode-card {
+    gap: var(--space-2);
+  }
+}
+
+@media (min-width: 900px) {
+  .episodes {
+    --card-share: 44cqw;
+    --card-floor: 21rem;
+    --card-cap: 34rem;
+    --row-inset: 0px;
+    --head-gap: round(clamp(3rem, 4cqw, 4rem), 1px);
+  }
+
+  .episodes-pin {
+    display: grid;
+    grid-template-columns: var(--copy-w, max-content) minmax(0, 1fr);
+    align-content: center;
+    align-items: center;
+    gap: 0 var(--head-gap);
+  }
+
+  .episodes-copy {
+    padding-inline-end: 0;
+  }
+
+  .episodes-lead-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+
+  .episodes-lead {
+    flex: none;
+    inline-size: auto;
+  }
+
+  .episodes-viewport {
+    grid-column: 2;
+  }
+}
+
+.episodes-dash {
+  flex: 0 1 28px;
+  min-inline-size: 8px;
+  block-size: 3px;
+  border-radius: 2px;
+  background: var(--rose);
+  transition:
+    background-color var(--dur-ui) var(--ease-out),
+    flex-basis var(--dur-ui) var(--ease-out);
+}
+
+.episodes-dash[data-active] {
+  flex-basis: 44px;
+  background: var(--gold);
+}
+
+@media (max-width: 479px) and (min-height: 810px), (min-width: 480px) and (max-width: 599px) and (min-height: 920px), (min-width: 600px) and (max-width: 659px) and (min-height: 900px), (min-width: 660px) and (max-width: 899px) and (min-height: 960px), (min-width: 900px) and (min-height: 760px) {
+  html[data-motion='on'] .episodes {
+    --travel: round(down, calc((var(--card-count) - 1 + var(--end-steps)) * var(--scroll-per-card)), 1px);
+
+    min-block-size: 0;
+    block-size: calc(100svh + var(--travel));
+  }
+
+  html[data-motion='on']:has(.episodes.is-inview) {
+    background-color: color-mix(in srgb, var(--wine) calc(mod(var(--episodes-active, 0), 2) * 100%), var(--ember));
+    transition: background-color 600ms var(--ease-out);
+  }
+
+  html[data-motion='on']:has(.episodes[data-pinned]) .mini-card {
+    background: transparent;
+  }
+
+  html[data-motion='on'] .episodes-sweeps {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    display: block;
+    overflow: clip;
+  }
+
+  html[data-motion='on'] .episodes-sweep {
+    --covered: clamp(0, calc(var(--active, 0) - var(--sweep-index) + 1), 1);
+    --stain-fill: var(--wine);
+
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: 100%;
+    background: var(--stain-fill);
+    translate: calc((1 - var(--covered)) * (100cqw + var(--sweep-reach))) 0;
+    transition: translate var(--sweep-ms) var(--ease-out);
+    will-change: translate;
+  }
+
+  html[data-motion='on'] .episodes-sweep:nth-child(even) {
+    --stain-fill: var(--ember);
+  }
+
+  html[data-motion='on'] .episodes-sweep .stain-edge {
+    inset: 0 auto auto 0;
+    z-index: auto;
+    inline-size: 100svh;
+    block-size: var(--sweep-reach);
+    transform-origin: 0 0;
+    transform: translate(calc(var(--sweep-reach) * -1), 100svh) rotate(-90deg);
+  }
+
+  html[data-motion='on'] .episodes-pin {
+    position: sticky;
+    inset-block-start: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: var(--pin-gap, var(--space-3));
+    align-content: normal;
+    align-items: stretch;
+    justify-content: normal;
+    block-size: 100svh;
+    min-block-size: 0;
+    overflow: clip;
+  }
+
+  html[data-motion='on'] .episodes-copy {
+    grid-row: auto;
+    align-self: start;
+  }
+
+  html[data-motion='on'] .episodes-viewport {
+    grid-column: auto;
+    margin-inline-start: 0;
+    max-inline-size: none;
+    container: stage / size;
+    overflow: clip;
+    overflow-clip-margin: 24px;
+    scroll-snap-type: none;
+  }
+
+  html[data-motion='on'] .episodes-track {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    align-content: start;
+    inline-size: auto;
+    padding: 0 var(--gutter) 0 var(--row-inset);
+    padding-block-start: max(0px, round(down, calc((100cqh - var(--card-h, 100cqh)) / 2), 1px));
+  }
+
+  html[data-motion='on'] .episodes-nav {
+    display: none;
+  }
+
+  html[data-motion='on'] .episode-card {
+    --ahead: max(0, calc(var(--card-index) - var(--step)));
+    --card-fit: calc((100cqh - var(--card-extra)) / var(--card-thumb));
+    --settle-shift: 0px;
+
+    grid-area: 1 / 1;
+    justify-self: start;
+    z-index: var(--card-index);
+    translate: round(calc(var(--ahead) * (var(--card-w) + var(--gap)) + var(--settle-shift)), 1px) 0;
+    will-change: translate;
+  }
+
+  html[data-motion='on'] .episode-card[data-covered] {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  html[data-motion='on'] .episodes[data-reveal] .episodes-viewport {
+    overflow: visible;
+  }
+
+  html[data-motion='on'] .episodes-dashes {
+    position: absolute;
+    inset-block-start: var(--dashes-top);
+    inset-inline: var(--gutter);
+    display: flex;
+    gap: var(--space-2);
+    z-index: -1;
+    max-inline-size: calc(var(--card-count) * 36px);
+    translate: 0 140%;
+    opacity: 0;
+    transition:
+      translate var(--dur-ui) var(--ease-out),
+      opacity var(--dur-ui) var(--ease-out);
+  }
+
+  html[data-motion='on'] .episodes[data-arrived] .episodes-dashes {
+    translate: 0 0;
+    opacity: 1;
+    transition:
+      translate var(--dur-move) var(--ease-out),
+      opacity var(--dur-move) var(--ease-out);
+  }
+
+  html[data-motion='on'] .episodes[data-reveal][data-arrived] .episodes-dashes {
+    transition-delay: calc(var(--line) * 80ms);
+  }
+
+  html[data-motion='on'] .episodes[data-reveal='pending'] .episodes-dashes {
+    translate: 0 140%;
+    opacity: 0;
+  }
+
+  @container stage (max-height: 470px) {
+    .episode-card {
+      --card-lines: 2;
+      --card-extra: calc(var(--card-k) - 28px);
+    }
+  }
+
+  @container stage (max-height: 425px) {
+    .episode-card {
+      --card-extra: calc(var(--card-k) - 44px);
+    }
+  }
+
+  @container stage (max-height: 400px) {
+    .episode-card {
+      --card-lines: 1;
+      --card-extra: calc(var(--card-k) - 72px);
+    }
+  }
+}
+
+@media (min-width: 600px) and (max-width: 659px) and (min-height: 900px), (min-width: 660px) and (max-width: 899px) and (min-height: 960px) {
+  html[data-motion='on'] .episode-card {
+    --settle-shift: calc(var(--settle-ease) * (100cqw - 2 * var(--row-inset) - var(--card-w)) / 2);
+  }
+}
+
+@media (min-width: 1600px) and (min-height: 840px) {
+  .episodes {
+    --head-gap: round(clamp(4rem, 6cqw, 9rem), 1px);
+    --pin-top: var(--pin-bottom);
+  }
+
+  .episodes-track,
+  .episode-card {
+    --card-w: round(nearest, var(--row-card-w, calc(max(539px, 66svh) * 0.7236)), 1px);
+  }
+
+  html[data-motion='on'] .episode-card {
+    --card-w: round(nearest, calc(max(539px, min(66svh, calc(100cqh - 48px))) * 0.7236), 1px);
+  }
+}
+
+@media (min-width: 900px) and (min-height: 760px) {
+  html[data-motion='on'] .episodes-pin {
+    grid-template-columns: var(--copy-w, max-content) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 0 var(--head-gap);
+  }
+
+  html[data-motion='on'] .episodes-viewport {
+    grid-column: 2;
+  }
+
+  html[data-motion='on'] .episodes-copy {
+    align-self: center;
+  }
+
+  html[data-motion='on'] .episodes-track {
+    padding-inline-start: 0;
+  }
+
+  html[data-motion='on'] .episode-card {
+    --settle-shift: calc(var(--settle-ease) * (100cqw - var(--gutter) - var(--card-w)) / 2);
+  }
+}
+
+html[data-motion='on'] .episodes[data-reveal] .episodes-line-mask {
+  overflow: hidden;
+}
+
+html[data-motion='on'] .episodes[data-reveal] .episodes-line-mask--script {
+  overflow: visible;
+  clip-path: inset(-2em -2em -0.4em -2em);
+}
+
+html[data-motion='on'] .episodes[data-reveal] .episodes-line {
+  transition:
+    translate var(--dur-move) var(--ease-out) calc(var(--line) * 80ms),
+    opacity var(--dur-move) var(--ease-out) calc(var(--line) * 80ms);
+}
+
+html[data-motion='on'] .episodes[data-reveal='pending'] .episodes-line {
+  translate: 0 140%;
+  opacity: 0;
+}
+
+@media (max-width: 479px) and (min-height: 810px), (min-width: 480px) and (max-width: 599px) and (min-height: 920px), (min-width: 600px) and (max-width: 659px) and (min-height: 900px), (min-width: 660px) and (max-width: 899px) and (min-height: 960px), (min-width: 900px) and (min-height: 760px) {
+  html[data-motion='on'] .episodes[data-reveal] .episode-card {
+    transition: transform var(--dur-move) var(--ease-out) 150ms;
+  }
+
+  html[data-motion='on'] .episodes[data-reveal='pending'] .episode-card {
+    transform: translateY(120%);
+  }
+}
