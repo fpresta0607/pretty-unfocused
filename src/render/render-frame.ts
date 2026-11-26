@@ -70,7 +70,7 @@ export function renderFrame(show: Show, sections: readonly FrameSection[]): stri
   const firstSection = sections[0];
   const firstLabel = firstSection === undefined ? '' : escapeHtml(firstSection.label);
   return `${renderIconSprite()}
-  <header class="frame" data-module-frame data-surface-top="dark" data-surface-bottom="dark">
+  <header class="frame" data-module-frame>
     <div class="frame-corner frame-corner--menu" data-module-menu>
       ${renderMenuButton()}
       ${renderMenuPanel(sections)}
