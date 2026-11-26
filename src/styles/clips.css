@@ -31,11 +31,6 @@ html[data-motion='on']:has(.clips[data-stain-swept]) {
   background-color: var(--gold);
 }
 
-html[data-motion='on'] .clips {
-  min-block-size: 190svh;
-  align-content: start;
-}
-
 html:not([data-motion='on']) .clips {
   --edge-room: round(down, var(--edge-rise), 1px);
 
@@ -56,12 +51,6 @@ html:not([data-motion='on']) .clips {
   translate: 0 calc(var(--stain-lift, 0px) * -1);
 }
 
-html[data-motion='on'] .clips-inner {
-  position: sticky;
-  inset-block-start: var(--pad-top);
-  align-self: start;
-}
-
 .clips .section-heading {
   --script-color: var(--wine);
 }
@@ -71,7 +60,8 @@ html[data-motion='on'] .clips-inner {
   z-index: 1;
   align-self: center;
   margin-inline: calc(var(--gutter) * -1);
-  padding-block: var(--space-1);
+  margin-block-start: calc((var(--space-4) + var(--ring) - var(--space-1)) * -1);
+  padding-block: calc(var(--space-4) + var(--ring)) var(--space-1);
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
@@ -84,7 +74,7 @@ html[data-motion='on'] .clips-inner {
 }
 
 .clips-fan-list {
-  --card-w: clamp(5.5rem, min(40vw, calc((100svh - 29.5rem) * 9 / 16)), 11.5rem);
+  --card-w: max(10.5rem, min(43vw, calc((100svh - 29.5rem) * 9 / 16), 11.5rem));
   --card-pad: clamp(var(--space-2), calc(var(--card-w) * 0.07), var(--space-3));
   --card-gap: var(--space-3);
   --fan-turn: 0deg;
@@ -153,14 +143,17 @@ html[data-motion='on'] .clips-inner {
 }
 
 .clip-card-title {
-  max-block-size: 2.4em;
+  display: -webkit-box;
   max-inline-size: min(100%, calc(var(--fan-pitch) - var(--card-pad) - var(--ring) - var(--card-w) * 0.04));
   overflow: hidden;
   font-weight: 700;
-  font-size: var(--size-body);
-  line-height: 1.2;
+  font-size: clamp(var(--size-body), calc(var(--card-w) * 0.26 - 25px), var(--size-h3));
+  line-height: 1.15;
   overflow-wrap: anywhere;
   text-wrap: balance;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
 }
 
 .clip-card-play {
@@ -262,6 +255,19 @@ html[data-motion='on'] .clips-inner {
   }
 }
 
+@media (min-width: 600px) and (min-height: 40rem), (max-width: 599px) and (min-height: 50rem) {
+  html[data-motion='on'] .clips {
+    min-block-size: 190svh;
+    align-content: start;
+  }
+
+  html[data-motion='on'] .clips-inner {
+    position: sticky;
+    inset-block-start: var(--pad-top);
+    align-self: start;
+  }
+}
+
 @media (max-width: 359px) {
   .clips-inner {
     row-gap: var(--space-3);
@@ -308,12 +314,13 @@ html[data-motion='on'] .clips-inner {
   }
 
   .clips-inner {
-    grid-template-columns: auto auto 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
     grid-template-areas:
-      'heading tiktok .'
-      'fan fan fan';
+      'heading tiktok'
+      'fan fan';
     column-gap: var(--space-5);
+    align-content: center;
     align-items: end;
   }
 
@@ -335,7 +342,7 @@ html[data-motion='on'] .clips-inner {
 
   .clips-tiktok {
     grid-area: tiktok;
-    justify-self: start;
+    justify-self: end;
     inline-size: 22rem;
   }
 }
@@ -347,6 +354,7 @@ html[data-motion='on'] .clips-inner {
 
   .clips-fan {
     container-type: inline-size;
+    margin-block-start: 0;
     margin-inline: 0;
     padding-block: var(--space-4);
     overflow: visible;

@@ -1,6 +1,6 @@
 import { module as Module } from 'modujs';
 
-import { cardDeal, dealProgress, dealRanks } from './clips-logic.ts';
+import { cardDeal, dealProgress, dealRanks, fitTitle } from './clips-logic.ts';
 import { isMotionEnabled, SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
 import { hasEntered, isRevealOpen, revealSectionHeading } from './section-heading-reveal.ts';
 
@@ -10,6 +10,8 @@ export class Clips extends Module {
   private heading: HTMLElement | null = null;
   private fan: HTMLElement | null = null;
   private dashes: HTMLElement[] = [];
+  private titles: { element: HTMLElement; text: string }[] = [];
+  private cardResize: ResizeObserver | undefined;
   private lastProgress = Number.NaN;
   private pendingFrame: number | undefined;
   private readonly smoothScrollDevice = window.matchMedia(SMOOTH_SCROLL_DEVICE_QUERY);
@@ -21,6 +23,15 @@ export class Clips extends Module {
     this.pendingFrame = window.requestAnimationFrame(() => {
       this.pendingFrame = undefined;
       this.update();
+    });
+  };
+
+  private readonly fitTitles = (): void => {
+    this.titles.forEach(({ element, text }) => {
+      element.textContent = fitTitle(text, (candidate) => {
+        element.textContent = candidate;
+        return element.scrollHeight <= element.clientHeight + 1;
+      });
     });
   };
 
@@ -39,10 +50,17 @@ export class Clips extends Module {
     this.fan = this.el.querySelector<HTMLElement>('[data-clips="fan"]');
     this.dashes = Array.from(this.el.querySelectorAll<HTMLElement>('[data-clips="dash"]'));
     this.fan?.addEventListener('scroll', this.updateDashes, { passive: true });
+    this.cards = Array.from(this.el.querySelectorAll<HTMLElement>('[data-clips="card"]'));
+    this.titles = Array.from(this.el.querySelectorAll<HTMLElement>('.clip-card-title'), (element) => ({ element, text: element.textContent }));
+    this.fitTitles();
+    this.cardResize = new ResizeObserver(this.fitTitles);
+    this.cards.forEach((card) => {
+      this.cardResize?.observe(card);
+    });
+    void document.fonts.ready.then(this.fitTitles);
     if (!isMotionEnabled(document.documentElement)) {
       return;
     }
-    this.cards = Array.from(this.el.querySelectorAll<HTMLElement>('[data-clips="card"]'));
     this.ranks = dealRanks(this.cards.map((card) => Number(card.style.getPropertyValue('--fan-position'))));
     this.heading = this.el.querySelector<HTMLElement>('[data-heading-group]');
     this.heading?.setAttribute('data-reveal', 'pending');
@@ -53,6 +71,7 @@ export class Clips extends Module {
 
   destroy(): void {
     this.fan?.removeEventListener('scroll', this.updateDashes);
+    this.cardResize?.disconnect();
     window.removeEventListener('scroll', this.scheduleUpdate);
     window.removeEventListener('resize', this.scheduleUpdate);
     window.cancelAnimationFrame(this.pendingFrame ?? 0);

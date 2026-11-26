@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { cardDeal, dealProgress, dealRanks } from './clips-logic.ts';
+import { cardDeal, dealProgress, dealRanks, fitTitle } from './clips-logic.ts';
 
 const VIEWPORT_HEIGHT = 800;
 
@@ -76,5 +76,30 @@ describe('cardDeal', () => {
     expect(cardDeal(0, 0, 1)).toBe(0);
     expect(cardDeal(0.5, 0, 1)).toBeGreaterThan(0.99);
     expect(cardDeal(1, 0, 1)).toBe(1);
+  });
+});
+
+describe('fitTitle', () => {
+  const title = 'Your favorite podcast just dropped an episode!!';
+  const fitsWithin = (limit: number) => (text: string) => text.length <= limit;
+
+  it('keeps a title that already fits whole', () => {
+    expect(fitTitle(title, fitsWithin(title.length))).toBe(title);
+  });
+
+  it.each([
+    [30, 'Your favorite podcast just…'],
+    [20, 'Your favorite…'],
+    [5, 'Your…'],
+  ])('ends a title that fits %i characters with an ellipsis at a whole word', (limit, expected) => {
+    expect(fitTitle(title, fitsWithin(limit))).toBe(expected);
+  });
+
+  it('drops punctuation left dangling before the ellipsis', () => {
+    expect(fitTitle('Help us be!! our own housewives', fitsWithin(14))).toBe('Help us be…');
+  });
+
+  it('keeps the first word when nothing shorter fits', () => {
+    expect(fitTitle(title, fitsWithin(0))).toBe('Your…');
   });
 });

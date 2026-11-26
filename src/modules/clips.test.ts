@@ -78,6 +78,7 @@ function mountClips(): void {
 beforeEach(() => {
   isFinePointer = true;
   sectionTop = VIEWPORT_HEIGHT;
+  Object.defineProperty(document, 'fonts', { value: { ready: Promise.resolve() }, configurable: true });
   vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === SMOOTH_SCROLL_DEVICE_QUERY && isFinePointer }));
   window.innerHeight = VIEWPORT_HEIGHT;
   document.body.innerHTML = renderClips(show);
@@ -214,5 +215,39 @@ describe('the clips progress dashes', () => {
     expect(atStart).toBe(0);
     expect(atMiddle).toBe(3);
     expect(activeDashIndex()).toBe(CLIP_COUNT - 1);
+  });
+});
+
+describe('the clip titles', () => {
+  const LONG_TITLE = 'Your favorite podcast just dropped an episode!!';
+  const LINE_HEIGHT = 20;
+  const LINES_SHOWN = 3;
+  const CHARACTERS_PER_LINE = 12;
+
+  function makeTitleOverflow(title: HTMLElement): void {
+    const lines = () => Math.ceil((title.textContent ?? '').length / CHARACTERS_PER_LINE);
+    Object.defineProperty(title, 'scrollHeight', { get: () => lines() * LINE_HEIGHT, configurable: true });
+    Object.defineProperty(title, 'clientHeight', { get: () => Math.min(lines(), LINES_SHOWN) * LINE_HEIGHT, configurable: true });
+  }
+
+  it('shows a title that fits whole', () => {
+    const title = getElement<HTMLElement>('.clip-card-title');
+    title.textContent = 'How it be';
+    makeTitleOverflow(title);
+
+    mountClips();
+
+    expect(title.textContent).toBe('How it be');
+  });
+
+  it('ends a title that is too long with an ellipsis at a whole word and keeps the full name on the play button', () => {
+    const title = getElement<HTMLElement>('.clip-card-title');
+    title.textContent = LONG_TITLE;
+    makeTitleOverflow(title);
+
+    mountClips();
+
+    expect(title.textContent).toBe('Your favorite podcast just dropped…');
+    expect(getElement('.clip-card-play .visually-hidden').textContent).toBe('Play Clip 0');
   });
 });
