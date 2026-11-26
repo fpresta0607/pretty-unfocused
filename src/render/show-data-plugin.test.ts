@@ -64,9 +64,13 @@ describe('showDataPlugin', () => {
     expect(page).not.toContain('<!--render:frame-->');
   });
 
-  it('adds the in-place player to the page', async () => {
+  it('adds the episodes section after the hero, with its menu link and the player', async () => {
     const page = await buildPage();
 
+    expect(page).toContain('id="episodes"');
+    expect(page.indexOf('id="home"')).toBeLessThan(page.indexOf('id="episodes"'));
+    expect(page).toContain('href="#episodes" data-menu="link"');
+    expect(page).toContain('<span class="menu-link-label">Episodes</span>');
     expect(page).toContain('<dialog class="player"');
   });
 
