@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import ModularApp from 'modujs';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Stain } from './stain.ts';
 
@@ -17,6 +17,8 @@ function getElement(selector: string): HTMLElement {
 
 let landingOffset = 300;
 let sectionTop = VIEWPORT.height;
+let smallViewportHeight = VIEWPORT.height;
+let isFinePointer = true;
 
 function readLift(): number {
   return parseFloat(getElement('#about').style.getPropertyValue('--about-lift') || '0');
@@ -33,6 +35,12 @@ async function scrollTo(top: number): Promise<void> {
   await new Promise((resolve) => window.requestAnimationFrame(resolve));
 }
 
+async function resizeTo(innerHeight: number): Promise<void> {
+  window.innerHeight = innerHeight;
+  window.dispatchEvent(new Event('resize'));
+  await new Promise((resolve) => window.requestAnimationFrame(resolve));
+}
+
 function mountStain(): void {
   app = new ModularApp({ modules: { stain: Stain } });
   app.init(app);
@@ -45,6 +53,10 @@ function readPath(set: string): string | null {
 beforeEach(() => {
   window.innerWidth = VIEWPORT.width;
   window.innerHeight = VIEWPORT.height;
+  smallViewportHeight = VIEWPORT.height;
+  isFinePointer = true;
+  vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === '(hover: hover) and (pointer: fine)' && isFinePointer }));
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => new DOMRect(0, 0, 0, smallViewportHeight));
   document.body.innerHTML = `<section id="about" data-module-stain>
     <h2 data-stain-landing>Cozy chaos only.</h2>
     <svg data-stain-set="wide"><path class="about-edge-rim"/><path class="about-edge-fill"/></svg>
@@ -60,6 +72,8 @@ beforeEach(() => {
 
 afterEach(() => {
   app.destroy();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   delete document.documentElement.dataset.motion;
   document.body.innerHTML = '';
 });
@@ -239,6 +253,66 @@ describe('the stain edge', () => {
 
     expect(getElement('#about').style.getPropertyValue('clip-path')).toBe('');
     expect(getElement('#about').style.getPropertyValue('--about-lift')).toBe('');
+  });
+
+  it('keeps the content where it belongs on a touch screen, so nothing shakes against the browser own scroll', async () => {
+    isFinePointer = false;
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+
+    const tops = [VIEWPORT.height * 0.9, VIEWPORT.height * 0.7, VIEWPORT.height / 2, VIEWPORT.height / 4];
+    const lifts = await tops.reduce<Promise<number[]>>(async (done, top) => {
+      const earlier = await done;
+      await scrollTo(top);
+      return [...earlier, readLift()];
+    }, Promise.resolve([]));
+
+    expect(lifts).toEqual([0, 0, 0, 0]);
+  });
+
+  it('still draws the sweep on a touch screen', async () => {
+    isFinePointer = false;
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+
+    await scrollTo(VIEWPORT.height * 0.75);
+
+    expect(getElement('#about').style.getPropertyValue('clip-path')).toMatch(/^path\('M-100\.0.*Z'\)$/);
+    expect(readPath('wide')).toMatch(/^M-100\.0.*Z$/);
+  });
+
+  it('lifts the content on a mouse or trackpad screen, where the page scrolls from the same script', async () => {
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+
+    await scrollTo(VIEWPORT.height * 0.7);
+
+    expect(readLift()).toBeGreaterThan(0);
+  });
+
+  it('draws the sweep to the small viewport, not to the height the browser reports while its toolbar moves', async () => {
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+    await scrollTo(VIEWPORT.height * 0.75);
+    const beforeToolbar = readPath('wide');
+    const liftBeforeToolbar = readLift();
+
+    await resizeTo(VIEWPORT.height + 80);
+
+    expect(readPath('wide')).toBe(beforeToolbar);
+    expect(readLift()).toBe(liftBeforeToolbar);
+  });
+
+  it('measures the small viewport again when the screen is resized or turned', async () => {
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+    await scrollTo(VIEWPORT.height * 0.75);
+    const earlier = readPath('wide');
+
+    smallViewportHeight = VIEWPORT.height - 200;
+    await resizeTo(VIEWPORT.height - 200);
+
+    expect(readPath('wide')).not.toBe(earlier);
   });
 
   it('draws the set that matches the screen, wide or narrow', () => {

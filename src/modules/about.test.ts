@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderAbout } from '../render/render-about.ts';
 import type { Show } from '../show/show-types.ts';
+import { SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
 import {
   About,
   REVEAL_FROM_SWEEP_PROGRESS,
@@ -26,6 +27,7 @@ vi.mock('animejs', async (importOriginal) => {
 });
 
 const VIEWPORT_HEIGHT = 800;
+const DESKTOP_WIDTH = 1024;
 const SAMPLE_STEP_MS = 5;
 const show: Show = {
   description: 'Hosted by two besties. Cozy chaos only.',
@@ -33,6 +35,7 @@ const show: Show = {
   clips: [],
 };
 let app: ModularApp;
+let isFinePointer = true;
 const fonts = new EventTarget();
 
 function getGroup(name: string): HTMLElement {
@@ -78,6 +81,8 @@ function mountAbout(): void {
 
 beforeEach(() => {
   timelines.length = 0;
+  isFinePointer = true;
+  vi.stubGlobal('matchMedia', (query: string) => ({ matches: query === SMOOTH_SCROLL_DEVICE_QUERY && isFinePointer }));
   Object.defineProperty(document, 'fonts', { value: fonts, configurable: true });
   window.innerHeight = VIEWPORT_HEIGHT;
   document.body.innerHTML = renderAbout(show);
@@ -88,6 +93,8 @@ beforeEach(() => {
 
 afterEach(() => {
   app.destroy();
+  vi.unstubAllGlobals();
+  window.innerWidth = DESKTOP_WIDTH;
   delete document.documentElement.dataset.motion;
   document.body.innerHTML = '';
 });
@@ -145,6 +152,147 @@ describe('the about section arrival', () => {
     await scrollGroup('hosts', 300);
 
     expect(isWaitingWhileTheStainSweeps).toBe(true);
+    expect(getGroup('hosts').hasAttribute('data-reveal')).toBe(false);
+  });
+
+  function placeSectionBelowTheScreen(): void {
+    const section = document.querySelector<HTMLElement>('#about');
+    if (section === null) {
+      throw new Error('The page has no about section');
+    }
+    section.getBoundingClientRect = () => new DOMRect(0, VIEWPORT_HEIGHT, 1000, 2000);
+  }
+
+  async function scrollHostsUntilDealt(): Promise<number> {
+    for (let top = VIEWPORT_HEIGHT * 2; top > 0; top -= 40) {
+      await scrollGroup('hosts', top);
+      if (!getGroup('hosts').hasAttribute('data-reveal')) {
+        return top;
+      }
+    }
+    throw new Error('The cards were never dealt');
+  }
+
+  describe.each([
+    ['a phone', 390],
+    ['a tablet in portrait', 768],
+    ['a tablet in landscape', 1024],
+  ])('on a touch screen, %s', (_name, width) => {
+    beforeEach(() => {
+      isFinePointer = false;
+      window.innerWidth = width;
+      placeSectionBelowTheScreen();
+      placeGroup('hosts', 0, VIEWPORT_HEIGHT * 2);
+      document.documentElement.dataset.motion = 'on';
+    });
+
+    it('deals the cards before any of them can enter the screen, so none is ever seen before its deal', async () => {
+      mountAbout();
+
+      const topWhenDealt = await scrollHostsUntilDealt();
+
+      expect(topWhenDealt).toBeGreaterThanOrEqual(VIEWPORT_HEIGHT);
+    });
+
+    it('deals the cards while the stain is still sweeping in, as they are below the screen then', async () => {
+      mountAbout();
+
+      await scrollGroup('hosts', VIEWPORT_HEIGHT * 1.2);
+
+      expect(getGroup('hosts').hasAttribute('data-reveal')).toBe(false);
+    });
+
+    it('keeps the cards back until they are close to the screen', async () => {
+      mountAbout();
+
+      await scrollGroup('hosts', VIEWPORT_HEIGHT * 1.4);
+
+      expect(getGroup('hosts').dataset.reveal).toBe('pending');
+    });
+
+    it('shows every card at its start pose from the start, so none is ever hidden while any part of it can be on the screen', () => {
+      mountAbout();
+
+      const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-about="host"]'));
+      expect(cards).toHaveLength(2);
+      cards.forEach((card) => {
+        expect(card.style.visibility).toBe('visible');
+        expect(card.style.transform).toMatch(/rotate/);
+      });
+    });
+
+    it('keeps the second card visible from the moment the deal starts, instead of hiding it through the pause after the first', async () => {
+      mountAbout();
+
+      await scrollGroup('hosts', VIEWPORT_HEIGHT * 1.2);
+
+      const [first, second] = Array.from(document.querySelectorAll<HTMLElement>('[data-about="host"]'));
+      expect(first?.style.visibility).toBe('visible');
+      expect(second?.style.visibility).toBe('visible');
+    });
+
+    it('lets the headline finish before the copy starts, even when the copy is already in view', async () => {
+      const section = document.querySelector<HTMLElement>('#about');
+      if (section === null) {
+        throw new Error('The page has no about section');
+      }
+      section.getBoundingClientRect = () => new DOMRect(0, 0, 1000, 2000);
+      mountAbout();
+
+      await scrollGroup('heading', 300);
+      await scrollGroup('copy', 300);
+      const isCopyWaitingForTheHeadline = getGroup('copy').dataset.reveal === 'pending';
+      playLatestTimeline(() => undefined);
+      await new Promise((resolve) => window.requestAnimationFrame(resolve));
+      await new Promise((resolve) => window.requestAnimationFrame(resolve));
+
+      expect(isCopyWaitingForTheHeadline).toBe(true);
+      expect(getGroup('copy').hasAttribute('data-reveal')).toBe(false);
+    });
+
+    it.each(['heading', 'copy'])('reveals the %s as soon as any part of it is on the screen, even while the stain is still sweeping in', async (name) => {
+      mountAbout();
+      if (name === 'copy') {
+        await scrollGroup('heading', 300);
+        playLatestTimeline(() => undefined);
+      }
+
+      await scrollGroup(name, VIEWPORT_HEIGHT * 1.05);
+      const isWaitingBelowTheScreen = getGroup(name).dataset.reveal === 'pending';
+      await scrollGroup(name, VIEWPORT_HEIGHT * 0.95);
+
+      expect(isWaitingBelowTheScreen).toBe(true);
+      expect(getGroup(name).hasAttribute('data-reveal')).toBe(false);
+    });
+  });
+
+  it('starts the copy with the headline, not after it, on a screen with a mouse', async () => {
+    document.documentElement.dataset.motion = 'on';
+    mountAbout();
+
+    await scrollGroup('heading', 300);
+    await scrollGroup('copy', 300);
+
+    expect(getGroup('copy').hasAttribute('data-reveal')).toBe(false);
+  });
+
+  it.each([
+    ['a narrow screen', 599],
+    ['a wide screen', DESKTOP_WIDTH],
+  ])('keeps the cards on %s with a mouse back until they are in view, however close they are to the screen', async (_name, width) => {
+    document.documentElement.dataset.motion = 'on';
+    window.innerWidth = width;
+    placeGroup('hosts', 0, VIEWPORT_HEIGHT * 2);
+    mountAbout();
+
+    await scrollGroup('hosts', VIEWPORT_HEIGHT * 1.2);
+    const isWaitingBelowTheScreen = getGroup('hosts').dataset.reveal === 'pending';
+    await scrollGroup('hosts', VIEWPORT_HEIGHT * 0.9);
+    const isWaitingJustBelowTheLine = getGroup('hosts').dataset.reveal === 'pending';
+    await scrollGroup('hosts', VIEWPORT_HEIGHT * 0.8);
+
+    expect(isWaitingBelowTheScreen).toBe(true);
+    expect(isWaitingJustBelowTheLine).toBe(true);
     expect(getGroup('hosts').hasAttribute('data-reveal')).toBe(false);
   });
 
