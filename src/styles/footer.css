@@ -18,12 +18,6 @@ html[data-motion='on']:has(.footer[data-stain-swept]) {
   background-color: var(--wine);
 }
 
-html:not([data-motion='on']) main > .section:last-child {
-  --edge-room: round(down, var(--edge-rise), 1px);
-
-  border-block-end: var(--edge-room) solid transparent;
-}
-
 .footer-inner {
   flex: 1;
   display: grid;

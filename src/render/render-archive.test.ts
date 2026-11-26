@@ -46,8 +46,8 @@ function omit(episode: Episode, field: 'durationSeconds' | 'number' | 'spotifyUr
 }
 
 describe('the every-episode section in the page', () => {
-  it('comes last after Clips, named Every episode', () => {
-    expect(SECTION_RENDERERS.map(({ id }) => id).slice(3)).toEqual(['clips', 'every-episode']);
+  it('follows Clips and comes before the footer, named Every episode', () => {
+    expect(SECTION_RENDERERS.map(({ id }) => id).slice(3)).toEqual(['clips', 'every-episode', 'say-hi']);
     expect(SECTION_RENDERERS[4]).toMatchObject({ id: 'every-episode', label: 'Every episode' });
   });
 });

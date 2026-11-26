@@ -4,10 +4,10 @@ import { buildFixtureShow } from '../show/build-fixture-show.ts';
 import { renderPageFrame, renderSections } from './render-page.ts';
 
 describe('renderPageFrame', () => {
-  it('lists every section in the menu, in page order, ending with Clips and Every episode', () => {
+  it('lists every section in the menu, in page order, from the hero to the footer', () => {
     const labels = [...renderPageFrame(buildFixtureShow()).matchAll(/<span class="menu-link-label">(.*?)<\/span>/g)].map((match) => match[1]);
 
-    expect(labels).toEqual(['Home', 'About the show', 'Episodes', 'Clips', 'Every episode']);
+    expect(labels).toEqual(['Home', 'About the show', 'Episodes', 'Clips', 'Every episode', 'Say hi']);
   });
 
   it('leaves Clips out of the menu when there are no clips to show', () => {
