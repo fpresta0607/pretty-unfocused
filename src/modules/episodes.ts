@@ -8,6 +8,7 @@ import {
   coveringCardCount,
   fitCards,
   frontCardIndex,
+  narrowedCardWidth,
   rowEndPadding,
   rowWidth,
   scrollTopForCard,
@@ -24,6 +25,8 @@ const MIN_STATIC_DESCRIPTION_LINES = 2;
 const MIN_SHORT_PHONE_DESCRIPTION_LINES = 1;
 const PHONE_MAX_WIDTH_PX = 599;
 const SHORT_PHONE_MAX_HEIGHT_PX = 760;
+const MIN_PHONE_CARD_WIDTH_PX = 252;
+const MAX_NARROWING_PASSES = 4;
 const MIN_PINNED_DESCRIPTION_LINES = 2;
 const MAX_DESCRIPTION_LINES = 6;
 const LINE_FIT_TOLERANCE_PX = 1;
@@ -60,6 +63,7 @@ export class Episodes extends Module {
   private layoutFrame = 0;
   private scrollFrame: number | undefined;
   private frameClear = 0;
+  private smallViewportHeight = 0;
   private navigation: HTMLElement | null = null;
   private viewport: HTMLElement | null = null;
   private previousButton: HTMLButtonElement | null = null;
@@ -111,11 +115,12 @@ export class Episodes extends Module {
     const sectionStyle = getComputedStyle(this.el);
     this.endSteps = parseFloat(sectionStyle.getPropertyValue('--end-steps')) || 0;
     this.frameClear = parseFloat(sectionStyle.getPropertyValue('--frame-clear'));
+    this.smallViewportHeight = this.measureSmallViewportHeight();
     this.restoreTexts();
     this.fitCopyColumn();
     this.fitRow();
-    const titleLines = this.fitCardHeights();
-    this.trimTitles(titleLines);
+    const fit = this.fitCardsToRoom();
+    this.trimTitles(fit?.titleLines);
     this.trimDescriptions();
     this.placeDashes();
     this.measureCoverSteps();
@@ -215,7 +220,31 @@ export class Episodes extends Module {
     }
   }
 
-  private fitCardHeights(): number | undefined {
+  private fitCardsToRoom(): CardFit | undefined {
+    let fit = this.fitCardHeights();
+    for (let pass = 0; pass < MAX_NARROWING_PASSES && fit !== undefined && this.narrowCards(fit); pass += 1) {
+      fit = this.fitCardHeights();
+    }
+    return fit;
+  }
+
+  private narrowCards(fit: CardFit): boolean {
+    const firstCard = this.cards[0];
+    const hardHeight = this.availableCardHeight()?.hardHeight;
+    if (this.viewport === null || firstCard === undefined || hardHeight === undefined || fit.height <= hardHeight + LINE_FIT_TOLERANCE_PX || window.innerWidth > PHONE_MAX_WIDTH_PX || this.isPinnedLayout()) {
+      return false;
+    }
+    const cardWidth = firstCard.offsetWidth;
+    const thumbRatio = parseFloat(getComputedStyle(this.el).getPropertyValue('--card-thumb'));
+    const width = narrowedCardWidth(cardWidth, fit.height, hardHeight, thumbRatio, MIN_PHONE_CARD_WIDTH_PX);
+    if (!(width < cardWidth)) {
+      return false;
+    }
+    this.viewport.style.setProperty('--row-card-w', `${width}px`);
+    return true;
+  }
+
+  private fitCardHeights(): CardFit | undefined {
     const track = this.viewport?.querySelector<HTMLElement>('.episodes-track');
     this.el.style.removeProperty('--card-h');
     this.cards.forEach((card) => {
@@ -244,7 +273,7 @@ export class Episodes extends Module {
       }
     });
     this.el.style.setProperty('--card-h', `${Math.ceil(fit.height)}px`);
-    return fit.titleLines;
+    return fit;
   }
 
   private measureFit(room: CardRoom | undefined): CardFit | undefined {
@@ -281,7 +310,7 @@ export class Episodes extends Module {
     if (this.isPinnedLayout()) {
       return MIN_PINNED_DESCRIPTION_LINES;
     }
-    const isShortPhone = window.innerWidth <= PHONE_MAX_WIDTH_PX && window.innerHeight <= SHORT_PHONE_MAX_HEIGHT_PX;
+    const isShortPhone = window.innerWidth <= PHONE_MAX_WIDTH_PX && this.smallViewportHeight <= SHORT_PHONE_MAX_HEIGHT_PX;
     return isShortPhone ? MIN_SHORT_PHONE_DESCRIPTION_LINES : MIN_STATIC_DESCRIPTION_LINES;
   }
 
@@ -311,13 +340,24 @@ export class Episodes extends Module {
     const stackedHeight = isStacked ? copy.offsetHeight + parseFloat(pinStyle.rowGap) : 0;
     const spaceAbove = parseFloat(pinStyle.paddingTop) + parseFloat(trackStyle.paddingTop) + stackedHeight;
     const spaceBelow = parseFloat(pinStyle.paddingBottom) + parseFloat(trackStyle.paddingBottom);
-    const preferredHeight = window.innerHeight - spaceAbove - spaceBelow;
+    const preferredHeight = this.smallViewportHeight - spaceAbove - spaceBelow;
     const bandHeight = this.frameBandHeight();
-    const hardHeight = bandHeight === undefined ? Number.NaN : window.innerHeight - bandHeight - FRAME_BAND_GAP_PX - spaceAbove;
+    const hardHeight = bandHeight === undefined ? Number.NaN : this.smallViewportHeight - bandHeight - FRAME_BAND_GAP_PX - spaceAbove;
     return {
       preferredHeight: Number.isFinite(preferredHeight) ? preferredHeight : undefined,
       hardHeight: Number.isFinite(hardHeight) ? hardHeight : undefined,
     };
+  }
+
+  private measureSmallViewportHeight(): number {
+    const probe = document.createElement('div');
+    probe.style.position = 'absolute';
+    probe.style.visibility = 'hidden';
+    probe.style.blockSize = '100svh';
+    this.el.append(probe);
+    const { height } = probe.getBoundingClientRect();
+    probe.remove();
+    return height;
   }
 
   private frameBandHeight(): number | undefined {

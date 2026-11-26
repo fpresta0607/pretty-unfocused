@@ -1,4 +1,6 @@
 // @vitest-environment happy-dom
+import { readFileSync } from 'node:fs';
+
 import ModularApp from 'modujs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -8,6 +10,9 @@ import { Episodes } from './episodes.ts';
 import { EPISODES_REVEAL_FROM_SWEEP_PROGRESS } from './stain-edge.ts';
 
 let app: ModularApp | undefined;
+let smallViewportHeight = 0;
+const measureBox = HTMLElement.prototype.getBoundingClientRect;
+const TOOLBAR_HEIGHT = 88;
 
 const EPISODES: Episode[] = Array.from({ length: 6 }, (_, index) => ({
   id: `episode-${index}`,
@@ -65,6 +70,10 @@ function mountEpisodes(): void {
 beforeEach(() => {
   vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver);
   Object.defineProperty(document, 'fonts', { value: { ready: Promise.resolve() }, configurable: true });
+  smallViewportHeight = window.innerHeight;
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement): DOMRect {
+    return this.style.blockSize === '100svh' ? new DOMRect(0, 0, 0, smallViewportHeight) : measureBox.call(this);
+  });
   document.body.innerHTML = renderEpisodes({ description: '', episodes: EPISODES, clips: [] });
 });
 
@@ -103,7 +112,14 @@ describe('the card height', () => {
     pin.style.padding = '0';
     pin.style.rowGap = '0';
     getElement<HTMLElement>('.episodes-track').style.padding = '0';
+    smallViewportHeight = availableHeight;
     vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(availableHeight);
+  }
+
+  function collapseToolbars(): Promise<void> {
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(smallViewportHeight + TOOLBAR_HEIGHT);
+    window.dispatchEvent(new Event('resize'));
+    return new Promise((resolve) => window.requestAnimationFrame(() => resolve()));
   }
 
   function readFit(): { height: string; lines: string[] } {
@@ -152,6 +168,17 @@ describe('the card height', () => {
     mountEpisodes();
 
     expect(readFit().lines[0]).toBe(expectedLines);
+  });
+
+  it('keeps a short phone at one line when its browser toolbars collapse and the visible height passes 760 px, since its small viewport height stays the same', async () => {
+    sizeCards([5, 5, 5, 5, 5, 5], [620, 620, 620, 620, 620, 620]);
+    limitStage(700);
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(390);
+    mountEpisodes();
+
+    await collapseToolbars();
+
+    expect(readFit().lines[0]).toBe('1');
   });
 
   describe('above the bottom pieces of the frame', () => {
@@ -225,7 +252,7 @@ describe('the card height', () => {
       sizeTitles(3);
       limitStage(543);
       mountEpisodes();
-      vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(2000);
+      limitStage(2000);
 
       window.dispatchEvent(new Event('resize'));
 
@@ -267,7 +294,7 @@ describe('the card height', () => {
     it('shows the description again when the screen grows tall enough', () => {
       limitStage(500);
       mountEpisodes();
-      vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(2000);
+      limitStage(2000);
 
       window.dispatchEvent(new Event('resize'));
 
@@ -288,6 +315,77 @@ describe('the card height', () => {
       mountEpisodes();
 
       expect(Number.parseFloat(readFit().height)).toBeLessThanOrEqual(600 - BAND_HEIGHT - GAP_TO_BAND);
+    });
+
+    describe('on a phone row', () => {
+      const NATURAL_CARD_WIDTH = 343;
+      const FLOOR_CARD_WIDTH = 252;
+      const THUMB_RATIO = 0.5625;
+
+      function makeCardsFollowTheirWidth(): void {
+        const viewport = getElement<HTMLElement>('.episodes-viewport');
+        const readWidth = (): number => Number.parseFloat(viewport.style.getPropertyValue('--row-card-w')) || NATURAL_CARD_WIDTH;
+        getElement<HTMLElement>('#episodes').style.setProperty('--card-thumb', String(THUMB_RATIO));
+        Object.defineProperty(getElement('.episode-card'), 'offsetWidth', { get: readWidth });
+        document.querySelectorAll<HTMLElement>('.episode-card:not(.episode-card--all)').forEach((card) => {
+          Object.defineProperty(card, 'offsetHeight', { get: () => 200 + 400 + (readWidth() - NATURAL_CARD_WIDTH) * THUMB_RATIO });
+        });
+      }
+
+      function readRowCardWidth(): string {
+        return getElement<HTMLElement>('.episodes-viewport').style.getPropertyValue('--row-card-w');
+      }
+
+      it('narrows the cards until they clear the frame when they run past it at full width', () => {
+        limitStage(537);
+        vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(360);
+        makeCardsFollowTheirWidth();
+
+        mountEpisodes();
+
+        const width = Number.parseFloat(readRowCardWidth());
+        expect(width).toBeLessThan(NATURAL_CARD_WIDTH);
+        expect(width).toBeGreaterThan(FLOOR_CARD_WIDTH);
+        expect(Number.parseFloat(readFit().height)).toBeLessThanOrEqual(537 - BAND_HEIGHT - GAP_TO_BAND);
+      });
+
+      it('stops at the floor width when no narrower card would clear the frame, leaving the card running past it', () => {
+        limitStage(500);
+        vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(360);
+        makeCardsFollowTheirWidth();
+
+        mountEpisodes();
+
+        expect(readRowCardWidth()).toBe(`${FLOOR_CARD_WIDTH}px`);
+        expect(Number.parseFloat(readFit().height)).toBeGreaterThan(500 - BAND_HEIGHT - GAP_TO_BAND);
+      });
+
+      it('keeps the narrowed width and height of the cards when the browser toolbars collapse during a scroll, since the small viewport height stays the same', async () => {
+        limitStage(537);
+        vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(360);
+        makeCardsFollowTheirWidth();
+        mountEpisodes();
+        const narrowed = { width: readRowCardWidth(), height: readFit().height };
+
+        await collapseToolbars();
+
+        expect(Number.parseFloat(narrowed.width)).toBeLessThan(NATURAL_CARD_WIDTH);
+        expect({ width: readRowCardWidth(), height: readFit().height }).toEqual(narrowed);
+      });
+
+      it.each([
+        ['a phone with room for the cards at full width', 360, 2000],
+        ['a phone whose cards end half a pixel past the frame, which the rounding up of their height explains', 360, 556.5],
+        ['a tablet, whose cards keep their width whatever the room', 700, 537],
+      ])('keeps the cards at their full width on %s', (_screen, width, height) => {
+        limitStage(height);
+        vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(width);
+        makeCardsFollowTheirWidth();
+
+        mountEpisodes();
+
+        expect(readRowCardWidth()).toBe('');
+      });
     });
   });
 
@@ -342,6 +440,36 @@ describe('the card height', () => {
     mountEpisodes();
 
     expect(readFit()).toEqual({ height: '', lines: ['', '', '', '', '', '', ''] });
+  });
+});
+
+describe('the row of cards', () => {
+  const EPISODES_STYLES = readFileSync('src/styles/episodes.css', 'utf8');
+  const CARD_STYLES = readFileSync('src/styles/episode-card.css', 'utf8');
+
+  beforeEach(() => {
+    const stylesheet = document.createElement('style');
+    stylesheet.textContent = `${EPISODES_STYLES}
+${CARD_STYLES}`;
+    document.head.append(stylesheet);
+  });
+
+  afterEach(() => {
+    document.head.innerHTML = '';
+  });
+
+  it('never scrolls vertically, so a drag along it moves the page instead of cutting the cards off', () => {
+    const viewport = getElement('.episodes-viewport');
+
+    expect(getComputedStyle(viewport).overflowY).toBe('hidden');
+  });
+
+  it.each(['.episode-all', '.episode-all-panel'])('lets the All episodes card shrink %s with the card instead of hanging out past it', (selector) => {
+    expect(getComputedStyle(getElement(selector)).getPropertyValue('min-block-size')).toBe('0');
+  });
+
+  it('keeps the round button of the All episodes card at its full size while the panel gives up height', () => {
+    expect(getComputedStyle(getElement('.episode-all .round-button')).flexShrink).toBe('0');
   });
 });
 
