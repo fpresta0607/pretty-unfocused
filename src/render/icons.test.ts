@@ -6,7 +6,7 @@ describe('renderIconSprite', () => {
   it('defines a symbol for every icon the page uses', () => {
     const sprite = renderIconSprite();
 
-    for (const name of ['spotify', 'youtube', 'tiktok', 'menu', 'close', 'headphones', 'play']) {
+    for (const name of ['spotify', 'youtube', 'tiktok', 'menu', 'close', 'headphones', 'play', 'arrow']) {
       expect(sprite).toContain(`id="icon-${name}"`);
     }
   });
