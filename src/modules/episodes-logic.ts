@@ -131,7 +131,7 @@ function fitWithinLines(measurements: readonly CardMeasurement[], options: CardF
   const missingHeight = contentHeight(describedFixedHeight, requiredLines) + minClearHeight - maxHeight;
   const clearHeight = missingHeight > 0 ? Math.max(floorClearHeight, minClearHeight - missingHeight) : minClearHeight;
   const stageLines = Math.floor((maxHeight - describedFixedHeight - clearHeight) / lineHeight + LINE_EPSILON);
-  const tallestTitleLines = Math.max(requiredLines, Math.min(Math.max(requiredLines, Math.min(...describedNaturalLines)), stageLines));
+  const sharedDescriptionLines = Math.max(requiredLines, Math.min(Math.max(requiredLines, Math.min(...describedNaturalLines)), stageLines));
   const linesWithin = (height: number): (number | undefined)[] =>
     measurements.map(({ fixedHeight }, index) => {
       const natural = naturalLines[index];
@@ -148,7 +148,7 @@ function fitWithinLines(measurements: readonly CardMeasurement[], options: CardF
     });
     return Math.min(...needed);
   };
-  let fullHeight = Math.max(contentHeight(describedFixedHeight, tallestTitleLines) + clearHeight, plainFixedHeight);
+  let fullHeight = Math.max(contentHeight(describedFixedHeight, sharedDescriptionLines) + clearHeight, plainFixedHeight);
   let descriptionLines = linesWithin(fullHeight);
   for (let nudge = nudgeToNextLine(fullHeight, descriptionLines); nudge > 0 && nudge <= MAX_LINE_NUDGE_PX && fullHeight + nudge <= maxHeight; nudge = nudgeToNextLine(fullHeight, descriptionLines)) {
     fullHeight += nudge;

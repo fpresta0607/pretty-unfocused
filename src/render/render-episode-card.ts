@@ -7,7 +7,6 @@ import { RING_SIZE, RING_SRC, RING_SRCSET } from './ring-asset.ts';
 import { renderPlayerAttributes } from './render-player-attributes.ts';
 
 const CARD_IMAGE_SIZES = '(min-width: 900px) 28vw, 90vw';
-const VIDEO_THUMBNAIL_BASE_URL = 'https://i.ytimg.com/vi';
 const EXCERPT_MAX_CHARACTERS = 600;
 const RING_IMAGE_SIZES = '(min-width: 900px) 20vw, 60vw';
 
@@ -20,14 +19,9 @@ function excerpt(description: string): string {
   return `${(lastSpace > 0 ? clipped.slice(0, lastSpace) : clipped).trimEnd()}…`;
 }
 
-function videoSrcset(videoId: string): string {
-  const baseUrl = `${VIDEO_THUMBNAIL_BASE_URL}/${encodeURIComponent(videoId)}`;
-  return `${baseUrl}/hqdefault.jpg 480w, ${baseUrl}/sddefault.jpg 640w`;
-}
-
 function renderMedia(episode: Episode): string {
   const { thumbnail } = episode;
-  const srcset = episode.youtubeVideoId === undefined ? '' : ` srcset="${escapeHtml(videoSrcset(episode.youtubeVideoId))}"`;
+  const srcset = thumbnail.srcset === undefined ? '' : ` srcset="${escapeHtml(thumbnail.srcset)}"`;
   const image = `<img class="episode-card-image" src="${escapeHtml(thumbnail.src)}"${srcset} sizes="${CARD_IMAGE_SIZES}" width="${thumbnail.width}" height="${thumbnail.height}" alt="" loading="eager">`;
   if (episode.youtubeUrl === undefined) {
     return `<div class="episode-card-art">${image}</div>`;
@@ -37,14 +31,14 @@ function renderMedia(episode: Episode): string {
 
 function renderActions(episode: Episode): string {
   const title = escapeHtml(episode.title);
-  const playButton =
-    episode.youtubeUrl === undefined || episode.youtubeVideoId === undefined
-      ? ''
-      : `<a class="round-button" href="${escapeHtml(episode.youtubeUrl)}"${renderPlayerAttributes(episode.youtubeVideoId, episode.title)}>${renderIcon('play')}<span class="visually-hidden">Play ${title}</span></a>`;
-  const watchPill =
-    episode.youtubeUrl === undefined
-      ? ''
-      : `<a class="pill episode-card-watch" href="${escapeHtml(episode.youtubeUrl)}">${renderIcon('youtube', 'brand-icon')}Watch<span class="visually-hidden"> ${title} on YouTube</span></a>`;
+  let playButton = '';
+  let watchPill = '';
+  if (episode.youtubeUrl !== undefined && episode.youtubeVideoId !== undefined) {
+    const youtubeUrl = escapeHtml(episode.youtubeUrl);
+    const playerAttributes = renderPlayerAttributes(episode.youtubeVideoId, episode.title);
+    playButton = `<a class="round-button" href="${youtubeUrl}"${playerAttributes}>${renderIcon('play')}<span class="visually-hidden">Play ${title}</span></a>`;
+    watchPill = `<a class="pill episode-card-watch" href="${youtubeUrl}"${playerAttributes}>${renderIcon('youtube', 'brand-icon')}Watch<span class="visually-hidden"> ${title} on YouTube</span></a>`;
+  }
   const listenPill =
     episode.spotifyUrl === undefined
       ? ''

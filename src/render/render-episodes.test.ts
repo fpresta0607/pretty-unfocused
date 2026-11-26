@@ -122,10 +122,8 @@ describe('renderEpisodes with the fixture show', () => {
     const [latestCard = ''] = cards;
 
     expect(latestCard).toContain(`width="${latestEpisode?.thumbnail.width}" height="${latestEpisode?.thumbnail.height}"`);
-    expect(latestCard).toContain(
-      `srcset="https://i.ytimg.com/vi/${latestEpisode?.youtubeVideoId}/hqdefault.jpg 480w, https://i.ytimg.com/vi/${latestEpisode?.youtubeVideoId}/sddefault.jpg 640w"`,
-    );
-    expect(latestCard).not.toContain('maxresdefault');
+    expect(latestCard).toContain(`srcset="${escapeHtml(latestEpisode?.thumbnail.srcset ?? '')}"`);
+    expect(latestCard).not.toContain('sddefault');
     expect(latestCard).toContain('loading="eager"');
     expect(latestCard).not.toContain('loading="lazy"');
     expect(latestCard).toContain('alt=""');
@@ -147,11 +145,11 @@ describe('renderEpisodes with the fixture show', () => {
     expect(card).toContain('href="https://open.spotify.com/episode/1"');
   });
 
-  it('puts the player attributes on the play button and the thumbnail link only', () => {
+  it('puts the player attributes on the thumbnail link, the play button and the Watch pill', () => {
     const card = readCards(renderEpisodes(makeShow([makeEpisode(1)])))[0] ?? '';
 
-    expect(card.match(/data-player="video1"/g)).toHaveLength(2);
-    expect(card).toMatch(/<a class="pill episode-card-watch" href="https:\/\/www\.youtube\.com\/watch\?v=video1">/);
+    expect(card.match(/data-player="video1"/g)).toHaveLength(3);
+    expect(card).toContain('<a class="pill episode-card-watch" href="https://www.youtube.com/watch?v=video1" data-player="video1" data-player-title="Episode 1">');
   });
 });
 
@@ -262,15 +260,7 @@ describe('renderEpisodes limits and edge cases', () => {
     expect(markup.match(/class="episodes-line[^"]*" style="--line:[0-9]"/g)).toHaveLength(4);
   });
 
-  it('renders the headline but no card, list or dashes for an empty episode list', () => {
-    const markup = renderEpisodes(makeShow([]));
-
-    expect(markup).toContain('id="episodes"');
-    expect(readHeadingAccessibleText(markup)).toBe('Every Monday, a new one');
-    expect(readCards(markup)).toHaveLength(0);
-    expect(markup).not.toContain('episodes-track');
-    expect(markup).not.toContain('episodes-dash');
-    expect(markup).not.toContain('episodes-sweep');
-    expect(markup).toContain('style="--card-count:0"');
+  it('renders no section for an empty episode list', () => {
+    expect(renderEpisodes(makeShow([]))).toBe('');
   });
 });

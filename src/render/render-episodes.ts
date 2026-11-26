@@ -50,15 +50,17 @@ function renderTrack(show: Show): string {
 }
 
 export function renderEpisodes(show: Show): string {
-  const hasEpisodes = show.episodes.length > 0;
-  const cardCount = hasEpisodes ? Math.min(show.episodes.length, LATEST_EPISODE_COUNT) + 1 : 0;
+  if (show.episodes.length === 0) {
+    return '';
+  }
+  const cardCount = Math.min(show.episodes.length, LATEST_EPISODE_COUNT) + 1;
 
   return `<section class="section episodes" id="episodes" data-section data-surface="dark" aria-labelledby="episodes-heading" style="--card-count:${cardCount}" data-module-episodes data-module-stain data-scroll data-scroll-offset="100%,100%" data-scroll-ignore-fold data-scroll-css-progress data-scroll-event-progress="episodes-progress">
     ${renderStainEdge()}
     <div class="episodes-pin">
-      ${hasEpisodes ? renderSweeps(cardCount) : ''}
+      ${renderSweeps(cardCount)}
       ${renderHeading()}
-      ${hasEpisodes ? renderTrack(show) : ''}
+      ${renderTrack(show)}
     </div>
   </section>`;
 }
