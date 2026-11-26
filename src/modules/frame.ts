@@ -2,12 +2,17 @@ import { module as Module } from 'modujs';
 
 import { isMotionEnabled } from './motion-state.ts';
 import { pickSectionAtLine, readSurface, shouldShowMiniCard, type Surface, type VerticalSpan } from './section-logic.ts';
-import { edgeHeight, edgeShape, settledEdgeShape, sweepProgress } from './stain-edge.ts';
+import { edgeHeight, edgeShape, settledEdgeShape, sweepProgress, type EdgeShape } from './stain-edge.ts';
 
 const HERO_THRESHOLDS = [0, 0.05, 0.1, 0.15, 0.2];
 const SAMPLES_ACROSS = 7;
 const SAMPLES_DOWN = 3;
 const PIECES = '.frame-button, .frame-mark, [data-frame="section"]';
+
+interface SectionEdge {
+  rect: DOMRect;
+  shape: EdgeShape | undefined;
+}
 
 export class Frame extends Module {
   private heroObserver: IntersectionObserver | undefined;
@@ -15,6 +20,7 @@ export class Frame extends Module {
   private sections: HTMLElement[] = [];
   private labels = new Map<string, string>();
   private labelWidths = new Map<string, number>();
+  private edgeRise = 0;
   private pendingFrame: number | undefined;
 
   private readonly scheduleUpdate = (): void => {
@@ -28,25 +34,28 @@ export class Frame extends Module {
     });
   };
 
-  private readonly remeasureLabels = (): void => {
+  private readonly remeasure = (): void => {
     this.labelWidths = this.measureLabelWidths();
+    this.edgeRise = this.measureEdgeRise();
     this.scheduleUpdate();
   };
 
   init(): void {
     this.labels = this.readSectionLabels();
     this.labelWidths = this.measureLabelWidths();
+    this.edgeRise = this.measureEdgeRise();
     this.refreshSections();
     this.updateSurfaces();
     window.addEventListener('scroll', this.scheduleUpdate, { passive: true });
-    window.addEventListener('resize', this.remeasureLabels);
+    window.addEventListener('resize', this.remeasure);
+    void document.fonts.ready.then(this.remeasure);
     this.mutationObserver = new MutationObserver(this.scheduleUpdate);
     this.mutationObserver.observe(document.body, { childList: true, subtree: true });
   }
 
   destroy(): void {
     window.removeEventListener('scroll', this.scheduleUpdate);
-    window.removeEventListener('resize', this.remeasureLabels);
+    window.removeEventListener('resize', this.remeasure);
     this.mutationObserver?.disconnect();
     this.heroObserver?.disconnect();
     window.cancelAnimationFrame(this.pendingFrame ?? 0);
@@ -99,16 +108,22 @@ export class Frame extends Module {
 
   private updateSurfaces(): void {
     this.updateHeroAway();
-    const rects = this.sections.map((section) => section.getBoundingClientRect());
+    const edges = this.readEdges();
     this.el.querySelectorAll<HTMLElement>(PIECES).forEach((piece) => {
       const isLabel = piece.matches('[data-frame="section"]');
       const box = piece.getBoundingClientRect();
-      const widthFor = (candidate: HTMLElement): number => (isLabel ? this.labelWidthFor(candidate, box) : box.width);
-      const section = this.sectionUnder(rects, box, widthFor);
+      const samplesByWidth = new Map<number, readonly (HTMLElement | undefined)[]>();
+      const samplesFor = (candidate: HTMLElement): readonly (HTMLElement | undefined)[] => {
+        const width = isLabel ? this.labelWidthFor(candidate, box) : box.width;
+        const samples = samplesByWidth.get(width) ?? this.sectionsUnder(edges, box, width);
+        samplesByWidth.set(width, samples);
+        return samples;
+      };
+      const section = this.sectionUnder(edges, box, samplesFor);
       if (section === undefined) {
         return;
       }
-      piece.dataset.frameSurface = this.surfaceUnder(rects, box, widthFor(section), readSurface(section.dataset.surface));
+      piece.dataset.frameSurface = this.surfaceOf(samplesFor(section), readSurface(section.dataset.surface));
       const label = isLabel ? this.labels.get(section.id) : undefined;
       if (label !== undefined && piece.textContent !== label) {
         piece.textContent = label;
@@ -121,15 +136,30 @@ export class Frame extends Module {
     return measured === undefined || measured === 0 ? box.width : measured;
   }
 
+  private readEdges(): SectionEdge[] {
+    const isEdgeScrubbed = isMotionEnabled(document.documentElement);
+    return this.sections.map((section) => {
+      const rect = section.getBoundingClientRect();
+      if (!section.hasAttribute('data-module-stain')) {
+        return { rect, shape: undefined };
+      }
+      const shape = isEdgeScrubbed
+        ? edgeShape(rect.top, window.innerWidth, window.innerHeight)
+        : settledEdgeShape(window.innerWidth, this.edgeRise);
+      return { rect, shape };
+    });
+  }
+
   private sectionUnder(
-    rects: readonly DOMRect[],
+    edges: readonly SectionEdge[],
     box: DOMRect,
-    widthFor: (section: HTMLElement) => number,
+    samplesFor: (section: HTMLElement) => readonly (HTMLElement | undefined)[],
   ): HTMLElement | undefined {
-    let winner = this.sectionAt(rects, box.left + box.width / 2, box.top + box.height / 2);
-    let winnerShare = winner === undefined ? 0 : this.shareOf(rects, box, widthFor(winner), winner);
+    const shareOf = (section: HTMLElement): number => samplesFor(section).filter((under) => under === section).length;
+    let winner = this.sectionAt(edges, box.left + box.width / 2, box.top + box.height / 2);
+    let winnerShare = winner === undefined ? 0 : shareOf(winner);
     for (const section of this.sections) {
-      const share = this.shareOf(rects, box, widthFor(section), section);
+      const share = shareOf(section);
       if (share > winnerShare) {
         winner = section;
         winnerShare = share;
@@ -138,58 +168,56 @@ export class Frame extends Module {
     return winner;
   }
 
-  private surfaceUnder(rects: readonly DOMRect[], box: DOMRect, width: number, tieBreaker: Surface): Surface {
+  private surfaceOf(samples: readonly (HTMLElement | undefined)[], tieBreaker: Surface): Surface {
     const counts: Record<Surface, number> = { dark: 0, light: 0 };
-    for (let across = 0; across < SAMPLES_ACROSS; across += 1) {
-      for (let down = 0; down < SAMPLES_DOWN; down += 1) {
-        const under = this.sectionAt(
-          rects,
-          box.left + (width * (across + 0.5)) / SAMPLES_ACROSS,
-          box.top + (box.height * (down + 0.5)) / SAMPLES_DOWN,
-        );
-        if (under !== undefined) {
-          counts[readSurface(under.dataset.surface)] += 1;
-        }
+    samples.forEach((under) => {
+      if (under !== undefined) {
+        counts[readSurface(under.dataset.surface)] += 1;
       }
-    }
+    });
     if (counts.dark === counts.light) {
       return tieBreaker;
     }
     return counts.dark > counts.light ? 'dark' : 'light';
   }
 
-  private shareOf(rects: readonly DOMRect[], box: DOMRect, width: number, section: HTMLElement): number {
-    let covered = 0;
+  private sectionsUnder(edges: readonly SectionEdge[], box: DOMRect, width: number): (HTMLElement | undefined)[] {
+    const samples: (HTMLElement | undefined)[] = [];
     for (let across = 0; across < SAMPLES_ACROSS; across += 1) {
       for (let down = 0; down < SAMPLES_DOWN; down += 1) {
-        const under = this.sectionAt(
-          rects,
-          box.left + (width * (across + 0.5)) / SAMPLES_ACROSS,
-          box.top + (box.height * (down + 0.5)) / SAMPLES_DOWN,
+        samples.push(
+          this.sectionAt(
+            edges,
+            box.left + (width * (across + 0.5)) / SAMPLES_ACROSS,
+            box.top + (box.height * (down + 0.5)) / SAMPLES_DOWN,
+          ),
         );
-        covered += under === section ? 1 : 0;
       }
     }
-    return covered / (SAMPLES_ACROSS * SAMPLES_DOWN);
+    return samples;
   }
 
-  private sectionAt(rects: readonly DOMRect[], x: number, y: number): HTMLElement | undefined {
-    const isEdgeScrubbed = isMotionEnabled(document.documentElement);
-    const tops = rects.map((rect, index) => {
-      if (this.sections[index]?.hasAttribute('data-module-stain') !== true) {
-        return rect.top;
-      }
-      const shape = isEdgeScrubbed
-        ? edgeShape(rect.top, window.innerWidth, window.innerHeight)
-        : settledEdgeShape(window.innerWidth, window.innerHeight);
-      return rect.top - edgeHeight((x - rect.left) / rect.width, shape);
-    });
-    const spans: VerticalSpan[] = rects.map((rect, index) => ({
+  private sectionAt(edges: readonly SectionEdge[], x: number, y: number): HTMLElement | undefined {
+    const tops = edges.map(({ rect, shape }) =>
+      shape === undefined ? rect.top : rect.top - edgeHeight((x - rect.left) / rect.width, shape),
+    );
+    const spans: VerticalSpan[] = edges.map(({ rect }, index) => ({
       top: tops[index] ?? rect.top,
       bottom: tops[index + 1] ?? rect.bottom,
     }));
     const index = pickSectionAtLine(spans, y);
     return index === undefined ? undefined : this.sections[index];
+  }
+
+  private measureEdgeRise(): number {
+    const probe = document.createElement('div');
+    probe.style.position = 'absolute';
+    probe.style.visibility = 'hidden';
+    probe.style.blockSize = 'var(--edge-rise)';
+    this.el.append(probe);
+    const rise = Number.parseFloat(getComputedStyle(probe).blockSize);
+    probe.remove();
+    return rise;
   }
 
   private measureLabelWidths(): Map<string, number> {
@@ -203,6 +231,7 @@ export class Frame extends Module {
       return widths;
     }
     probe.style.visibility = 'hidden';
+    probe.style.scale = 'none';
     label.parentElement.append(probe);
     this.labels.forEach((text, id) => {
       probe.textContent = text;

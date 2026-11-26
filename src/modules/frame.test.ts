@@ -1,4 +1,6 @@
 // @vitest-environment happy-dom
+import { readFileSync } from 'node:fs';
+
 import ModularApp from 'modujs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -8,6 +10,8 @@ import { Frame } from './frame.ts';
 import { edgeHeight, settledEdgeShape } from './stain-edge.ts';
 
 const VIEWPORT_HEIGHT = 800;
+const EDGE_RISE_PX = 160;
+const PAGE_WIDTH = 1000;
 const SECTIONS = [
   { id: 'home', label: 'Home' },
   { id: 'about', label: 'About' },
@@ -80,6 +84,38 @@ async function scrollTo(placeSections: () => void): Promise<void> {
   await new Promise((resolve) => window.requestAnimationFrame(resolve));
 }
 
+interface Box {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+function readCoverShare(box: Box, aboutTop: number, edgeRise: number): number {
+  const shape = settledEdgeShape(PAGE_WIDTH, edgeRise);
+  let cream = 0;
+  for (let column = 0; column < 60; column += 1) {
+    const edgeY = aboutTop - edgeHeight((box.left + (box.width * (column + 0.5)) / 60) / PAGE_WIDTH, shape);
+    for (let row = 0; row < 8; row += 1) {
+      cream += box.top + (box.height * (row + 0.5)) / 8 >= edgeY ? 1 : 0;
+    }
+  }
+  return cream / 480;
+}
+
+function placeAboutAt(top: number): void {
+  placeSection('home', top - VIEWPORT_HEIGHT, top);
+  placeSection('about', top, top + 3000);
+}
+
+function setEdgeRise(pixels: number): void {
+  document.documentElement.style.setProperty('--edge-rise', `${pixels}px`);
+}
+
+function stubFontsReady(ready: Promise<unknown>): void {
+  Object.defineProperty(document, 'fonts', { configurable: true, value: { ready } });
+}
+
 function mountFrame(): void {
   app = new ModularApp({ modules: { frame: Frame } });
   app.init(app);
@@ -88,7 +124,9 @@ function mountFrame(): void {
 beforeEach(() => {
   vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver);
   window.innerHeight = VIEWPORT_HEIGHT;
-  window.innerWidth = 1000;
+  window.innerWidth = PAGE_WIDTH;
+  setEdgeRise(EDGE_RISE_PX);
+  stubFontsReady(Promise.resolve());
   heroObserverCallback = undefined;
   observedElements = [];
   document.body.innerHTML = `${renderFrame(show, SECTIONS)}
@@ -101,6 +139,8 @@ beforeEach(() => {
 afterEach(() => {
   app.destroy();
   delete document.documentElement.dataset.motion;
+  document.documentElement.style.removeProperty('--edge-rise');
+  Reflect.deleteProperty(document, 'fonts');
   vi.unstubAllGlobals();
   document.body.innerHTML = '';
 });
@@ -313,28 +353,12 @@ describe('the frame with the settled edge of a page without motion', () => {
 
 describe('the frame pieces and the pixels under them', () => {
   const LABEL = { left: 20, top: 700, width: 300, height: 24 };
-  const COLUMNS = 60;
-  const ROWS = 8;
   const CLEAR_MARGIN = 0.15;
   const TOPS = Array.from({ length: 130 }, (_, index) => LABEL.top + 180 - index * 1.7);
 
   function placeAbout(top: number): void {
     placeSection('home', top - VIEWPORT_HEIGHT, top);
     placeSection('about', top, top + 3000);
-  }
-
-  function readCreamShare(aboutTop: number): number {
-    const shape = settledEdgeShape(window.innerWidth, window.innerHeight);
-    let cream = 0;
-    for (let column = 0; column < COLUMNS; column += 1) {
-      const x = LABEL.left + (LABEL.width * (column + 0.5)) / COLUMNS;
-      const edgeY = aboutTop - edgeHeight(x / 1000, shape);
-      for (let row = 0; row < ROWS; row += 1) {
-        const y = LABEL.top + (LABEL.height * (row + 0.5)) / ROWS;
-        cream += y >= edgeY ? 1 : 0;
-      }
-    }
-    return cream / (COLUMNS * ROWS);
   }
 
   beforeEach(() => {
@@ -346,7 +370,7 @@ describe('the frame pieces and the pixels under them', () => {
   it.each(TOPS.map((top) => [top.toFixed(1), top] as const))(
     'gives the section name the colour that covers most of its box when the section top is at %s',
     (_name, top) => {
-      const creamShare = readCreamShare(top);
+      const creamShare = readCoverShare(LABEL, top, EDGE_RISE_PX);
       placeAbout(top);
 
       mountFrame();
@@ -387,19 +411,6 @@ describe('the section name over the pixels under its own text', () => {
     placeSection('about', top, top + 3000);
   }
 
-  function readShare(aboutTop: number, width: number, isCream: boolean): number {
-    const shape = settledEdgeShape(window.innerWidth, window.innerHeight);
-    let matching = 0;
-    for (let column = 0; column < 60; column += 1) {
-      const edgeY = aboutTop - edgeHeight((LABEL.left + (width * (column + 0.5)) / 60) / 1000, shape);
-      for (let row = 0; row < 8; row += 1) {
-        const isBelowEdge = LABEL.top + (LABEL.height * (row + 0.5)) / 8 >= edgeY;
-        matching += isBelowEdge === isCream ? 1 : 0;
-      }
-    }
-    return matching / 480;
-  }
-
   beforeEach(() => {
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
       const width = WIDTH_OF[this.textContent === 'Home' ? 'Home' : 'About'];
@@ -417,8 +428,8 @@ describe('the section name over the pixels under its own text', () => {
     (_name, top) => {
       placeSection('home', top - VIEWPORT_HEIGHT, top);
       placeSection('about', top, top + 3000);
-      const aboutShare = readShare(top, WIDTH_OF.About, true);
-      const homeShare = readShare(top, WIDTH_OF.Home, false);
+      const aboutShare = readCoverShare({ ...LABEL, width: WIDTH_OF.About }, top, EDGE_RISE_PX);
+      const homeShare = 1 - readCoverShare({ ...LABEL, width: WIDTH_OF.Home }, top, EDGE_RISE_PX);
       placeAbout(top);
 
       mountFrame();
@@ -428,4 +439,130 @@ describe('the section name over the pixels under its own text', () => {
       }
     },
   );
+});
+
+describe('the section name measured at the width it is drawn', () => {
+  const LABEL = { left: 350, top: 700, height: 24 };
+  const TEXT_WIDTH = 300;
+  const SHRUNK = 0.4;
+  const TOPS = Array.from({ length: 130 }, (_, index) => LABEL.top + 180 - index * 1.7);
+  const CLEAR_MARGIN = 0.15;
+  let fontScale = 1;
+
+  function readExpectedName(top: number, widthScale: number): string | undefined {
+    const creamShare = readCoverShare({ ...LABEL, width: TEXT_WIDTH * widthScale }, top, EDGE_RISE_PX);
+    if (Math.abs(creamShare - 0.5) <= CLEAR_MARGIN) {
+      return undefined;
+    }
+    return creamShare > 0.5 ? 'About' : 'Home';
+  }
+
+  async function startIntroScaled(): Promise<void> {
+    document.documentElement.setAttribute('data-intro', '');
+    mountFrame();
+    await Promise.resolve();
+    document.documentElement.setAttribute('data-frame-ready', '');
+  }
+
+  async function startBeforeTheFontLoads(): Promise<void> {
+    let finishLoading = (): void => undefined;
+    stubFontsReady(
+      new Promise<void>((resolve) => {
+        finishLoading = resolve;
+      }),
+    );
+    fontScale = SHRUNK;
+    mountFrame();
+    fontScale = 1;
+    finishLoading();
+    await Promise.resolve();
+  }
+
+  beforeEach(() => {
+    const stylesheet = document.createElement('style');
+    stylesheet.textContent = readFileSync('src/styles/frame.css', 'utf8');
+    document.head.append(stylesheet);
+    fontScale = 1;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      if (!this.matches('[data-frame="section"]')) {
+        return new DOMRect();
+      }
+      const scale = Number.parseFloat(getComputedStyle(this).scale);
+      return new DOMRect(LABEL.left, LABEL.top, TEXT_WIDTH * fontScale * (Number.isFinite(scale) ? scale : 1), LABEL.height);
+    });
+    getElement('#about').setAttribute('data-module-stain', '');
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.head.innerHTML = '';
+    document.documentElement.removeAttribute('data-intro');
+    document.documentElement.removeAttribute('data-frame-ready');
+  });
+
+  it.each([
+    ['while the intro still holds it scaled down', startIntroScaled],
+    ['before the text font has loaded', startBeforeTheFontLoads],
+  ])('follows the colour under the whole name when the frame starts %s', async (_name, start) => {
+    placeAboutAt(TOPS[0] ?? 0);
+    await start();
+    const checks: { expected: string; shown: string | null; isTellingApart: boolean }[] = [];
+
+    for (const top of TOPS) {
+      await scrollTo(() => placeAboutAt(top));
+      const expected = readExpectedName(top, 1);
+      if (expected !== undefined) {
+        const shown = getElement('[data-frame="section"]').textContent;
+        const shrunkExpected = readExpectedName(top, SHRUNK);
+        checks.push({ expected, shown, isTellingApart: shrunkExpected !== undefined && shrunkExpected !== expected });
+      }
+    }
+
+    expect(checks.some((check) => check.isTellingApart)).toBe(true);
+    expect(checks.map((check) => check.shown)).toEqual(checks.map((check) => check.expected));
+  });
+});
+
+describe('the frame over the still edge at the height the stylesheet gives it', () => {
+  const MARK = { left: 472, top: 672, width: 56, height: 56 };
+  const STYLESHEET_RISE_PX = 120;
+  const WINDOW_RISE_PX = VIEWPORT_HEIGHT * 0.2;
+  const TOPS = Array.from({ length: 120 }, (_, index) => MARK.top + MARK.height + 150 - index * 1.5);
+  const CLEAR_MARGIN = 0.15;
+
+  function readExpectedSurface(top: number, edgeRise: number): string | undefined {
+    const creamShare = readCoverShare(MARK, top, edgeRise);
+    if (Math.abs(creamShare - 0.5) <= CLEAR_MARGIN) {
+      return undefined;
+    }
+    return creamShare > 0.5 ? 'light' : 'dark';
+  }
+
+  beforeEach(() => {
+    setEdgeRise(STYLESHEET_RISE_PX);
+    getElement('#about').setAttribute('data-module-stain', '');
+    placePiece('.frame-mark', MARK.left + MARK.width / 2, MARK.top + MARK.height / 2);
+  });
+
+  it('turns a piece light where the edge drawn at the stylesheet height crosses it, not at a fifth of the window', async () => {
+    placeAboutAt(TOPS[0] ?? 0);
+    mountFrame();
+    const checks: { expected: string; shown: string | undefined; isTellingApart: boolean }[] = [];
+
+    for (const top of TOPS) {
+      await scrollTo(() => placeAboutAt(top));
+      const expected = readExpectedSurface(top, STYLESHEET_RISE_PX);
+      if (expected !== undefined) {
+        const windowExpected = readExpectedSurface(top, WINDOW_RISE_PX);
+        checks.push({
+          expected,
+          shown: readPieceSurface('.frame-mark'),
+          isTellingApart: windowExpected !== undefined && windowExpected !== expected,
+        });
+      }
+    }
+
+    expect(checks.some((check) => check.isTellingApart)).toBe(true);
+    expect(checks.map((check) => check.shown)).toEqual(checks.map((check) => check.expected));
+  });
 });

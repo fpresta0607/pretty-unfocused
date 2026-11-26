@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -9,10 +7,8 @@ import {
   buildSettledEdgePath,
   buildSettledRimPath,
   EDGE_RIM_PX,
-  EDGE_RISE_HEIGHT_FRACTION,
   edgeHeight,
   edgeProfile,
-  edgeRise,
   edgeShape,
   settledEdgeShape,
   STATIC_VIEWS,
@@ -28,6 +24,7 @@ const VIEWPORTS = [
   ['a phone', NARROW, 3, 3, 0.1, 0.035],
 ] as const;
 const MIN_TROUGH_RADIUS_PX = 15;
+const EDGE_RISE_PX = 180;
 const POSITIONS = Array.from({ length: 1001 }, (_, index) => index / 1000);
 
 function sectionTopAt(progress: number, viewport: { height: number }): number {
@@ -70,18 +67,6 @@ function findTroughRadii(shape: EdgeShape, viewport: { width: number }): number[
 function countSubpaths(path: string): number {
   return path.split('M').length - 1;
 }
-
-describe('edgeRise', () => {
-  it('is a fifth of the screen height', () => {
-    expect(edgeRise(WIDE.height)).toBeCloseTo(WIDE.height * EDGE_RISE_HEIGHT_FRACTION, 6);
-  });
-
-  it('matches the height the stylesheet leaves under the hero for the still edge', () => {
-    const stylesheet = readFileSync(new URL('../styles/tokens.css', import.meta.url), 'utf8');
-
-    expect(stylesheet).toContain(`--edge-rise: ${Math.round(EDGE_RISE_HEIGHT_FRACTION * 100)}svh;`);
-  });
-});
 
 describe('sweepProgress', () => {
   it.each([
@@ -336,14 +321,6 @@ describe('the domes of the phone', () => {
   });
 });
 
-describe('the stylesheet', () => {
-  it('names the gentle in-out ease that scrubs the sweep', () => {
-    const stylesheet = readFileSync(new URL('../styles/tokens.css', import.meta.url), 'utf8');
-
-    expect(stylesheet).toContain('--ease-scrub: cubic-bezier(0.45, 0, 0.55, 1);');
-  });
-});
-
 describe('buildSettledEdgePath', () => {
   function readNumbers(path: string): number[] {
     return (path.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
@@ -354,8 +331,8 @@ describe('buildSettledEdgePath', () => {
     ['a phone', true, NARROW, STATIC_VIEWS.narrow],
   ])('draws the same domes as the still edge the frame reads for %s', (_name, isNarrow, viewport, view) => {
     const settled = readNumbers(buildSettledEdgePath(isNarrow));
-    const shape = settledEdgeShape(viewport.width, viewport.height);
-    const scale = view.height / edgeRise(viewport.height);
+    const shape = settledEdgeShape(viewport.width, EDGE_RISE_PX);
+    const scale = view.height / EDGE_RISE_PX;
     const scaled = { ...shape, rise: shape.rise * scale, relief: shape.relief * scale };
     const expected = readNumbers(buildEdgePath(scaled, view));
 
@@ -384,8 +361,8 @@ describe('buildSettledEdgePath', () => {
   });
 
   it('keeps the still edge within the room under the hero', () => {
-    const shape = settledEdgeShape(WIDE.width, WIDE.height);
+    const shape = settledEdgeShape(WIDE.width, EDGE_RISE_PX);
 
-    expect(Math.max(...POSITIONS.map((position) => edgeHeight(position, shape)))).toBeLessThanOrEqual(edgeRise(WIDE.height));
+    expect(Math.max(...POSITIONS.map((position) => edgeHeight(position, shape)))).toBeLessThanOrEqual(EDGE_RISE_PX);
   });
 });

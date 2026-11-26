@@ -1,6 +1,5 @@
 import { EASE_SCRUB } from './motion-tokens.ts';
 
-export const EDGE_RISE_HEIGHT_FRACTION = 0.2;
 export const NARROW_VIEWPORT_PX = 600;
 export const SWEEP_END_PROGRESS = 0.5;
 export const STATIC_POSE = 0.5;
@@ -124,10 +123,6 @@ function blendRange(domes: readonly Dome[], smoothness: number): { floor: number
 const WIDE_SET: StainSet = { domes: WIDE_DOMES, smoothness: 0.5, reliefFraction: 0.3, tiltFraction: 0.12, travel: 0.3 };
 const NARROW_SET: StainSet = { domes: NARROW_DOMES, smoothness: 0.9, reliefFraction: 0.21, tiltFraction: 0.06, travel: 0.22 };
 
-export function edgeRise(viewportHeight: number): number {
-  return viewportHeight * EDGE_RISE_HEIGHT_FRACTION;
-}
-
 function shapeFromSet(set: StainSet, evolution: number, rise: number, relief: number, tilt: number): EdgeShape {
   const domes = evolveDomes(set.domes, evolution, set.travel);
   return { rise, relief, tilt, domes, smoothness: set.smoothness, ...blendRange(domes, set.smoothness) };
@@ -175,8 +170,8 @@ function stillShape(isNarrow: boolean, height: number): EdgeShape {
   return { ...silhouette, rise: total - relief, relief };
 }
 
-export function settledEdgeShape(viewportWidth: number, viewportHeight: number): EdgeShape {
-  return stillShape(viewportWidth < NARROW_VIEWPORT_PX, edgeRise(viewportHeight));
+export function settledEdgeShape(viewportWidth: number, edgeRise: number): EdgeShape {
+  return stillShape(viewportWidth < NARROW_VIEWPORT_PX, edgeRise);
 }
 
 export function edgeProfile(shape: EdgeShape, position: number): number {
