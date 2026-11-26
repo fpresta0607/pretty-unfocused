@@ -8,19 +8,19 @@ const COLUMN_CHARACTERS = 24;
 
 function wrapGreedily(text: string): string[] {
   const lines: string[] = [];
-  text.split(' ').forEach((word) => {
+  text.split(/(?<=[ \u2014])/).forEach((segment) => {
     const current = lines.at(-1);
-    if (current !== undefined && current.length + 1 + word.length <= COLUMN_CHARACTERS) {
-      lines[lines.length - 1] = `${current} ${word}`;
+    if (current !== undefined && `${current}${segment}`.trimEnd().length <= COLUMN_CHARACTERS) {
+      lines[lines.length - 1] = `${current}${segment}`;
     } else {
-      lines.push(word);
+      lines.push(segment);
     }
   });
   return lines;
 }
 
 function placeCharactersOnColumn(element: HTMLElement): string[] {
-  const settledLines = wrapGreedily(element.textContent ?? '');
+  const wrappedLines = wrapGreedily(element.textContent ?? '');
   vi.spyOn(Range.prototype, 'getBoundingClientRect').mockImplementation(function mockRect(this: Range) {
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
     let characterIndex = this.startOffset;
@@ -28,13 +28,13 @@ function placeCharactersOnColumn(element: HTMLElement): string[] {
       characterIndex += walker.currentNode.textContent?.length ?? 0;
     }
     let lineStart = 0;
-    const lineIndex = settledLines.findIndex((line) => {
-      lineStart += line.length + 1;
+    const lineIndex = wrappedLines.findIndex((line) => {
+      lineStart += line.length;
       return characterIndex < lineStart;
     });
     return new DOMRect(0, lineIndex * LINE_PITCH_PX, 10, LINE_PITCH_PX);
   });
-  return settledLines;
+  return wrappedLines.map((line) => line.trimEnd());
 }
 
 describe('groupWordsByOffset', () => {
@@ -64,6 +64,7 @@ describe('splitIntoLines', () => {
       'text with inline wrappers and punctuation after them',
       'Hosted by Maya and Gia (two chronically curious besties). We are talking ADHD, <span>self-growth</span>, and the messy middle<span>-plus</span> whatever',
     ],
+    ['text that wraps after an em dash inside a word', 'Hosted by the middle\u2060\u2014plus whatever we are into'],
   ])('splits %s into the very lines the settled layout breaks it into', (_name, html) => {
     const paragraph = document.createElement('p');
     paragraph.innerHTML = html;

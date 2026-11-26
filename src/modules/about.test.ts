@@ -1,23 +1,32 @@
 // @vitest-environment happy-dom
+import type { Timeline } from 'animejs';
 import ModularApp from 'modujs';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderAbout } from '../render/render-about.ts';
 import type { Show } from '../show/show-types.ts';
 import {
   About,
-  HOST_DEAL_OVERSHOOT_PX,
-  LINE_STAGGER,
-  MOVE_DURATION,
   REVEAL_FROM_SWEEP_PROGRESS,
   SCRIPT_WIPE_AT,
-  SCRIPT_WIPE_DURATION,
-  TOPIC_AT,
-  TOPIC_DURATION,
-  TOPIC_STAGGER,
 } from './about.ts';
 
+const timelines = vi.hoisted((): Timeline[] => []);
+
+vi.mock('animejs', async (importOriginal) => {
+  const anime = await importOriginal<typeof import('animejs')>();
+  return {
+    ...anime,
+    createTimeline: (...parameters: Parameters<typeof anime.createTimeline>) => {
+      const timeline = anime.createTimeline(...parameters).pause();
+      timelines.push(timeline);
+      return timeline;
+    },
+  };
+});
+
 const VIEWPORT_HEIGHT = 800;
+const SAMPLE_STEP_MS = 5;
 const show: Show = {
   description: 'Hosted by two besties. Cozy chaos only.',
   episodes: [],
@@ -45,12 +54,30 @@ async function scrollGroup(name: string, y: number): Promise<void> {
   await new Promise((resolve) => window.requestAnimationFrame(resolve));
 }
 
+function readTranslateY(element: Element): number {
+  const match = /translate(?:Y\(|\([^,]+,)(-?[\d.]+)/.exec(element instanceof HTMLElement ? element.style.transform : '');
+  return match === null ? Number.NaN : Number(match[1]);
+}
+
+function playLatestTimeline(sample: (time: number) => void): void {
+  const timeline = timelines.at(-1);
+  if (timeline === undefined) {
+    throw new Error('No reveal was started');
+  }
+  for (let time = 0; time < timeline.duration; time += SAMPLE_STEP_MS) {
+    timeline.seek(time);
+    sample(time);
+  }
+  timeline.seek(timeline.duration);
+}
+
 function mountAbout(): void {
   app = new ModularApp({ modules: { about: About } });
   app.init(app);
 }
 
 beforeEach(() => {
+  timelines.length = 0;
   Object.defineProperty(document, 'fonts', { value: fonts, configurable: true });
   window.innerHeight = VIEWPORT_HEIGHT;
   document.body.innerHTML = renderAbout(show);
@@ -163,16 +190,38 @@ describe('the about section arrival', () => {
     expect(script?.closest('.about-script-line')).not.toBeNull();
   });
 
-  it('finishes the three headline lines in order, all before the last topic pill lands', () => {
-    const topicCount = document.querySelectorAll('[data-about="topic"]').length;
-    const chaosEnds = LINE_STAGGER + MOVE_DURATION;
-    const onlyEnds = SCRIPT_WIPE_AT + SCRIPT_WIPE_DURATION;
-    const lastTopicEnds = TOPIC_AT + (topicCount - 1) * TOPIC_STAGGER + TOPIC_DURATION;
+  it('finishes the three headline lines in order, and starts the script wipe only once the lines are well under way', async () => {
+    document.documentElement.dataset.motion = 'on';
+    mountAbout();
+    await scrollGroup('heading', 300);
+    const lines = Array.from(document.querySelectorAll<HTMLElement>('[data-about="line"]'));
+    const script = document.querySelector<HTMLElement>('[data-about="script"]');
+    const lineFinishTimes = lines.map(() => Number.POSITIVE_INFINITY);
+    let scriptFinishTime = Number.POSITIVE_INFINITY;
+    let scriptStartTime = Number.POSITIVE_INFINITY;
 
-    expect(SCRIPT_WIPE_AT).toBe(LINE_STAGGER + MOVE_DURATION / 2);
-    expect(MOVE_DURATION).toBeLessThan(chaosEnds);
-    expect(chaosEnds).toBeLessThan(onlyEnds);
-    expect(onlyEnds).toBeLessThan(lastTopicEnds);
+    playLatestTimeline((time) => {
+      lines.forEach((line, index) => {
+        if (readTranslateY(line) === 0) {
+          lineFinishTimes[index] = Math.min(lineFinishTimes[index] ?? time, time);
+        }
+      });
+      const clip = script?.style.clipPath ?? '';
+      if (!clip.includes('100%')) {
+        scriptStartTime = Math.min(scriptStartTime, time);
+      }
+      if (/inset\(\S+ 0%/.test(clip)) {
+        scriptFinishTime = Math.min(scriptFinishTime, time);
+      }
+    });
+
+    expect(lines.length).toBeGreaterThan(0);
+    expect(lineFinishTimes).toEqual([...lineFinishTimes].sort((first, second) => first - second));
+    expect(new Set(lineFinishTimes).size).toBe(lines.length);
+    expect(scriptStartTime).toBeGreaterThanOrEqual(SCRIPT_WIPE_AT);
+    expect(scriptFinishTime).toBeGreaterThan(Math.max(...lineFinishTimes));
+    expect(scriptFinishTime).toBeLessThan(Number.POSITIVE_INFINITY);
+    expect(script?.style.clipPath).toBe('');
   });
 
   it('deals the host cards with movement and rotation only, never fading them', async () => {
@@ -199,8 +248,27 @@ describe('the about section arrival', () => {
     expect(second?.style.visibility).toBe('hidden');
   });
 
-  it('overshoots each dealt card by a visible 8 to 12 px before it settles', () => {
-    expect(HOST_DEAL_OVERSHOOT_PX).toBeGreaterThanOrEqual(8);
-    expect(HOST_DEAL_OVERSHOOT_PX).toBeLessThanOrEqual(12);
+  it('overshoots each dealt card by a visible 8 to 12 px before it settles in place', async () => {
+    document.documentElement.dataset.motion = 'on';
+    mountAbout();
+    await scrollGroup('hosts', 300);
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-about="host"]'));
+    const highestRises = cards.map(() => 0);
+
+    playLatestTimeline(() => {
+      cards.forEach((card, index) => {
+        const translateY = readTranslateY(card);
+        if (translateY < (highestRises[index] ?? 0)) {
+          highestRises[index] = translateY;
+        }
+      });
+    });
+
+    expect(cards).toHaveLength(2);
+    highestRises.forEach((rise) => {
+      expect(-rise).toBeGreaterThanOrEqual(8);
+      expect(-rise).toBeLessThanOrEqual(12);
+    });
+    cards.forEach((card) => expect(card.style.transform).toBe(''));
   });
 });
