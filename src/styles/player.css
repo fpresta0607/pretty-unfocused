@@ -42,6 +42,12 @@
   }
 }
 
+@media (max-width: 599px) {
+  .player::backdrop {
+    background: var(--wine);
+  }
+}
+
 .player-box {
   position: relative;
   inline-size: min(100%, 72rem, calc((100svh - 12rem) * 16 / 9));

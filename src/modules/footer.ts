@@ -15,7 +15,7 @@ import { isMotionEnabled } from './motion-state.ts';
 import { EASE_OUT } from './motion-tokens.ts';
 import { sweepProgress } from './stain-edge.ts';
 
-const REVEAL_FROM_SWEEP_PROGRESS = 0.4;
+const REVEAL_FROM_SWEEP_PROGRESS = 0.1;
 const EMAIL_AT = SCRIPT_WIPE_AT + 100;
 const EMAIL_WIPE_DURATION = 450;
 const LINKS_AT = EMAIL_AT + 100;

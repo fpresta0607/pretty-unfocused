@@ -28,24 +28,3 @@ export function cardDeal(progress: number, rank: number, cardCount: number): num
   const localProgress = clamp((progress - rank * staggerStep) / DEAL_WINDOW, 0, 1);
   return EASE_POP(localProgress);
 }
-
-const TRAILING_PUNCTUATION = /[\s!?.,:;]+$/u;
-
-export function fitTitle(title: string, isFitting: (text: string) => boolean): string {
-  if (isFitting(title)) {
-    return title;
-  }
-  const words = title.split(' ');
-  const clipped = (keptWords: number): string => `${words.slice(0, keptWords).join(' ').replace(TRAILING_PUNCTUATION, '')}…`;
-  let fewest = 1;
-  let most = words.length - 1;
-  while (fewest < most) {
-    const middle = Math.ceil((fewest + most) / 2);
-    if (isFitting(clipped(middle))) {
-      fewest = middle;
-    } else {
-      most = middle - 1;
-    }
-  }
-  return clipped(fewest);
-}

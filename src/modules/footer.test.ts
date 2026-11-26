@@ -71,7 +71,7 @@ describe('Footer with motion on', () => {
     expect(getFooter().dataset.reveal).toBe('pending');
   });
 
-  it('releases the footer once the stain has reached the headline', async () => {
+  it('releases the footer once the stain has begun to rise', async () => {
     start(true);
 
     await scrollTo(PAGE_END_SCROLL - VIEWPORT_HEIGHT, VIEWPORT_HEIGHT * 0.6, VIEWPORT_HEIGHT * 0.7);
@@ -79,10 +79,10 @@ describe('Footer with motion on', () => {
     expect(getFooter().dataset.reveal).toBeUndefined();
   });
 
-  it('keeps everything back while the stain has not yet reached the headline', async () => {
+  it('keeps everything back until the stain has begun to rise', async () => {
     start(true);
 
-    await scrollTo(PAGE_END_SCROLL - VIEWPORT_HEIGHT, VIEWPORT_HEIGHT * 0.8, VIEWPORT_HEIGHT * 0.9);
+    await scrollTo(PAGE_END_SCROLL - VIEWPORT_HEIGHT, VIEWPORT_HEIGHT * 0.96, VIEWPORT_HEIGHT * 0.98);
 
     expect(getFooter().dataset.reveal).toBe('pending');
   });

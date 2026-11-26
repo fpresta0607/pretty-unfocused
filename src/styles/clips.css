@@ -149,11 +149,14 @@ html:not([data-motion='on']) .clips {
   font-weight: 700;
   font-size: clamp(var(--size-body), calc(var(--card-w) * 0.26 - 25px), var(--size-h3));
   line-height: 1.15;
-  overflow-wrap: anywhere;
   text-wrap: balance;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
   line-clamp: 4;
+}
+
+.clip-card-word {
+  white-space: nowrap;
 }
 
 .clip-card-play {
@@ -296,10 +299,6 @@ html:not([data-motion='on']) .clips {
 
   .clips-fan-list {
     --card-w: max(10.5rem, min(28vw, calc((100svh - 26.5rem - 1.6 * var(--size-h2)) * 9 / 16), 15rem));
-  }
-
-  .clips .section-heading-mask {
-    display: inline-block;
   }
 
   .clips-tiktok {

@@ -16,13 +16,20 @@ function renderSrcset(clip: Clip): string {
   return ` srcset="${escapeHtml(srcset)}" sizes="${CARD_IMAGE_SIZES}"`;
 }
 
+function renderTitleWords(title: string): string {
+  return escapeHtml(title)
+    .split(/\s+/)
+    .map((word) => `<span class="clip-card-word">${word}</span>`)
+    .join(' ');
+}
+
 export function renderClipCard(clip: Clip, position: number, layer: number): string {
   const title = escapeHtml(clip.title);
   const { thumbnail } = clip;
   return `<li class="clip-card" data-clips="card" style="--fan-position:${position};--fan-layer:${layer}">
           <div class="clip-card-face">
             <img class="clip-card-image" src="${escapeHtml(thumbnail.src)}"${renderSrcset(clip)} width="${thumbnail.width}" height="${thumbnail.height}" alt="" loading="lazy" decoding="async">
-            <p class="clip-card-title">${title}</p>
+            <p class="clip-card-title">${renderTitleWords(clip.title)}</p>
             <a class="round-button round-button--gold clip-card-play" href="${escapeHtml(clip.youtubeUrl)}"${renderPlayerAttributes(clip.youtubeVideoId, clip.title, 'vertical')}>${renderIcon('play')}<span class="visually-hidden">Play ${title}</span></a>
           </div>
         </li>`;

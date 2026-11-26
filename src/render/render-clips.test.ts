@@ -26,6 +26,11 @@ function readCards(markup: string): string[] {
   return markup.match(/<li class="clip-card"[\s\S]*?<\/li>/g) ?? [];
 }
 
+function readTitleText(card: string): string {
+  const titleMarkup = card.match(/<p class="clip-card-title">(.*?)<\/p>/)?.[1] ?? '';
+  return titleMarkup.replace(/<[^>]*>/g, '');
+}
+
 function readHeadingAccessibleText(markup: string): string {
   const headingMarkup = markup.match(/<h2[^>]*>([\s\S]*?)<\/h2>/)?.[1] ?? '';
   const [textBeforeHiddenVisual = ''] = headingMarkup.split('aria-hidden="true"');
@@ -58,7 +63,7 @@ describe('renderClips with the fixture show', () => {
   it('has one h2 named We love to overshare, with the visible words hidden from assistive tech', () => {
     expect(markup.match(/<h2[\s>]/g)).toHaveLength(1);
     expect(readHeadingAccessibleText(markup)).toBe('We love to overshare');
-    expect(markup).toContain('<span class="section-heading-line" data-heading="line">We love</span>');
+    expect(markup).toContain('<span class="section-heading-line" data-heading="line">We love to</span>');
     expect(markup).toContain('<span class="section-heading-script" data-heading="script">overshare</span>');
     expect(markup).toContain('aria-labelledby="clips-heading"');
   });
@@ -83,7 +88,7 @@ describe('renderClips with the fixture show', () => {
       expect(card).toContain(`data-player="${clip.youtubeVideoId}"`);
       expect(card).toContain('data-player-shape="vertical"');
       expect(card).toContain(`<span class="visually-hidden">Play ${clip.title}</span>`);
-      expect(card).toContain(`<p class="clip-card-title">${clip.title}</p>`);
+      expect(readTitleText(card)).toBe(clip.title);
     });
   });
 
@@ -110,7 +115,7 @@ describe('renderClips fan and limits', () => {
     const cards = readCards(renderClips(makeShow(clips)));
 
     expect(cards).toHaveLength(6);
-    expect(cards.map((card) => card.match(/<p class="clip-card-title">(.*?)<\/p>/)?.[1])).toEqual([
+    expect(cards.map(readTitleText)).toEqual([
       'Clip 0',
       'Clip 1',
       'Clip 2',
@@ -146,11 +151,20 @@ describe('renderClips fan and limits', () => {
     expect(renderClips(makeShow([]))).toBe('');
   });
 
+  it('sets each word of a title in its own unbreakable span so a clipped title ends between words', () => {
+    const card = readCards(renderClips(makeShow([makeClip(0, { title: 'A new  episode 🦃🍂' })])))[0] ?? '';
+
+    expect(card).toContain(
+      '<p class="clip-card-title"><span class="clip-card-word">A</span> <span class="clip-card-word">new</span> <span class="clip-card-word">episode</span> <span class="clip-card-word">🦃🍂</span></p>',
+    );
+  });
+
   it('escapes a clip title everywhere it is written', () => {
     const card = readCards(renderClips(makeShow([makeClip(0, { title: 'Tom & <b>"Jerry"</b>' })])))[0] ?? '';
 
     expect(card).not.toContain('<b>');
-    expect(card.match(/Tom &amp; &lt;b&gt;&quot;Jerry&quot;&lt;\/b&gt;/g)).toHaveLength(3);
+    expect(card.match(/Tom &amp; &lt;b&gt;&quot;Jerry&quot;&lt;\/b&gt;/g)).toHaveLength(2);
+    expect(card).toContain('<span class="clip-card-word">&lt;b&gt;&quot;Jerry&quot;&lt;/b&gt;</span>');
     expect(card).toContain('data-player-title="Tom &amp; &lt;b&gt;&quot;Jerry&quot;&lt;/b&gt;"');
   });
 
