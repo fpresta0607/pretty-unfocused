@@ -56,8 +56,8 @@ export class Stain extends Module {
     }
     const { width, height } = edge.getBoundingClientRect();
     edge.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    edge.querySelector('.about-edge-rim')?.setAttribute('d', buildRimPath(shape, { width, height }));
-    edge.querySelector('.about-edge-fill')?.setAttribute('d', buildEdgePath(shape, { width, height }));
+    edge.querySelector('.stain-edge-rim')?.setAttribute('d', buildRimPath(shape, { width, height }));
+    edge.querySelector('.stain-edge-fill')?.setAttribute('d', buildEdgePath(shape, { width, height }));
   }
 
   private measureViewportHeight(): number {
@@ -74,7 +74,7 @@ export class Stain extends Module {
   private updateLift(sectionTop: number): void {
     if (!this.smoothScrollDevice.matches) {
       this.lift = 0;
-      this.el.style.setProperty('--about-lift', '0px');
+      this.el.style.setProperty('--stain-lift', '0px');
       return;
     }
     const landings = Array.from(this.el.querySelectorAll('[data-stain-landing]'), (landing) => landing.getBoundingClientRect().top);
@@ -88,7 +88,7 @@ export class Stain extends Module {
     const isSweeping = sweepProgress(sectionTop, this.viewportHeight) < 1;
     const share = isSweeping ? sweepGrowth(sectionTop, this.viewportHeight) : Math.min(Math.max(sectionTop / sectionTopAtSweepEnd, 0), 1);
     this.lift = fullLift * share;
-    this.el.style.setProperty('--about-lift', `${this.lift.toFixed(1)}px`);
+    this.el.style.setProperty('--stain-lift', `${this.lift.toFixed(1)}px`);
   }
 
   private updateClip(sectionRect: DOMRect, shape: EdgeShape): void {

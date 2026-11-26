@@ -6,11 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderAbout } from '../render/render-about.ts';
 import type { Show } from '../show/show-types.ts';
 import { SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
-import {
-  About,
-  REVEAL_FROM_SWEEP_PROGRESS,
-  SCRIPT_WIPE_AT,
-} from './about.ts';
+import { About, SCRIPT_WIPE_AT } from './about.ts';
+import { REVEAL_FROM_SWEEP_PROGRESS } from './stain-edge.ts';
 
 const timelines = vi.hoisted((): Timeline[] => []);
 

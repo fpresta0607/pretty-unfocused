@@ -2,6 +2,7 @@ import type { Show } from '../show/show-types.ts';
 import { renderAbout } from './render-about.ts';
 import { renderFrame } from './render-frame.ts';
 import { renderHero } from './render-hero.ts';
+import { renderPlayer } from './render-player.ts';
 
 export interface SectionRenderer {
   id: string;
@@ -19,5 +20,6 @@ export function renderSections(show: Show): string {
 }
 
 export function renderPageFrame(show: Show): string {
-  return renderFrame(show, SECTION_RENDERERS);
+  return `${renderFrame(show, SECTION_RENDERERS)}
+  ${renderPlayer()}`;
 }

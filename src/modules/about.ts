@@ -4,7 +4,7 @@ import { module as Module } from 'modujs';
 import { EASE_OUT, EASE_POP } from './motion-tokens.ts';
 import { isMotionEnabled, SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
 import { splitIntoLines } from './split-lines.ts';
-import { sweepProgress } from './stain-edge.ts';
+import { REVEAL_FROM_SWEEP_PROGRESS, sweepProgress } from './stain-edge.ts';
 
 const MASK_HIDDEN = '130%';
 export const MOVE_DURATION = 800;
@@ -27,7 +27,6 @@ const TOPIC_START_SCALE = 0.6;
 const ENTER_FRACTION = 0.88;
 const NATIVE_SCROLL_ENTER_FRACTION = 1;
 const NATIVE_SCROLL_HOSTS_ENTER_FRACTION = 1.3;
-export const REVEAL_FROM_SWEEP_PROGRESS = 0.7;
 
 interface Deal {
   host: HTMLElement;

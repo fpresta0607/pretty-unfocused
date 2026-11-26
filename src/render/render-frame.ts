@@ -2,6 +2,7 @@ import type { Show } from '../show/show-types.ts';
 import { escapeHtml } from './escape-html.ts';
 import { renderIcon, renderIconSprite } from './icons.ts';
 import { PLATFORM_LINKS, renderPlatformPills } from './platform-links.ts';
+import { renderPlayerAttributes } from './render-player-attributes.ts';
 import { RING_SMALL_SIZE, RING_SMALL_SRC } from './ring-asset.ts';
 
 export interface FrameSection {
@@ -58,7 +59,7 @@ function renderMiniCard(show: Show): string {
   const srcset = thumbnail.srcset === undefined ? '' : ` srcset="${escapeHtml(thumbnail.srcset)}"`;
   return `<aside class="mini-card" aria-label="Latest episode" data-frame="mini" data-inert-on-menu>
       <img class="mini-card-image" src="${escapeHtml(thumbnail.src)}"${srcset} sizes="${MINI_IMAGE_SIZES}" width="${thumbnail.width}" height="${thumbnail.height}" alt="" decoding="async" fetchpriority="low">
-      <a class="mini-card-link" href="${escapeHtml(playUrl)}" aria-label="Play ${title} on ${platform}">
+      <a class="mini-card-link" href="${escapeHtml(playUrl)}" aria-label="Play ${title} on ${platform}"${renderPlayerAttributes(latestEpisode.youtubeVideoId, latestEpisode.title)}>
         <span class="label mini-card-label">Latest<span class="mini-card-label-rest"> episode</span></span>
         <span class="mini-card-title">${title}</span>
       </a>

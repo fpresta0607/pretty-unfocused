@@ -87,6 +87,14 @@ describe.each(VIEWPORTS)('the stain sweep on %s', (_name, viewport, fewestDomes,
     expect(Math.min(...ys)).toBeGreaterThan(viewport.height * 0.85);
   });
 
+  it.each([0, 1, 2])('keeps the whole edge, rim included, below the bottom of the screen with the section top %j px above it', (pixelsAbove) => {
+    const sectionTop = viewport.height - pixelsAbove;
+    const shape = edgeShape(sectionTop, viewport.width, viewport.height);
+    const ys = POSITIONS.map((position) => sectionTop - edgeHeight(position, shape));
+
+    expect(Math.min(...ys)).toBeGreaterThanOrEqual(viewport.height);
+  });
+
   it('has the whole screen cream, with a margin, by the time the section top is at 50% of the screen', () => {
     const ys = edgeYs(1, viewport);
 

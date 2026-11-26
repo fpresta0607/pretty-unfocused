@@ -164,7 +164,7 @@ describe('renderAbout with the fixture show', () => {
   });
 
   it('ships the still stain edge in the markup, hidden from assistive tech, so it is drawn without scripts', () => {
-    const edges = markup.match(/<svg class="about-edge about-edge--(wide|narrow)"[^>]*>/g) ?? [];
+    const edges = markup.match(/<svg class="stain-edge stain-edge--(wide|narrow)"[^>]*>/g) ?? [];
 
     expect(edges).toHaveLength(2);
     edges.forEach((edge) => {
@@ -172,8 +172,8 @@ describe('renderAbout with the fixture show', () => {
       expect(edge).toContain('aria-hidden="true"');
       expect(edge).toMatch(/viewBox="0 0 \d+ \d+"/);
     });
-    expect(markup.match(/<path class="about-edge-fill" d="M-[^"]+Z[^"]*"\/>/g)).toHaveLength(2);
-    expect(markup.match(/<path class="about-edge-rim" d="M-[^"]+Z[^"]*"\/><path class="about-edge-fill"/g)).toHaveLength(2);
+    expect(markup.match(/<path class="stain-edge-fill" d="M-[^"]+Z[^"]*"\/>/g)).toHaveLength(2);
+    expect(markup.match(/<path class="stain-edge-rim" d="M-[^"]+Z[^"]*"\/><path class="stain-edge-fill"/g)).toHaveLength(2);
     expect(markup).toContain('data-module-stain');
   });
 

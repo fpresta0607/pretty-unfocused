@@ -1,0 +1,36 @@
+.stain-edge {
+  position: absolute;
+  inset: auto 0 100%;
+  z-index: -1;
+  inline-size: 100%;
+  block-size: var(--edge-rise);
+  max-inline-size: none;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.stain-edge-rim {
+  fill: var(--roast);
+}
+
+.stain-edge-fill {
+  fill: var(--stain-fill);
+}
+
+.stain-edge--narrow {
+  display: none;
+}
+
+html[data-motion='on'] .stain-edge {
+  block-size: 100svh;
+}
+
+@media (max-width: 599px) {
+  .stain-edge--wide {
+    display: none;
+  }
+
+  .stain-edge--narrow {
+    display: block;
+  }
+}

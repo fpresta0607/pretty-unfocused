@@ -1,0 +1,117 @@
+.player {
+  --focus-ring: var(--gold);
+
+  position: fixed;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: none;
+  max-block-size: none;
+  margin: 0;
+  padding: var(--gutter);
+  border: 0;
+  background: transparent;
+  color: var(--cream);
+  overflow: hidden;
+  transition:
+    overlay var(--dur-ui) allow-discrete,
+    display var(--dur-ui) allow-discrete;
+}
+
+.player[open] {
+  display: grid;
+  place-items: center;
+}
+
+.player::backdrop {
+  background: color-mix(in srgb, var(--wine) 96%, transparent);
+  opacity: 0;
+  transition:
+    opacity var(--dur-ui) var(--ease-out),
+    overlay var(--dur-ui) allow-discrete,
+    display var(--dur-ui) allow-discrete;
+}
+
+.player[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  .player[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+.player-box {
+  position: relative;
+  inline-size: min(100%, 72rem, calc((100svh - 12rem) * 16 / 9));
+  translate: 0 2rem;
+  scale: 0.96;
+  transition:
+    translate var(--dur-ui) var(--ease-out),
+    scale var(--dur-ui) var(--ease-out);
+}
+
+.player[open] .player-box {
+  translate: none;
+  scale: 1;
+}
+
+@starting-style {
+  .player[open] .player-box {
+    translate: 0 2rem;
+    scale: 0.96;
+  }
+}
+
+.player-stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  background: var(--wine);
+  overflow: hidden;
+}
+
+.player-poster {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.player-stage iframe {
+  position: relative;
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  border: 0;
+}
+
+.player-stage iframe:not([data-loaded]) {
+  visibility: hidden;
+}
+
+.lenis.lenis-smooth .player-stage iframe {
+  pointer-events: auto;
+}
+
+.player-close {
+  --focus-ring: var(--gold);
+
+  position: absolute;
+  inset-block-end: calc(100% + var(--space-3));
+  inset-inline-end: 0;
+}
+
+html[data-player-open] {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player,
+  .player-box,
+  .player::backdrop {
+    transition-duration: 0s !important;
+  }
+}
