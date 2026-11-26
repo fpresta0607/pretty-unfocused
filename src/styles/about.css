@@ -14,21 +14,6 @@
   isolation: isolate;
 }
 
-html[data-motion='on'] .about {
-  box-shadow: 0 var(--space-4) 0 var(--cream);
-}
-
-html[data-motion='on']:has(.about[data-stain-swept]) {
-  background-color: var(--cream);
-}
-
-html:not([data-motion='on']) .about {
-  --edge-room: round(down, var(--edge-rise), 1px);
-
-  min-block-size: calc(100svh + var(--edge-room));
-  border-block-end: var(--edge-room) solid transparent;
-}
-
 .about-inner {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -210,7 +195,6 @@ html:not([data-motion='on']) .about {
   .about-heading {
     margin-block-end: var(--space-3);
   }
-
 }
 
 @media (min-width: 600px) {
