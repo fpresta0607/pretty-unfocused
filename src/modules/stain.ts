@@ -1,10 +1,11 @@
 import { module as Module } from 'modujs';
 
 import { isMotionEnabled, SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
-import { buildClipPath, buildEdgePath, buildRimPath, edgeShape, NARROW_VIEWPORT_PX, SWEEP_END_PROGRESS, sweepGrowth, sweepProgress, type EdgeShape } from './stain-edge.ts';
+import { EASE_LIFT } from './motion-tokens.ts';
+import { buildClipPath, buildEdgePath, buildRimPath, edgeShape, NARROW_VIEWPORT_PX, SWEEP_END_PROGRESS, sweepProgress, type EdgeShape } from './stain-edge.ts';
 
 const LANDING_TOP_FRACTION = 0.25;
-const LONGEST_LIFT_SHARE = 0.85;
+const LONGEST_LIFT_SHARE = 0.19;
 
 export class Stain extends Module {
   private pendingFrame: number | undefined;
@@ -86,10 +87,10 @@ export class Stain extends Module {
     const sectionTopAtSweepEnd = this.viewportHeight * (1 - SWEEP_END_PROGRESS);
     const naturalOffset = Math.min(...landings) - sectionTop + this.lift;
     const landingLift = naturalOffset + sectionTopAtSweepEnd - LANDING_TOP_FRACTION * this.viewportHeight;
-    const fullLift = Math.min(Math.max(landingLift, 0), sectionTopAtSweepEnd * LONGEST_LIFT_SHARE);
-    const isSweeping = sweepProgress(sectionTop, this.viewportHeight) < 1;
-    const share = isSweeping ? sweepGrowth(sectionTop, this.viewportHeight) : Math.min(Math.max(sectionTop / sectionTopAtSweepEnd, 0), 1);
-    this.lift = fullLift * share;
+    const fullLift = Math.min(Math.max(landingLift, 0), this.viewportHeight * LONGEST_LIFT_SHARE);
+    const progressUp = sweepProgress(sectionTop, this.viewportHeight);
+    const progressDown = Math.min(Math.max(sectionTop / sectionTopAtSweepEnd, 0), 1);
+    this.lift = fullLift * EASE_LIFT(Math.min(progressUp, progressDown));
     this.el.style.setProperty('--stain-lift', `${this.lift.toFixed(1)}px`);
   }
 
