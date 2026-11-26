@@ -1,0 +1,203 @@
+.episode-card {
+  --card-pad: var(--space-3);
+  --focus-ring: var(--cream);
+
+  container: card / inline-size;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--card-pad);
+  inline-size: var(--card-w);
+  block-size: var(--card-h, auto);
+  padding: var(--card-pad) var(--card-pad) var(--space-3);
+  border: var(--ring) solid var(--tone);
+  border-radius: calc(var(--radius) + var(--ring));
+  background: var(--roast);
+  color: var(--cream);
+  transition: border-color var(--sweep-ms) var(--ease-out);
+
+  scroll-snap-align: start;
+}
+
+.episode-card-media,
+.episode-card-art {
+  inline-size: 100%;
+}
+
+.episode-card-media {
+  display: block;
+  border-radius: var(--space-2);
+}
+
+.episode-card-image {
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 1 / var(--card-thumb);
+  border-radius: var(--space-2);
+  object-fit: cover;
+}
+
+.episode-card-art {
+  position: relative;
+  aspect-ratio: 1 / var(--card-thumb);
+  border-radius: var(--space-2);
+  overflow: clip;
+  background: var(--cover-edge);
+}
+
+.episode-card-art .episode-card-image {
+  position: absolute;
+  inset: 0;
+  inline-size: auto;
+  block-size: 100%;
+  margin-inline: auto;
+  aspect-ratio: 1;
+  border-radius: 0;
+}
+
+.episode-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-block-size: 0;
+}
+
+.episode-card-title {
+  font-weight: 700;
+  font-size: var(--size-h3);
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.episode-card-summary {
+  flex: 0 1 auto;
+  min-block-size: 0;
+}
+
+.episode-card-description {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines, var(--card-lines));
+  max-inline-size: 70ch;
+  overflow: hidden;
+}
+
+.episode-card-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-block-size: var(--round-size);
+  margin-block-start: auto;
+}
+
+.episode-card-actions > * {
+  flex: none;
+}
+
+.episode-card-actions .round-button {
+  background: var(--cream);
+  color: var(--roast);
+}
+
+.episode-card-actions .pill {
+  gap: var(--space-2);
+  min-block-size: 40px;
+  min-inline-size: 0;
+  padding: 0 var(--space-3);
+  white-space: nowrap;
+}
+
+@media (max-width: 359px) {
+  .episode-card-actions {
+    gap: var(--space-1);
+  }
+
+  .episode-card-actions .pill {
+    gap: var(--space-1);
+    padding-inline: var(--space-2);
+    letter-spacing: 0.03em;
+  }
+
+  .episode-card-actions .brand-icon {
+    inline-size: 16px;
+    block-size: 16px;
+  }
+}
+
+.episode-card--all {
+  --focus-ring: var(--cream);
+
+  padding: 0;
+  background: var(--gold);
+  color: var(--wine);
+}
+
+.episode-card--all:has(.episode-all:focus-visible) {
+  outline: 2px solid var(--cream);
+  outline-offset: 0;
+}
+
+.episode-all {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--card-pad);
+  padding: var(--card-pad);
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+
+.episode-all:focus-visible {
+  outline: 0;
+}
+
+.episode-all:hover .round-button {
+  translate: 0 -2px;
+}
+
+.episode-all-panel {
+  container: panel / size;
+  display: grid;
+  flex: 1 1 auto;
+  place-items: center;
+  inline-size: 100%;
+  aspect-ratio: 1 / var(--card-thumb);
+  border-radius: var(--space-2);
+  background: var(--wine);
+  color: var(--cream);
+}
+
+.episode-all-ring {
+  grid-area: 1 / 1;
+  block-size: 92cqmin;
+  inline-size: 92cqmin;
+}
+
+.episode-all-count {
+  grid-area: 1 / 1;
+  font-family: var(--font-display);
+  font-size: 38cqmin;
+  line-height: 1;
+  -webkit-text-stroke: var(--display-stroke) currentcolor;
+}
+
+.episode-all-title {
+  font-family: var(--font-display);
+  font-size: var(--size-h3);
+  line-height: 1;
+  text-transform: uppercase;
+  text-wrap: balance;
+  -webkit-text-stroke: var(--display-stroke) currentcolor;
+}
+
+.episode-all-line {
+  margin-block-start: calc(-1 * var(--space-2));
+}
+
+.episode-all .round-button {
+  margin-block-start: auto;
+  background: var(--wine);
+  color: var(--cream);
+}
