@@ -127,11 +127,11 @@ describe('renderClips fan and limits', () => {
     expect(cards.map((card) => card.match(/--fan-position:(-?[\d.]+)/)?.[1])).toEqual(positions);
   });
 
-  it('stacks the middle cards above the outer ones', () => {
+  it('stacks each card above the one before it, so every card shows its own left edge', () => {
     const cards = readCards(renderClips(makeShow(Array.from({ length: 6 }, (_, index) => makeClip(index)))));
     const layers = cards.map((card) => Number(card.match(/--fan-layer:(\d+)/)?.[1]));
 
-    expect(layers).toEqual([1, 3, 5, 5, 3, 1]);
+    expect(layers).toEqual([1, 2, 3, 4, 5, 6]);
   });
 
   it('renders no section at all when there are no clips', () => {

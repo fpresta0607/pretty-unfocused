@@ -9,8 +9,7 @@ const FAN_CARD_COUNT = 6;
 function renderFan(clips: Show['clips']): string {
   const cards = clips.map((clip, index) => {
     const position = index - (clips.length - 1) / 2;
-    const layer = Math.round(clips.length - Math.abs(position) * 2);
-    return renderClipCard(clip, position, layer);
+    return renderClipCard(clip, position, index + 1);
   });
   return `<div class="clips-fan" data-clips="fan" data-stain-landing>
       <ul class="clips-fan-list" role="list" aria-label="Latest clips">

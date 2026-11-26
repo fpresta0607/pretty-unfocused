@@ -10,13 +10,13 @@ import {
   SCRIPT_WIPE_DURATION,
 } from './about.ts';
 import { EASE_OUT } from './motion-tokens.ts';
-import { REVEAL_FROM_SWEEP_PROGRESS, sweepProgress } from './stain-edge.ts';
+import { EPISODES_REVEAL_FROM_SWEEP_PROGRESS, sweepProgress } from './stain-edge.ts';
 
 const ENTER_FRACTION = 0.88;
 const NATIVE_SCROLL_ENTER_FRACTION = 1;
 
 export function isRevealOpen(section: HTMLElement, isSmoothScroll: boolean): boolean {
-  return !isSmoothScroll || sweepProgress(section.getBoundingClientRect().top, window.innerHeight) >= REVEAL_FROM_SWEEP_PROGRESS;
+  return !isSmoothScroll || sweepProgress(section.getBoundingClientRect().top, window.innerHeight) >= EPISODES_REVEAL_FROM_SWEEP_PROGRESS;
 }
 
 export function hasEntered(target: HTMLElement, isSmoothScroll: boolean): boolean {

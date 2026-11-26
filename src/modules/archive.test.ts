@@ -161,7 +161,7 @@ describe('the every-episode arrival', () => {
     });
 
     it('holds the rows below the fold back, and the headline already in view too until the stain has crossed', () => {
-      getElement('#every-episode').getBoundingClientRect = () => new DOMRect(0, VIEWPORT_HEIGHT * 0.9, 1000, 2000);
+      getElement('#every-episode').getBoundingClientRect = () => new DOMRect(0, VIEWPORT_HEIGHT * 0.97, 1000, 2000);
 
       mountArchive();
 

@@ -7,21 +7,21 @@ const VIEWPORT_HEIGHT = 800;
 describe('dealProgress', () => {
   it.each([
     ['is zero while the section is still below the deal line', 800, 0],
-    ['is zero exactly at the deal line', 440, 0],
-    ['is half way half way up the scroll range', 240, 0.5],
-    ['is one once the section has almost reached the top', 40, 1],
+    ['is zero exactly at the deal line', 720, 0],
+    ['is half way half way up the scroll range', 560, 0.5],
+    ['is one once the section has reached the end of the stain sweep', 400, 1],
     ['stays one while the section scrolls on past the top', -600, 1],
   ])('%s', (_behavior, sectionTop, expected) => {
     expect(dealProgress(sectionTop, VIEWPORT_HEIGHT)).toBeCloseTo(expected, 10);
   });
 
   it('follows the scroll position, a quarter of the way for a quarter of the range', () => {
-    expect(dealProgress(340, VIEWPORT_HEIGHT)).toBeCloseTo(0.25, 10);
-    expect(dealProgress(140, VIEWPORT_HEIGHT)).toBeCloseTo(0.75, 10);
+    expect(dealProgress(640, VIEWPORT_HEIGHT)).toBeCloseTo(0.25, 10);
+    expect(dealProgress(480, VIEWPORT_HEIGHT)).toBeCloseTo(0.75, 10);
   });
 
   it('scales with the viewport height', () => {
-    expect(dealProgress(300, 1000)).toBeCloseTo(dealProgress(240, 800), 10);
+    expect(dealProgress(700, 1000)).toBeCloseTo(dealProgress(560, 800), 10);
   });
 });
 

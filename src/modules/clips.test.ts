@@ -7,7 +7,7 @@ import type { Clip, Show } from '../show/show-types.ts';
 import { Clips } from './clips.ts';
 import { cardDeal, dealRanks } from './clips-logic.ts';
 import { SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
-import { REVEAL_FROM_SWEEP_PROGRESS } from './stain-edge.ts';
+import { EPISODES_REVEAL_FROM_SWEEP_PROGRESS } from './stain-edge.ts';
 
 vi.mock('animejs', async (importOriginal) => {
   const anime = await importOriginal<typeof import('animejs')>();
@@ -90,16 +90,6 @@ describe('the clips fan without motion', () => {
     expect(document.querySelectorAll('[data-reveal]')).toHaveLength(0);
     expect(getElement<HTMLElement>('[data-clips="card"]').getAttribute('style')).not.toContain('--deal');
   });
-
-  it('starts the row of cards with the middle one in view', () => {
-    const fan = getElement<HTMLElement>('[data-clips="fan"]');
-    Object.defineProperty(fan, 'scrollWidth', { value: 900, configurable: true });
-    Object.defineProperty(fan, 'clientWidth', { value: 300, configurable: true });
-
-    mountClips();
-
-    expect(fan.scrollLeft).toBe(300);
-  });
 });
 
 describe('the clips fan with motion', () => {
@@ -124,19 +114,19 @@ describe('the clips fan with motion', () => {
   it.each([0.1, 0.25, 0.5, 0.75])('follows the scroll position, so scroll progress %j puts every card exactly where the curve says', async (progress) => {
     mountClips();
 
-    await scrollSectionTo(VIEWPORT_HEIGHT * (0.55 - 0.5 * progress));
+    await scrollSectionTo(VIEWPORT_HEIGHT * (0.9 - 0.4 * progress));
 
     expect(readDeals()).toEqual(expectedDeals(progress));
   });
 
   it('deals half way for half a scroll step, and back again when the page scrolls up', async () => {
     mountClips();
-    await scrollSectionTo(VIEWPORT_HEIGHT * 0.3);
+    await scrollSectionTo(VIEWPORT_HEIGHT * 0.7);
     const halfWay = readDeals();
 
     await scrollSectionTo(0);
     const dealt = readDeals();
-    await scrollSectionTo(VIEWPORT_HEIGHT * 0.3);
+    await scrollSectionTo(VIEWPORT_HEIGHT * 0.7);
     const afterScrollingBack = readDeals();
 
     expect(halfWay.some((deal) => deal > 0 && deal < 1)).toBe(true);
@@ -147,7 +137,7 @@ describe('the clips fan with motion', () => {
   it('deals the middle cards before the outer ones', async () => {
     mountClips();
 
-    await scrollSectionTo(VIEWPORT_HEIGHT * 0.45);
+    await scrollSectionTo(VIEWPORT_HEIGHT * 0.75);
 
     const [leftmost, , middleLeft, middleRight, , rightmost] = readDeals();
     expect(middleLeft).toBeGreaterThan(leftmost ?? 0);
@@ -157,8 +147,8 @@ describe('the clips fan with motion', () => {
   it('holds the headline back until it is in view and the stain is most of the way across', async () => {
     mountClips();
     const heading = getElement<HTMLElement>('[data-heading-group]');
-    const sectionAtEarlyStain = VIEWPORT_HEIGHT * (1 - 0.5 * (REVEAL_FROM_SWEEP_PROGRESS - 0.05));
-    const sectionAtStainAcross = VIEWPORT_HEIGHT * (1 - 0.5 * REVEAL_FROM_SWEEP_PROGRESS);
+    const sectionAtEarlyStain = VIEWPORT_HEIGHT * (1 - 0.5 * (EPISODES_REVEAL_FROM_SWEEP_PROGRESS - 0.05));
+    const sectionAtStainAcross = VIEWPORT_HEIGHT * (1 - 0.5 * EPISODES_REVEAL_FROM_SWEEP_PROGRESS);
     const isHeldBackAtFirst = heading.dataset.reveal === 'pending';
 
     await scrollSectionTo(sectionAtEarlyStain, 300);

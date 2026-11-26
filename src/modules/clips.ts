@@ -23,7 +23,6 @@ export class Clips extends Module {
   };
 
   init(): void {
-    this.centreFan();
     if (!isMotionEnabled(document.documentElement)) {
       return;
     }
@@ -40,13 +39,6 @@ export class Clips extends Module {
     window.removeEventListener('scroll', this.scheduleUpdate);
     window.removeEventListener('resize', this.scheduleUpdate);
     window.cancelAnimationFrame(this.pendingFrame ?? 0);
-  }
-
-  private centreFan(): void {
-    const fan = this.el.querySelector<HTMLElement>('[data-clips="fan"]');
-    if (fan !== null) {
-      fan.scrollLeft = (fan.scrollWidth - fan.clientWidth) / 2;
-    }
   }
 
   private update(): void {

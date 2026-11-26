@@ -14,13 +14,9 @@
   --stain-fill: var(--gold);
   --ring: 3px;
   --pad-top: calc(var(--space-7) - var(--space-2));
-  --pad-bottom: calc(var(--space-7) + var(--space-3));
-  --card-w: clamp(8.75rem, 38vw, 11.5rem);
-  --overlap: 0.55;
+  --pad-bottom: calc(var(--round-size) + var(--space-4) + var(--space-3));
+  --overlap: 0.45;
   --fan-turn: 4.5deg;
-  --fan-drop: calc(var(--card-w) * 0.032);
-  --fan-pitch: calc(var(--card-w) * (1 - var(--overlap)));
-  --fan-room: calc(var(--card-w) * 0.45);
 
   z-index: 4;
   display: grid;
@@ -66,8 +62,8 @@ html:not([data-motion='on']) .clips {
   z-index: 1;
   align-self: center;
   margin-inline: calc(var(--gutter) * -1);
-  margin-block: calc(var(--fan-room) * -0.5);
-  padding-block: var(--fan-room);
+  margin-block: calc(var(--space-5) * -1 - var(--space-2));
+  padding-block: calc(var(--space-5) + var(--space-2));
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
@@ -79,14 +75,19 @@ html:not([data-motion='on']) .clips {
 }
 
 .clips-fan-list {
+  --card-w: clamp(5.5rem, min(38vw, calc((100svh - 28.5rem) * 9 / 16)), 11.5rem);
+  --fan-drop: calc(var(--card-w) * 0.016);
+  --fan-pitch: calc(var(--card-w) * (1 - var(--overlap)));
+
   display: flex;
   inline-size: max-content;
   margin-inline: auto;
-  padding-inline: max(var(--gutter), calc(var(--card-w) * 0.22));
+  padding-inline: calc(var(--gutter) + var(--card-w) * 0.1);
 }
 
 .clip-card {
   --deal: 1;
+  --gather: 0;
 
   position: relative;
   z-index: var(--fan-layer);
@@ -94,10 +95,9 @@ html:not([data-motion='on']) .clips {
   inline-size: var(--card-w);
   aspect-ratio: 9 / 16;
   scroll-snap-align: center;
-  translate: calc(var(--fan-position) * var(--fan-pitch) * (var(--deal) - 1))
+  translate: calc(var(--fan-position) * var(--fan-pitch) * (var(--deal) - 1) * var(--gather))
     calc(var(--fan-position) * var(--fan-position) * var(--fan-drop) * var(--deal));
   rotate: calc(var(--fan-position) * var(--fan-turn) * var(--deal));
-  will-change: translate, rotate;
 }
 
 .clip-card + .clip-card {
@@ -113,7 +113,7 @@ html:not([data-motion='on']) .clips {
   gap: var(--space-2);
   inline-size: 100%;
   block-size: 100%;
-  padding: var(--space-3);
+  padding: clamp(var(--space-2), calc(var(--card-w) * 0.07), var(--space-3));
   border: var(--ring) solid var(--gold);
   border-radius: var(--radius);
   background: var(--wine);
@@ -128,31 +128,35 @@ html:not([data-motion='on']) .clips {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgb(70 2 31 / 0) 25%, var(--wine) 72%);
+  z-index: -1;
+  background: linear-gradient(to bottom, rgb(70 2 31 / 0) 30%, var(--wine) 72%);
 }
 
 .clip-card-image {
   position: absolute;
   inset: 0;
+  z-index: -2;
   inline-size: 100%;
   block-size: 100%;
   object-fit: cover;
 }
 
 .clip-card-title {
-  position: relative;
   display: -webkit-box;
+  max-inline-size: 100%;
   overflow: hidden;
   font-weight: 700;
-  font-size: 1.0625rem;
-  line-height: 1.15;
+  font-size: clamp(0.8125rem, calc(var(--card-w) * 0.075), 1.0625rem);
+  line-height: 1.2;
   text-wrap: balance;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
 }
 
 .clip-card-play {
-  --round-size: 44px;
+  --round-size: clamp(36px, calc(var(--card-w) * 0.22), 48px);
+
+  order: -1;
 }
 
 .clip-card-play:hover {
@@ -187,43 +191,84 @@ html:not([data-motion='on']) .clips {
   z-index: 2;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'label label'
+    'handle pill'
+    'line line';
   align-items: center;
   column-gap: var(--space-3);
-  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  row-gap: var(--space-1);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border: var(--ring) solid var(--gold);
   border-radius: var(--radius);
   background: var(--wine);
   color: var(--cream);
 }
 
-.clips-tiktok-label,
-.clips-tiktok-line {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+.clips-tiktok-label {
+  grid-area: label;
+  color: var(--gold);
 }
 
 .clips-tiktok-handle {
+  grid-area: handle;
   display: flex;
   align-items: center;
   gap: var(--space-2);
   min-inline-size: 0;
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: clamp(0.875rem, 4.4vw, 1.05rem);
   line-height: 1.1;
   overflow-wrap: anywhere;
 }
 
+.clips-tiktok-line {
+  grid-area: line;
+  line-height: 1.2;
+}
+
 .clips-tiktok-pill {
   --focus-ring: var(--cream);
+
+  grid-area: pill;
+}
+
+@media (max-width: 359px) {
+  .clips-inner {
+    row-gap: var(--space-3);
+  }
+
+  .clips-tiktok-line {
+    font-size: 1rem;
+  }
+
+  .clips-tiktok {
+    grid-template-areas:
+      'label label'
+      'handle handle'
+      'line pill';
+  }
 }
 
 @media (min-width: 600px) {
   .clips {
-    --card-w: clamp(10rem, 22vw, 14rem);
+    --pad-bottom: calc(var(--mini-card-height) + var(--space-4) + var(--space-3));
+  }
+
+  .clips-fan {
+    container-type: inline-size;
+    margin-inline: 0;
+  }
+
+  .clips-fan-list {
+    --fan-drop: calc(var(--card-w) * 0.032);
+    --card-w: min(calc(100cqi / 4), calc((100svh - 17rem) * 9 / 16), 22rem);
+
+    padding-inline: calc(var(--card-w) * 0.1);
+  }
+
+  .clip-card {
+    --gather: 1;
   }
 
   .clips-tiktok {
@@ -235,17 +280,16 @@ html:not([data-motion='on']) .clips {
 @media (min-width: 900px) {
   .clips {
     --pad-top: calc(var(--space-4) + var(--round-size) + var(--space-3));
-    --pad-bottom: calc(var(--space-4) + var(--mini-card-height) + var(--space-3));
-    --card-w: clamp(10rem, min(16vw, calc((100svh - 29rem) * 9 / 16)), 22rem);
   }
 
   .clips-inner {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(16rem, auto) minmax(0, 1fr);
     grid-template-rows: auto auto;
     grid-template-areas:
       'heading fan'
-      'tiktok tiktok';
+      'tiktok fan';
     column-gap: var(--space-5);
+    row-gap: var(--space-4);
     align-content: center;
   }
 
@@ -256,56 +300,26 @@ html:not([data-motion='on']) .clips {
 
   .clips-fan {
     grid-area: fan;
-    align-self: start;
-    margin-inline: 0;
   }
 
   .clips-tiktok {
     grid-area: tiktok;
-    justify-self: end;
-  }
-}
-
-@media (min-width: 1360px) {
-  .clips {
-    --card-w: clamp(10rem, min(16vw, calc((100svh - 24rem) * 9 / 16)), 22rem);
-  }
-
-  .clips-inner {
-    grid-template-rows: auto;
-    grid-template-areas: 'heading fan';
-  }
-
-  .clips-tiktok {
-    --tilt: 2deg;
-
-    grid-area: fan;
     grid-template-columns: minmax(0, 1fr);
-    align-self: end;
-    justify-self: end;
-    inline-size: 18.5rem;
-    padding: var(--space-4);
-    row-gap: var(--space-2);
-    rotate: var(--tilt);
-  }
-
-  .clips-tiktok-label,
-  .clips-tiktok-line {
-    position: static;
+    grid-template-areas:
+      'label'
+      'handle'
+      'line'
+      'pill';
+    align-self: start;
+    justify-self: stretch;
     inline-size: auto;
-    block-size: auto;
-    margin: 0;
-    clip-path: none;
-    white-space: normal;
-  }
-
-  .clips-tiktok-label {
-    color: var(--gold);
+    contain: inline-size;
+    row-gap: var(--space-2);
+    padding: var(--space-4);
   }
 
   .clips-tiktok-handle {
-    margin-block: var(--space-2);
-    font-size: 1.3rem;
+    font-size: 1.2rem;
   }
 
   .clips-tiktok-line {
@@ -314,19 +328,5 @@ html:not([data-motion='on']) .clips {
 
   .clips-tiktok-pill {
     justify-self: start;
-  }
-}
-
-@media (max-width: 599px) {
-  .clip-card-play {
-    --round-size: 40px;
-  }
-
-  .clip-card-title {
-    font-size: 0.9375rem;
-  }
-
-  .clips-tiktok {
-    padding-inline-start: var(--space-3);
   }
 }

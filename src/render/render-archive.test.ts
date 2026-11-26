@@ -101,6 +101,20 @@ describe('renderArchive rows', () => {
     expect(rows[1]).not.toContain('archive-number');
   });
 
+  it('counts the newest episodes the feed has not numbered on from the newest numbered one, by date', () => {
+    const feedNumbered = [makeEpisode(4, { number: 20 }), makeEpisode(5, { number: 19 })];
+    const rows = readRows(renderArchive(makeShow([...[0, 1, 2, 3].map((index) => omit(makeEpisode(index), 'number')), ...feedNumbered])));
+
+    expect(rows.map((row) => row.match(/<\/span>(\d+)<\/span>/)?.[1])).toEqual(['24', '23', '22', '21', '20', '19']);
+  });
+
+  it('keeps the feed numbers as published, even where they repeat or skip, and leaves older unnumbered episodes bare', () => {
+    const episodes = [makeEpisode(0, { number: 7 }), makeEpisode(1, { number: 7 }), makeEpisode(2, { number: 2 }), omit(makeEpisode(3), 'number')];
+    const rows = readRows(renderArchive(makeShow(episodes)));
+
+    expect(rows.map((row) => row.match(/<\/span>(\d+)<\/span>/)?.[1])).toEqual(['7', '7', '2', undefined]);
+  });
+
   it('shows the date and, when known, the length', () => {
     const episode = makeEpisode(1);
     const rows = readRows(renderArchive(makeShow([episode, omit(makeEpisode(2), 'durationSeconds')])));
@@ -114,7 +128,7 @@ describe('renderArchive rows', () => {
   it('offers Watch on YouTube with the player attributes only for an episode with a YouTube video', () => {
     const rows = readRows(renderArchive(makeShow([makeEpisode(1), omit(omit(makeEpisode(2), 'youtubeUrl'), 'youtubeVideoId')])));
 
-    expect(rows[0]).toMatch(/<a class="pill archive-pill archive-pill--solid" href="https:\/\/www\.youtube\.com\/watch\?v=video1" data-player="video1" data-player-title="Episode 1">/);
+    expect(rows[0]).toMatch(/<a class="pill pill--solid" href="https:\/\/www\.youtube\.com\/watch\?v=video1" data-player="video1" data-player-title="Episode 1">/);
     expect(rows[0]).not.toContain('data-player-shape');
     expect(rows[0]).toContain('Watch on YouTube');
     expect(rows[1]).not.toContain('Watch on YouTube');

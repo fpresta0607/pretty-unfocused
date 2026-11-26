@@ -8,11 +8,11 @@ import { renderPlayerAttributes } from './render-player-attributes.ts';
 
 const DESCRIPTION_MAX_CHARACTERS = 300;
 
-function renderNumber(episode: Episode): string {
-  if (episode.number === undefined) {
+function renderNumber(number: number | undefined): string {
+  if (number === undefined) {
     return '';
   }
-  return `<span class="archive-number" data-archive="number"><span class="visually-hidden">Episode </span>${episode.number}</span>`;
+  return `<span class="archive-number" data-archive="number"><span class="visually-hidden">Episode </span>${number}</span>`;
 }
 
 function renderMeta(episode: Episode): string {
@@ -28,22 +28,22 @@ function renderActions(episode: Episode): string {
   const watch =
     episode.youtubeUrl === undefined
       ? ''
-      : `<a class="pill archive-pill archive-pill--solid" href="${escapeHtml(episode.youtubeUrl)}"${renderPlayerAttributes(episode.youtubeVideoId, episode.title)}>${renderIcon('youtube', 'brand-icon')}Watch on YouTube<span class="visually-hidden">: ${title}</span></a>`;
+      : `<a class="pill pill--solid" href="${escapeHtml(episode.youtubeUrl)}"${renderPlayerAttributes(episode.youtubeVideoId, episode.title)}>${renderIcon('youtube', 'brand-icon')}Watch on YouTube<span class="visually-hidden">: ${title}</span></a>`;
   const listen =
     episode.spotifyUrl === undefined
       ? ''
-      : `<a class="pill archive-pill" href="${escapeHtml(episode.spotifyUrl)}">${renderIcon('spotify', 'brand-icon')}Listen on Spotify<span class="visually-hidden">: ${title}</span></a>`;
+      : `<a class="pill" href="${escapeHtml(episode.spotifyUrl)}">${renderIcon('spotify', 'brand-icon')}Listen on Spotify<span class="visually-hidden">: ${title}</span></a>`;
   return `${watch}${listen}`;
 }
 
-export function renderArchiveRow(episode: Episode, index: number): string {
+export function renderArchiveRow(episode: Episode, index: number, number: number | undefined): string {
   const description = excerptDescription(episode.description, DESCRIPTION_MAX_CHARACTERS);
   const descriptionMarkup = description === '' ? '' : `<p class="archive-description">${escapeHtml(description)}</p>`;
   const actions = renderActions(episode);
   const actionsMarkup = actions === '' ? '' : `<div class="archive-actions">${actions}</div>`;
   return `<li class="archive-row" data-archive="row">
         <button class="archive-trigger" id="archive-trigger-${index}" type="button" aria-expanded="true" aria-controls="archive-panel-${index}" data-archive="trigger">
-          ${renderNumber(episode)}
+          ${renderNumber(number)}
           <span class="archive-title">${escapeHtml(episode.title)}</span>
           ${renderMeta(episode)}
           <span class="archive-toggle" aria-hidden="true"></span>

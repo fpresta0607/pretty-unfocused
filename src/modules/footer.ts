@@ -13,7 +13,7 @@ import {
 import { isFooterInView, riseProgress } from './footer-logic.ts';
 import { isMotionEnabled, SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
 import { EASE_OUT } from './motion-tokens.ts';
-import { REVEAL_FROM_SWEEP_PROGRESS, sweepProgress } from './stain-edge.ts';
+import { EPISODES_REVEAL_FROM_SWEEP_PROGRESS, sweepProgress } from './stain-edge.ts';
 
 const ENTER_FRACTION = 0.88;
 const NATIVE_SCROLL_ENTER_FRACTION = 1;
@@ -81,7 +81,7 @@ export class Footer extends Module {
       return;
     }
     const isNativeScroll = !this.smoothScrollDevice.matches;
-    const isStainAcross = sweepProgress(footerTop, window.innerHeight) >= REVEAL_FROM_SWEEP_PROGRESS;
+    const isStainAcross = sweepProgress(footerTop, window.innerHeight) >= EPISODES_REVEAL_FROM_SWEEP_PROGRESS;
     if (!isStainAcross && !isNativeScroll) {
       return;
     }

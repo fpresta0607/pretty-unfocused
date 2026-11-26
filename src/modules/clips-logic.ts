@@ -1,7 +1,7 @@
 import { EASE_POP } from './motion-tokens.ts';
 
-export const DEAL_START_FRACTION = 0.55;
-export const DEAL_SPAN_FRACTION = 0.5;
+export const DEAL_START_FRACTION = 0.9;
+export const DEAL_SPAN_FRACTION = 0.4;
 export const DEAL_WINDOW = 0.5;
 
 function clamp(value: number, lowest: number, highest: number): number {
