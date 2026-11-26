@@ -2,7 +2,7 @@ import { createTimeline, stagger, utils } from 'animejs';
 import { module as Module } from 'modujs';
 
 import { EASE_OUT, EASE_POP } from './motion-tokens.ts';
-import { isMotionEnabled } from './motion-state.ts';
+import { isMotionEnabled, SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
 import { splitIntoLines } from './split-lines.ts';
 import { sweepProgress } from './stain-edge.ts';
 
@@ -25,11 +25,24 @@ export const TOPIC_STAGGER = 70;
 export const TOPIC_DURATION = 400;
 const TOPIC_START_SCALE = 0.6;
 const ENTER_FRACTION = 0.88;
+const NATIVE_SCROLL_ENTER_FRACTION = 1;
+const NATIVE_SCROLL_HOSTS_ENTER_FRACTION = 1.3;
 export const REVEAL_FROM_SWEEP_PROGRESS = 0.7;
+
+interface Deal {
+  host: HTMLElement;
+  tiltDegrees: number;
+  direction: number;
+  startDegrees: number;
+  startShift: number;
+  startRise: number;
+}
 
 export class About extends Module {
   private pendingGroups: HTMLElement[] = [];
   private pendingFrame: number | undefined;
+  private isHeadingSettled = false;
+  private readonly smoothScrollDevice = window.matchMedia(SMOOTH_SCROLL_DEVICE_QUERY);
 
   private readonly scheduleUpdate = (): void => {
     if (this.pendingFrame !== undefined) {
@@ -51,6 +64,9 @@ export class About extends Module {
     this.pendingGroups.forEach((group) => {
       group.dataset.reveal = 'pending';
     });
+    if (!this.smoothScrollDevice.matches) {
+      this.holdHostsAtStartPose();
+    }
     this.update();
     if (this.pendingGroups.length > 0) {
       window.addEventListener('scroll', this.scheduleUpdate, { passive: true });
@@ -69,12 +85,16 @@ export class About extends Module {
   }
 
   private update(): void {
-    if (sweepProgress(this.el.getBoundingClientRect().top, window.innerHeight) < REVEAL_FROM_SWEEP_PROGRESS) {
-      return;
-    }
-    const enterLine = window.innerHeight * ENTER_FRACTION;
+    const isStainAcross = sweepProgress(this.el.getBoundingClientRect().top, window.innerHeight) >= REVEAL_FROM_SWEEP_PROGRESS;
     this.pendingGroups = this.pendingGroups.filter((group) => {
-      if (group.getBoundingClientRect().top >= enterLine) {
+      const isNativeScroll = !this.smoothScrollDevice.matches;
+      if (!isStainAcross && !isNativeScroll) {
+        return true;
+      }
+      if (group.dataset.aboutGroup === 'copy' && isNativeScroll && !this.isHeadingSettled) {
+        return true;
+      }
+      if (group.getBoundingClientRect().top >= window.innerHeight * this.enterFractionOf(group, isNativeScroll)) {
         return true;
       }
       this.reveal(group);
@@ -83,6 +103,13 @@ export class About extends Module {
     if (this.pendingGroups.length === 0) {
       this.stopWatching();
     }
+  }
+
+  private enterFractionOf(group: HTMLElement, isNativeScroll: boolean): number {
+    if (!isNativeScroll) {
+      return ENTER_FRACTION;
+    }
+    return group.dataset.aboutGroup === 'hosts' ? NATIVE_SCROLL_HOSTS_ENTER_FRACTION : NATIVE_SCROLL_ENTER_FRACTION;
   }
 
   private reveal(group: HTMLElement): void {
@@ -107,14 +134,18 @@ export class About extends Module {
       onComplete: () => {
         lines.forEach((line) => line.style.removeProperty('transform'));
         script.forEach((word) => word.style.removeProperty('clip-path'));
+        this.isHeadingSettled = true;
+        if (!this.smoothScrollDevice.matches && this.pendingGroups.length > 0) {
+          this.scheduleUpdate();
+        }
       },
     })
       .add(lines, { translateY: [MASK_HIDDEN, '0%'], delay: stagger(LINE_STAGGER) }, 0)
       .add(script, { clipPath: [SCRIPT_HIDDEN, SCRIPT_SHOWN], duration: SCRIPT_WIPE_DURATION }, SCRIPT_WIPE_AT);
   }
 
-  private revealHosts(group: HTMLElement): void {
-    const deals = Array.from(group.querySelectorAll<HTMLElement>('[data-about="host"]')).map((host) => {
+  private readDeals(group: HTMLElement): Deal[] {
+    return Array.from(group.querySelectorAll<HTMLElement>('[data-about="host"]')).map((host) => {
       const tiltDegrees = parseFloat(getComputedStyle(host).getPropertyValue('--tilt'));
       const direction = tiltDegrees < 0 ? -1 : 1;
       return {
@@ -126,8 +157,23 @@ export class About extends Module {
         startRise: HOST_DEAL_RISE * host.offsetHeight,
       };
     });
+  }
+
+  private holdHostsAtStartPose(): void {
+    this.pendingGroups
+      .filter((group) => group.dataset.aboutGroup === 'hosts')
+      .forEach((group) =>
+        this.readDeals(group).forEach(({ host, startDegrees, startShift, startRise }) =>
+          utils.set(host, { translateX: startShift, translateY: startRise, rotate: startDegrees, visibility: 'visible' }),
+        ),
+      );
+  }
+
+  private revealHosts(group: HTMLElement): void {
+    const isNativeScroll = !this.smoothScrollDevice.matches;
+    const deals = this.readDeals(group);
     deals.forEach(({ host, startDegrees, startShift, startRise }) =>
-      utils.set(host, { translateX: startShift, translateY: startRise, rotate: startDegrees, visibility: 'hidden' }),
+      utils.set(host, { translateX: startShift, translateY: startRise, rotate: startDegrees, visibility: isNativeScroll ? 'visible' : 'hidden' }),
     );
     delete group.dataset.reveal;
 
@@ -141,7 +187,9 @@ export class About extends Module {
     });
     deals.forEach(({ host, direction, tiltDegrees, startDegrees, startShift, startRise }, index) => {
       const settleDuration = MOVE_DURATION - HOST_DEAL_PASS_DURATION;
-      timeline.set(host, { visibility: 'visible' }, index * HOST_STAGGER);
+      if (!isNativeScroll) {
+        timeline.set(host, { visibility: 'visible' }, index * HOST_STAGGER);
+      }
       timeline.add(
         host,
         {
