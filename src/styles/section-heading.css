@@ -1,0 +1,54 @@
+.section-heading {
+  --heading-color: var(--wine);
+  --script-color: var(--roast);
+
+  margin-inline-start: -0.04em;
+  color: var(--heading-color);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--size-h2);
+  line-height: 0.92;
+  text-transform: uppercase;
+  -webkit-text-stroke: var(--display-stroke) currentcolor;
+}
+
+.section-heading-visual {
+  display: block;
+}
+
+.section-heading-mask {
+  display: block;
+  padding-block: 0.06em;
+  margin-block-end: -0.12em;
+  overflow: hidden;
+}
+
+.section-heading-line {
+  display: block;
+}
+
+.section-heading-script-line {
+  display: block;
+  margin-block: -0.45em -0.35em;
+  margin-inline: -0.16em -0.2em;
+  color: var(--script-color);
+  font-family: var(--font-script);
+  font-size: var(--size-script);
+  line-height: 1;
+  text-transform: none;
+  -webkit-text-stroke: 0;
+}
+
+.section-heading-script {
+  display: block;
+  inline-size: max-content;
+  padding: 0.35em 0.2em;
+}
+
+.section-heading[data-reveal='pending'] [data-heading='line'] {
+  transform: translateY(130%);
+}
+
+.section-heading[data-reveal='pending'] [data-heading='script'] {
+  clip-path: inset(-2em 100% -2em 0px);
+}

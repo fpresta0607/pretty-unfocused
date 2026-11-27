@@ -46,7 +46,7 @@ function createShortThumbnail(videoId: string, hasOardefaultThumbnail: boolean):
   return { src: `${baseUrl}/hqdefault.jpg`, width: 480, height: 360 };
 }
 
-function compareNewestFirst(left: { publishedAt: string }, right: { publishedAt: string }): number {
+export function compareNewestFirst(left: { publishedAt: string }, right: { publishedAt: string }): number {
   return Date.parse(right.publishedAt) - Date.parse(left.publishedAt);
 }
 

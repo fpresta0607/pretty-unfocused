@@ -1,6 +1,6 @@
-import { YOUTUBE_CHANNEL_URL } from '../show/show-links.ts';
 import type { Episode } from '../show/show-types.ts';
 import { escapeHtml } from './escape-html.ts';
+import { excerptDescription } from './excerpt-description.ts';
 import { formatShortDate } from './format-date.ts';
 import { renderIcon } from './icons.ts';
 import { RING_SIZE, RING_SRC, RING_SRCSET } from './ring-asset.ts';
@@ -9,15 +9,6 @@ import { renderPlayerAttributes } from './render-player-attributes.ts';
 const CARD_IMAGE_SIZES = '(min-width: 900px) 28vw, 90vw';
 const EXCERPT_MAX_CHARACTERS = 600;
 const RING_IMAGE_SIZES = '(min-width: 900px) 20vw, 60vw';
-
-function excerpt(description: string): string {
-  if (description.length <= EXCERPT_MAX_CHARACTERS) {
-    return description;
-  }
-  const clipped = description.slice(0, EXCERPT_MAX_CHARACTERS);
-  const lastSpace = clipped.lastIndexOf(' ');
-  return `${(lastSpace > 0 ? clipped.slice(0, lastSpace) : clipped).trimEnd()}…`;
-}
 
 function renderMedia(episode: Episode): string {
   const { thumbnail } = episode;
@@ -47,7 +38,7 @@ function renderActions(episode: Episode): string {
 }
 
 export function renderEpisodeCard(episode: Episode, index: number): string {
-  const description = excerpt(episode.description);
+  const description = excerptDescription(episode.description, EXCERPT_MAX_CHARACTERS);
   const descriptionMarkup =
     description === ''
       ? ''
@@ -65,7 +56,7 @@ export function renderEpisodeCard(episode: Episode, index: number): string {
 
 export function renderAllEpisodesCard(episodeCount: number, index: number): string {
   return `<li class="episode-card episode-card--all" data-episodes="card" style="--card-index:${index}">
-      <a class="episode-all" href="${escapeHtml(YOUTUBE_CHANNEL_URL)}">
+      <a class="episode-all" href="#every-episode">
         <span class="visually-hidden">All ${episodeCount} episodes</span>
         <span class="episode-all-panel" aria-hidden="true">
           <img class="episode-all-ring" src="${RING_SRC}" srcset="${RING_SRCSET}" sizes="${RING_IMAGE_SIZES}" width="${RING_SIZE}" height="${RING_SIZE}" alt="" loading="lazy" decoding="async">

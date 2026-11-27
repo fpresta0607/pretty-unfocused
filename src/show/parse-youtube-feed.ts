@@ -1,5 +1,5 @@
 import { toIsoTimestamp } from './iso-timestamp.ts';
-import { decodeEntities, toPlainText } from './plain-text.ts';
+import { decodeEntities, toPlainLines } from './plain-text.ts';
 import {
   parseXml,
   readAttribute,
@@ -46,7 +46,7 @@ function parseEntry(entry: XmlNode): YoutubeEntry {
     videoId,
     title: decodeEntities(readRequiredText(entry, 'title', label)).trim(),
     publishedAt: toIsoTimestamp(readRequiredText(entry, 'published', label), label),
-    description: toPlainText(readText(mediaGroup, 'media:description') ?? ''),
+    description: toPlainLines(readText(mediaGroup, 'media:description') ?? ''),
     url,
     isShort: new URL(url).pathname.startsWith('/shorts/'),
   };
