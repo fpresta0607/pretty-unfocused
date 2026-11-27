@@ -8,6 +8,7 @@ import { readFixture } from './read-fixture.ts';
 const NO_THUMBNAILS: ThumbnailAvailability = {
   maxresVideoIds: new Set(),
   oardefaultVideoIds: new Set(),
+  showArtworkUrl: undefined,
 };
 
 function createPodcastItem(overrides: Partial<PodcastItem>): PodcastItem {
@@ -245,6 +246,23 @@ describe('mergeShow thumbnails', () => {
     const show = mergeShow(podcast, { entries: [] }, NO_THUMBNAILS);
 
     expect(show.episodes[0]?.thumbnail.src).toBe('https://example.com/channel.jpg');
+  });
+
+  it('uses the smaller published show artwork for a podcast-only episode that shows the channel image', () => {
+    const showArtworkUrl = 'https://i.scdn.co/image/ab6765630000ba8a0123';
+
+    const show = mergeShow(podcast, { entries: [] }, { ...NO_THUMBNAILS, showArtworkUrl });
+
+    expect(show.episodes[0]?.thumbnail).toEqual({ src: showArtworkUrl, width: 640, height: 640 });
+  });
+
+  it('keeps the own image of a podcast-only episode whose image is not the channel image', () => {
+    const ownImage = 'https://example.com/own.jpg';
+    const feed = createPodcastFeed([createPodcastItem({ title: 'Own art', imageUrl: ownImage })], 'https://example.com/channel.jpg');
+
+    const show = mergeShow(feed, { entries: [] }, { ...NO_THUMBNAILS, showArtworkUrl: 'https://i.scdn.co/image/ab6765630000ba8a0123' });
+
+    expect(show.episodes[0]?.thumbnail).toEqual({ src: ownImage, width: 1400, height: 1400 });
   });
 
   it('throws when a podcast-only episode has no image at all', () => {

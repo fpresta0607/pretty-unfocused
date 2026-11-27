@@ -2,7 +2,7 @@ import { createTimeline, stagger, utils } from 'animejs';
 import { module as Module } from 'modujs';
 
 import { EASE_OUT, EASE_POP } from './motion-tokens.ts';
-import { isMotionEnabled } from './motion-state.ts';
+import { HERO_SETTLED_EVENT, isMotionEnabled } from './motion-state.ts';
 import { splitIntoLines } from './split-lines.ts';
 
 const MASK_HIDDEN = '115%';
@@ -80,6 +80,7 @@ export class Hero extends Module {
         [...scriptMask, ...card].forEach(
           (element) => element instanceof HTMLElement && element.style.removeProperty('clip-path'),
         );
+        window.dispatchEvent(new Event(HERO_SETTLED_EVENT));
       },
     })
       .add(

@@ -181,6 +181,55 @@ describe('the card height', () => {
     expect(readFit().lines[0]).toBe('1');
   });
 
+  it('fits the cards again for a resize that changes the screen size', async () => {
+    sizeCards([5, 5, 5, 5, 5, 5]);
+    limitStage(900);
+    mountEpisodes();
+    const fitted = readFit();
+    sizeCards([1, 1, 1, 1, 1, 1]);
+
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(window.innerWidth + 1);
+    window.dispatchEvent(new Event('resize'));
+    await new Promise((resolve) => window.requestAnimationFrame(resolve));
+
+    expect(readFit()).not.toEqual(fitted);
+  });
+
+  it('keeps the fit of the cards for a resize that leaves the screen size unchanged, since nothing they depend on moved', async () => {
+    sizeCards([5, 5, 5, 5, 5, 5]);
+    limitStage(900);
+    mountEpisodes();
+    const fitted = readFit();
+    sizeCards([1, 1, 1, 1, 1, 1]);
+
+    window.dispatchEvent(new Event('resize'));
+    await new Promise((resolve) => window.requestAnimationFrame(resolve));
+
+    expect(readFit()).toEqual(fitted);
+  });
+
+  it.each([
+    ['loading', true],
+    ['loaded', false],
+  ])('when the fonts are %j, fits the cards again once they are ready: %j', async (status, isFittedAgain) => {
+    let finishLoading = (): void => undefined;
+    const ready = new Promise<void>((resolve) => {
+      finishLoading = resolve;
+    });
+    Object.defineProperty(document, 'fonts', { value: { status, ready }, configurable: true });
+    sizeCards([5, 5, 5, 5, 5, 5]);
+    limitStage(900);
+    mountEpisodes();
+    const fitted = readFit();
+    sizeCards([1, 1, 1, 1, 1, 1]);
+
+    finishLoading();
+    await ready;
+    await Promise.resolve();
+
+    expect(JSON.stringify(readFit()) !== JSON.stringify(fitted)).toBe(isFittedAgain);
+  });
+
   describe('above the bottom pieces of the frame', () => {
     const SCREEN_HEIGHT = 700;
     const MINI_CARD_HEIGHT = 93;

@@ -10,6 +10,17 @@ describe('renderPageFrame', () => {
     expect(labels).toEqual(['Home', 'About the show', 'Episodes', 'Clips', 'Every episode', 'Say hi']);
   });
 
+  it('defines each coffee-stain outline once, for every section edge and colour band to reference', () => {
+    const show = buildFixtureShow();
+    const markup = `${renderPageFrame(show)}${renderSections(show)}`;
+    const referencedIds = new Set(Array.from(markup.matchAll(/<use class="stain-edge-(?:rim|fill)" href="#([^"]+)"/g), (match) => match[1]));
+
+    expect(referencedIds).toEqual(new Set(['stain-edge-rim-wide', 'stain-edge-fill-wide', 'stain-edge-rim-narrow', 'stain-edge-fill-narrow']));
+    for (const id of referencedIds) {
+      expect(markup.match(new RegExp(`<path id="${id}" d="[^"]+"/>`, 'g'))).toHaveLength(1);
+    }
+  });
+
   it('leaves Clips out of the menu when there are no clips to show', () => {
     const show = { ...buildFixtureShow(), clips: [] };
 

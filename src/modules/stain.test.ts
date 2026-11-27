@@ -119,6 +119,25 @@ describe('the stain edge', () => {
     expect(readPath('wide')).toBeNull();
   });
 
+  it('swaps the reference to the shared settled outline for a path of its own before it reshapes the edge', () => {
+    document.documentElement.dataset.motion = 'on';
+    document.querySelector('[data-stain-set="wide"]')?.replaceChildren(
+      ...['rim', 'fill'].map((part) => {
+        const reference = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        reference.setAttribute('class', `stain-edge-${part}`);
+        reference.setAttribute('href', `#stain-edge-${part}-wide`);
+        return reference;
+      }),
+    );
+
+    mountStain();
+
+    const parts = Array.from(document.querySelectorAll('[data-stain-set="wide"] > *'));
+    expect(parts.map((part) => part.tagName.toLowerCase())).toEqual(['path', 'path']);
+    expect(parts.map((part) => part.getAttribute('class'))).toEqual(['stain-edge-rim', 'stain-edge-fill']);
+    expect(readPath('wide')).toMatch(/^M-100\.0.*Z$/);
+  });
+
   it('draws one closed cream shape as soon as it starts, sized to the pixels it covers', () => {
     document.documentElement.dataset.motion = 'on';
 

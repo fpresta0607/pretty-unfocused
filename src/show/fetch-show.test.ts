@@ -1,10 +1,15 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { fetchShow } from './fetch-show.ts';
 import { readFixture } from './read-fixture.ts';
-import { PODCAST_FEED_URL, YOUTUBE_FEED_URL } from './show-links.ts';
+import { PODCAST_FEED_URL, SPOTIFY_SHOW_URL, YOUTUBE_FEED_URL } from './show-links.ts';
+
+const SPOTIFY_ARTWORK_URL = 'https://i.scdn.co/image/ab6765630000ba8a8a5ad1a6dbabbba0e074814c';
+const SPOTIFY_SHOW_PAGE = `<html><head><meta property="og:image" content="${SPOTIFY_ARTWORK_URL}"/></head></html>`;
 
 interface FakeFetchOptions {
+  spotifyResponse?: Response;
+  spotifyError?: Error;
   podcastResponse?: Response;
   youtubeResponse?: Response;
   imageStatusByUrl?: ReadonlyMap<string, number>;
@@ -19,6 +24,12 @@ function createFakeFetch(options: FakeFetchOptions = {}): typeof fetch {
     }
     if (url === YOUTUBE_FEED_URL) {
       return options.youtubeResponse ?? new Response(readFixture('youtube-feed.xml'));
+    }
+    if (url === SPOTIFY_SHOW_URL) {
+      if (options.spotifyError !== undefined) {
+        throw options.spotifyError;
+      }
+      return options.spotifyResponse ?? new Response(SPOTIFY_SHOW_PAGE);
     }
     if (url.startsWith('https://i.ytimg.com/vi/')) {
       await options.onImageRequest?.(url, init);
@@ -41,6 +52,10 @@ function buildYoutubeFeed(videoIds: readonly string[]): string {
     .join('\n');
   return `<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom">${entries}</feed>`;
 }
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('fetchShow', () => {
   it('builds the show from both feeds and the thumbnail checks', async () => {
@@ -86,6 +101,55 @@ describe('fetchShow', () => {
     ]);
     expect(imageRequests.every((request) => request.init?.method === 'HEAD')).toBe(true);
     expect(JSON.stringify(imageRequests[0]?.init?.headers)).toContain('pretty-unfocused-site');
+  });
+
+  it('gives an episode without a video the smaller show artwork published on Spotify', async () => {
+    const warn = vi.spyOn(console, 'warn');
+
+    const show = await fetchShow(createFakeFetch());
+
+    expect(warn).not.toHaveBeenCalled();
+
+    const episodesWithoutVideo = show.episodes.filter((episode) => episode.youtubeVideoId === undefined);
+    expect(episodesWithoutVideo.length).toBeGreaterThan(0);
+    for (const episode of episodesWithoutVideo) {
+      expect(episode.thumbnail).toEqual({ src: SPOTIFY_ARTWORK_URL, width: 640, height: 640 });
+    }
+  });
+
+  it.each([
+    ['the Spotify page is not available', new Response('down', { status: 503 })],
+    ['the Spotify page has no image', new Response('<html><head></head></html>')],
+    ['the Spotify page image is on another host', new Response('<meta property="og:image" content="https://example.com/image/ab01"/>')],
+  ])('keeps the feed artwork and warns when %s', async (_label, spotifyResponse) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    const show = await fetchShow(createFakeFetch({ spotifyResponse }));
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]?.[0]).toMatch(/Spotify show page.*keeping the feed artwork/);
+
+    const episodesWithoutVideo = show.episodes.filter((episode) => episode.youtubeVideoId === undefined);
+    expect(episodesWithoutVideo.length).toBeGreaterThan(0);
+    for (const episode of episodesWithoutVideo) {
+      expect(episode.thumbnail.src).toContain('cloudfront.net');
+      expect(episode.thumbnail.width).toBe(1400);
+    }
+  });
+
+  it('keeps the feed artwork, warns and still builds when the Spotify page cannot be reached', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    const show = await fetchShow(createFakeFetch({ spotifyError: new TypeError('fetch failed') }));
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]?.[0]).toMatch(/Spotify show page could not be reached.*fetch failed/);
+
+    const episodesWithoutVideo = show.episodes.filter((episode) => episode.youtubeVideoId === undefined);
+    expect(episodesWithoutVideo.length).toBeGreaterThan(0);
+    for (const episode of episodesWithoutVideo) {
+      expect(episode.thumbnail.src).toContain('cloudfront.net');
+    }
   });
 
   it('keeps at most 6 thumbnail checks in flight', async () => {

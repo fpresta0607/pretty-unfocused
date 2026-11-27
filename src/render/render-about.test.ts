@@ -172,8 +172,8 @@ describe('renderAbout with the fixture show', () => {
       expect(edge).toContain('aria-hidden="true"');
       expect(edge).toMatch(/viewBox="0 0 \d+ \d+"/);
     });
-    expect(markup.match(/<path class="stain-edge-fill" d="M-[^"]+Z[^"]*"\/>/g)).toHaveLength(2);
-    expect(markup.match(/<path class="stain-edge-rim" d="M-[^"]+Z[^"]*"\/><path class="stain-edge-fill"/g)).toHaveLength(2);
+    expect(markup.match(/<use class="stain-edge-fill" href="#stain-edge-fill-(wide|narrow)"\/>/g)).toHaveLength(2);
+    expect(markup.match(/<use class="stain-edge-rim" href="#stain-edge-rim-(wide|narrow)"\/><use class="stain-edge-fill"/g)).toHaveLength(2);
     expect(markup).toContain('data-module-stain');
   });
 

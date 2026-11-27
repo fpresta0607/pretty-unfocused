@@ -6,14 +6,14 @@ import { renderIcon } from './icons.ts';
 import { RING_SIZE, RING_SRC, RING_SRCSET } from './ring-asset.ts';
 import { renderPlayerAttributes } from './render-player-attributes.ts';
 
-const CARD_IMAGE_SIZES = '(min-width: 900px) 28vw, 90vw';
+const CARD_IMAGE_SIZES = '(min-width: 900px) 28vw, (min-width: 600px) 50vw, calc(100vw - 4rem)';
 const EXCERPT_MAX_CHARACTERS = 600;
 const RING_IMAGE_SIZES = '(min-width: 900px) 20vw, 60vw';
 
 function renderMedia(episode: Episode): string {
   const { thumbnail } = episode;
   const srcset = thumbnail.srcset === undefined ? '' : ` srcset="${escapeHtml(thumbnail.srcset)}"`;
-  const image = `<img class="episode-card-image" src="${escapeHtml(thumbnail.src)}"${srcset} sizes="${CARD_IMAGE_SIZES}" width="${thumbnail.width}" height="${thumbnail.height}" alt="" loading="eager">`;
+  const image = `<img class="episode-card-image" src="${escapeHtml(thumbnail.src)}"${srcset} sizes="${CARD_IMAGE_SIZES}" width="${thumbnail.width}" height="${thumbnail.height}" alt="" loading="lazy">`;
   if (episode.youtubeUrl === undefined) {
     return `<div class="episode-card-art">${image}</div>`;
   }
