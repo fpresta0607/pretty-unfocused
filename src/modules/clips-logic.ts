@@ -1,7 +1,7 @@
 import { EASE_POP } from './motion-tokens.ts';
 
-export const DEAL_START_FRACTION = 1;
-export const DEAL_SPAN_FRACTION = 0.45;
+export const DEAL_START_FRACTION = 0.8;
+export const DEAL_SPAN_FRACTION = 0.5;
 export const ROW_LANDING_FRACTION = 0.3;
 export const DEAL_WINDOW = 0.5;
 

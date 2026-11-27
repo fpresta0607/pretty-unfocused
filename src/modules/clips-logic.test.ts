@@ -7,17 +7,17 @@ const VIEWPORT_HEIGHT = 800;
 describe('dealProgress', () => {
   it.each([
     ['is zero while the fan is still below the screen', 900, 0],
-    ['is zero exactly as the fan top reaches the bottom of the screen', 800, 0],
-    ['is half way half way through the first half screen', 620, 0.5],
-    ['is one once the fan top is 0.55 screens down', 440, 1],
+    ['is zero until the fan top is 0.8 screens down, with the cards already on screen', 640, 0],
+    ['is half way when the fan top is 0.55 screens down', 440, 0.5],
+    ['is one once the fan top is 0.3 screens down', 240, 1],
     ['stays one while the fan scrolls on up the screen', -600, 1],
   ])('%s', (_behavior, fanTop, expected) => {
     expect(dealProgress(fanTop, VIEWPORT_HEIGHT)).toBeCloseTo(expected, 10);
   });
 
   it('follows the scroll position, a quarter of the way for a quarter of the range', () => {
-    expect(dealProgress(710, VIEWPORT_HEIGHT)).toBeCloseTo(0.25, 10);
-    expect(dealProgress(530, VIEWPORT_HEIGHT)).toBeCloseTo(0.75, 10);
+    expect(dealProgress(540, VIEWPORT_HEIGHT)).toBeCloseTo(0.25, 10);
+    expect(dealProgress(340, VIEWPORT_HEIGHT)).toBeCloseTo(0.75, 10);
   });
 
   it('scales with the viewport height', () => {
@@ -27,7 +27,7 @@ describe('dealProgress', () => {
 
 describe('rowDealProgress', () => {
   it('follows the fan position while that is further along than the section arrival', () => {
-    expect(rowDealProgress(620, 500, VIEWPORT_HEIGHT)).toBeCloseTo(0.5, 10);
+    expect(rowDealProgress(440, 500, VIEWPORT_HEIGHT)).toBeCloseTo(0.5, 10);
   });
 
   it.each([

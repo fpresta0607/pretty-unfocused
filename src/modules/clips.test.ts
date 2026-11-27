@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderClips } from '../render/render-clips.ts';
 import type { Clip, Show } from '../show/show-types.ts';
 import { Clips } from './clips.ts';
-import { cardDeal, dealRanks } from './clips-logic.ts';
+import { cardDeal, DEAL_SPAN_FRACTION, DEAL_START_FRACTION, dealRanks } from './clips-logic.ts';
 import { SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
 import { EPISODES_REVEAL_FROM_SWEEP_PROGRESS } from './stain-edge.ts';
 
@@ -20,7 +20,6 @@ vi.mock('animejs', async (importOriginal) => {
 const VIEWPORT_HEIGHT = 800;
 const CLIP_COUNT = 6;
 const FAN_OFFSET = 100;
-const DEAL_SPAN_FRACTION = 0.45;
 let app: ModularApp;
 let isFinePointer = true;
 let sectionTop = VIEWPORT_HEIGHT;
@@ -138,7 +137,7 @@ describe('the clips fan with motion', () => {
   it('deals every card out to its place once the fan has scrolled well into the screen', async () => {
     mountClips();
 
-    await scrollFanTo(VIEWPORT_HEIGHT * 0.5);
+    await scrollFanTo(VIEWPORT_HEIGHT * 0.25);
 
     expect(readDeals()).toEqual(Array(CLIP_COUNT).fill(1));
   });
@@ -146,7 +145,7 @@ describe('the clips fan with motion', () => {
   it.each([0.1, 0.25, 0.5, 0.75])('follows the scroll position, so scroll progress %j puts every card exactly where the curve says', async (progress) => {
     mountClips();
 
-    await scrollFanTo(VIEWPORT_HEIGHT * (1 - DEAL_SPAN_FRACTION * progress));
+    await scrollFanTo(VIEWPORT_HEIGHT * (DEAL_START_FRACTION - DEAL_SPAN_FRACTION * progress));
 
     expect(readDeals()).toEqual(expectedDeals(progress));
   });
@@ -155,19 +154,19 @@ describe('the clips fan with motion', () => {
     mountClips();
     getElement<HTMLElement>('#clips').style.setProperty('--stain-lift', '300px');
 
-    await scrollFanTo(VIEWPORT_HEIGHT * (1 - DEAL_SPAN_FRACTION * 0.5));
+    await scrollFanTo(VIEWPORT_HEIGHT * (DEAL_START_FRACTION - DEAL_SPAN_FRACTION * 0.5));
 
     expect(readDeals()).toEqual(expectedDeals(0.5));
   });
 
   it('deals half way for half a scroll step, and back again when the page scrolls up', async () => {
     mountClips();
-    await scrollFanTo(VIEWPORT_HEIGHT * 0.85);
+    await scrollFanTo(VIEWPORT_HEIGHT * 0.6);
     const halfWay = readDeals();
 
-    await scrollFanTo(VIEWPORT_HEIGHT * 0.5);
+    await scrollFanTo(VIEWPORT_HEIGHT * 0.25);
     const dealt = readDeals();
-    await scrollFanTo(VIEWPORT_HEIGHT * 0.85);
+    await scrollFanTo(VIEWPORT_HEIGHT * 0.6);
     const afterScrollingBack = readDeals();
 
     expect(halfWay.some((deal) => deal > 0 && deal < 1)).toBe(true);
@@ -178,7 +177,7 @@ describe('the clips fan with motion', () => {
   it('deals the middle cards before the outer ones', async () => {
     mountClips();
 
-    await scrollFanTo(VIEWPORT_HEIGHT * 0.88);
+    await scrollFanTo(VIEWPORT_HEIGHT * 0.7);
 
     const [leftmost, , middleLeft, middleRight, , rightmost] = readDeals();
     expect(middleLeft).toBeGreaterThan(leftmost ?? 0);

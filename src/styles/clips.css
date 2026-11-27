@@ -348,9 +348,10 @@ html:not([data-motion='on']) .clips {
 
 @media (min-width: 1440px) {
   .clips {
-    --size-h2: clamp(3rem, 5.6vw, 8rem);
-    --size-script: clamp(3.0625rem, 5.2vw, 7.4rem);
-    --head-height: calc(var(--size-h2) + var(--size-script) * 0.9);
+    --size-h2: clamp(3rem, max(5.6vw, 19.8vw - 204px), 8rem);
+    --size-script: calc(var(--size-h2) * 0.925);
+    --head-height: calc(var(--size-h2) * 1.83);
+    --fan-clear: calc(var(--space-3) + var(--space-4) + var(--ring) + var(--mini-card-height) + 2 * var(--space-4) + var(--space-2));
   }
 
   .clips-inner {
@@ -359,6 +360,7 @@ html:not([data-motion='on']) .clips {
     grid-template-areas:
       'heading tiktok'
       'fan fan';
+    align-content: start;
     align-items: end;
     max-inline-size: none;
     row-gap: var(--space-3);
@@ -384,7 +386,7 @@ html:not([data-motion='on']) .clips {
   }
 
   .clips-fan-list {
-    --card-w: max(10.5rem, min(calc(100cqi / 5.9), calc((100svh - var(--pad-top) - var(--pad-bottom) - var(--head-height) - 3rem) / 2.05)));
+    --card-w: max(10.5rem, min(calc(100cqi / 5.9), calc((100svh - var(--pad-top) - var(--head-height) - var(--fan-clear)) / 2.04)));
     --card-gap: calc(var(--card-w) * -0.1);
     --fan-turn: 3deg;
     --fan-drop: calc(var(--card-w) * 0.032);
