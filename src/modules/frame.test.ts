@@ -381,6 +381,21 @@ describe('the frame with the stain edge drawn on a touch screen', () => {
     expect(PIECES.map(readPieceSurface)).toEqual(['dark', 'dark', 'dark']);
   });
 
+  it('turns a piece lower on the hero light once a dome of the wave has risen over it, while the section top is still below it', async () => {
+    const LOWER_PIECE_Y = 300;
+    placePiece('.frame-button--listen', 500, LOWER_PIECE_Y);
+    placeAbout(VIEWPORT_HEIGHT);
+    mountFrame();
+
+    await scrollTo(() => placeAbout(VIEWPORT_HEIGHT * 0.8));
+    const beforeTheDomeArrives = readPieceSurface('.frame-button--listen');
+    await scrollTo(() => placeAbout(VIEWPORT_HEIGHT * 0.45));
+
+    expect(VIEWPORT_HEIGHT * 0.45).toBeGreaterThan(LOWER_PIECE_Y + 28);
+    expect(beforeTheDomeArrives).toBe('dark');
+    expect(readPieceSurface('.frame-button--listen')).toBe('light');
+  });
+
   it('turns every piece light once the wave has covered the screen, never before', async () => {
     placeAbout(VIEWPORT_HEIGHT);
     mountFrame();

@@ -2,7 +2,7 @@ import { EASE_SCRUB } from './motion-tokens.ts';
 
 export const NARROW_VIEWPORT_PX = 600;
 export const SWEEP_END_PROGRESS = 0.5;
-export const SECTION_REACH_SCALE = 0.22;
+export const SECTION_REACH_SCALE = 0.08;
 export const REVEAL_FROM_SWEEP_PROGRESS = 0.7;
 export const EPISODES_REVEAL_FROM_SWEEP_PROGRESS = 0.1;
 export const STATIC_POSE = 0.5;
@@ -167,11 +167,12 @@ export function edgeShape(sectionTop: number, viewportWidth: number, viewportHei
   const scale = reachScale(reach);
   const progress = sweepProgress(sectionTop, viewportHeight, reach);
   const hiddenDepth = HIDDEN_DEPTH_PX * (1 - smoothStep(progress / HIDDEN_DEPTH_RELEASE_PROGRESS));
+  // Only the base is scaled by the reach: the domes keep their full relief and lean so the swell survives on a touch screen.
   const rise = viewportHeight * RISE_AT_END_FRACTION * scale * sweepGrowth(sectionTop, viewportHeight, reach) - hiddenDepth;
   const taper = 1 - (1 - RELIEF_AT_END) * smoothStep((progress - RELIEF_TAPER_START) / (1 - RELIEF_TAPER_START));
-  const relief = viewportHeight * set.reliefFraction * scale * smoothStep(progress / RELIEF_RAMP_PROGRESS) * taper;
+  const relief = viewportHeight * set.reliefFraction * smoothStep(progress / RELIEF_RAMP_PROGRESS) * taper;
   const tiltFade = 1 - smoothStep((progress - TILT_FADE_START) / TILT_FADE_SPAN);
-  const tilt = viewportHeight * set.tiltFraction * scale * (1 - 2 * progress) * tiltFade * smoothStep(progress / RELIEF_RAMP_PROGRESS);
+  const tilt = viewportHeight * set.tiltFraction * (1 - 2 * progress) * tiltFade * smoothStep(progress / RELIEF_RAMP_PROGRESS);
   const shape = shapeFromSet(set, progress, rise, relief, tilt);
   lastShape = { key, shape };
   return shape;

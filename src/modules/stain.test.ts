@@ -54,11 +54,19 @@ async function walkDownThePage(step: number): Promise<{ lifts: number[]; positio
   return { lifts, positions };
 }
 
-function readLowestPoint(): number {
+function readCurveHeights(): number[] {
   const path = readPath('wide') ?? '';
   const curve = path.slice(0, path.indexOf('L'));
-  const heights = (curve.match(/-?\d+(\.\d+)?/g) ?? []).map(Number).filter((_, index) => index % 2 === 1);
-  return Math.max(...heights);
+  return (curve.match(/-?\d+(\.\d+)?/g) ?? []).map(Number).filter((_, index) => index % 2 === 1);
+}
+
+function readLowestPoint(): number {
+  return Math.max(...readCurveHeights());
+}
+
+function readCrestHeight(): number {
+  const heights = readCurveHeights();
+  return Math.max(...heights) - Math.min(...heights);
 }
 
 function mountStain(): void {
@@ -387,6 +395,29 @@ describe('the stain edge', () => {
     expect(lowestPointOfTheWideWave).toBeLessThanOrEqual(VIEWPORT.height / 2);
     expect(getElement('#about').hasAttribute('data-stain-swept')).toBe(false);
     expect(readLowestPoint()).toBeGreaterThan(VIEWPORT.height / 2);
+  });
+
+  it('lets a touch screen wave swell as tall as the wave of a mouse screen at the same point of its sweep', async () => {
+    document.documentElement.dataset.motion = 'on';
+    mountStain();
+    const sweepEndTop = VIEWPORT.height * 0.5 * SECTION_REACH_SCALE;
+    const progresses = [0.2, 0.4, 0.6];
+    const mouseCrests: number[] = [];
+    for (const progress of progresses) {
+      await scrollTo(VIEWPORT.height * (1 - 0.5 * progress));
+      mouseCrests.push(readCrestHeight());
+    }
+
+    isFinePointer = false;
+    const touchCrests: number[] = [];
+    for (const progress of progresses) {
+      await scrollTo(VIEWPORT.height - progress * (VIEWPORT.height - sweepEndTop));
+      touchCrests.push(readCrestHeight());
+    }
+
+    touchCrests.forEach((touchCrest, index) => {
+      expect(touchCrest).toBeGreaterThanOrEqual((mouseCrests[index] ?? Number.NaN) * 0.75);
+    });
   });
 
   it('marks a touch screen section as swept only once the wave drawn at the small viewport covers the screen above it', async () => {

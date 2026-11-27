@@ -195,7 +195,7 @@ describe.each(VIEWPORTS)('the stain sweep on %s', (_name, viewport, fewestDomes,
       const ys = edgeYs(progress, viewport);
       const isOnScreen = Math.min(...ys) < viewport.height * 0.9 && Math.max(...ys) > viewport.height * 0.1;
       if (isOnScreen) {
-        expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(viewport.height * 0.02);
+        expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(viewport.height * 0.1);
       }
     });
   });
@@ -341,9 +341,14 @@ describe('the stain sweep on a smooth-scroll device', () => {
   });
 });
 
-describe.each(VIEWPORTS.map(([name, viewport]) => [name, viewport] as const))('the stain sweep that stays close to the section on %s', (_name, viewport) => {
+const TOUCH_VIEWPORTS = [
+  ...VIEWPORTS.map(([name, viewport]) => [name, viewport] as const),
+  ['a small phone', { width: 393, height: 702 }],
+  ['a smaller phone', { width: 360, height: 640 }],
+] as const;
+
+describe.each(TOUCH_VIEWPORTS)('the stain sweep that stays close to the section on %s', (_name, viewport) => {
   const HEADLINE_HEIGHT = viewport.height * 0.2;
-  const MAX_LEAD_OVER_FIRST_CONTENT = HEADLINE_HEIGHT * 1.5;
   const FIRST_CONTENT_OFFSETS_PX = [64, 96];
   const SWEEP_END_TOP = viewport.height * (1 - SWEEP_END_PROGRESS) * SECTION_REACH_SCALE;
   const SECTION_TOPS = Array.from({ length: 2 * Math.round(viewport.height / 4) + 1 }, (_, index) => viewport.height - index * 2);
@@ -364,11 +369,11 @@ describe.each(VIEWPORTS.map(([name, viewport]) => [name, viewport] as const))('t
     return Math.min(...POSITIONS.map((position) => edgeHeight(position, shape)));
   }
 
-  it.each(FIRST_CONTENT_OFFSETS_PX)('never leads the first content, %j px below the section top, by more than one and a half headlines', (offset) => {
+  it.each(FIRST_CONTENT_OFFSETS_PX)('keeps the troughs within one headline of the first content, %j px below the section top, at every step', (offset) => {
     SECTION_TOPS.forEach((sectionTop) => {
-      const leadingEdge = sectionTop - highestEdgeHeight(touchShapeAt(sectionTop));
+      const lowestPoint = sectionTop - lowestEdgeHeight(touchShapeAt(sectionTop));
 
-      expect(sectionTop + offset - leadingEdge).toBeLessThanOrEqual(MAX_LEAD_OVER_FIRST_CONTENT);
+      expect(sectionTop + offset - lowestPoint).toBeLessThanOrEqual(HEADLINE_HEIGHT);
     });
   });
 
@@ -391,26 +396,27 @@ describe.each(VIEWPORTS.map(([name, viewport]) => [name, viewport] as const))('t
     });
   });
 
-  it('is done with the wave covering the screen, with a margin, where the section top is at a fifth of its desktop height', () => {
+  it('is done with the wave covering the screen, with a margin, where the section top is at the end of the touch sweep', () => {
     expect(sweepProgress(SWEEP_END_TOP, viewport.height, 'section')).toBe(1);
-    expect(SWEEP_END_TOP - lowestEdgeHeight(touchShapeAt(SWEEP_END_TOP))).toBeLessThanOrEqual(-viewport.height * 0.01);
+    expect(SWEEP_END_TOP - lowestEdgeHeight(touchShapeAt(SWEEP_END_TOP))).toBeLessThanOrEqual(-viewport.height * 0.004);
     expect(sweepProgress(SWEEP_END_TOP + 1, viewport.height, 'section')).toBeLessThan(1);
   });
 
-  it('rises with every step of the scroll, never stalling and never running away from it', () => {
+  it('carries the crest up the screen at least as fast as the scroll while it swells and never falling back much as it settles', () => {
     const step = 4;
     const sweepTops = SECTION_TOPS.filter((sectionTop) => sectionTop <= viewport.height - 2 * step && sectionTop >= SWEEP_END_TOP);
     const speeds = sweepTops.map((sectionTop) => {
       const before = sectionTop - highestEdgeHeight(touchShapeAt(sectionTop + step));
       const after = sectionTop - step - highestEdgeHeight(touchShapeAt(sectionTop));
-      return (before - after) / step;
+      return { progress: sweepProgress(sectionTop, viewport.height, 'section'), speed: (before - after) / step };
     });
+    const swelling = speeds.filter(({ progress }) => progress <= 0.6).map(({ speed }) => speed);
 
-    expect(Math.min(...speeds)).toBeGreaterThan(0.2);
-    expect(Math.max(...speeds)).toBeLessThan(4);
+    expect(Math.min(...swelling)).toBeGreaterThan(0.5);
+    expect(Math.min(...speeds.map(({ speed }) => speed))).toBeGreaterThan(-0.3);
   });
 
-  it('keeps the character of the desktop wave: the same domes and the same lean, only drawn lower', () => {
+  it('keeps the character of the desktop wave: the same domes, the same relief and the same lean, only the base drawn lower', () => {
     [0.1, 0.4, 0.7, 1].forEach((progress) => {
       const touch = touchShapeAt(touchTopAt(progress));
       const desktop = shapeAt(progress, viewport);
@@ -421,8 +427,18 @@ describe.each(VIEWPORTS.map(([name, viewport]) => [name, viewport] as const))('t
         expect(dome.halfWidth).toBeCloseTo(desktop.domes[index]?.halfWidth ?? Number.NaN, 6);
         expect(dome.height).toBeCloseTo(desktop.domes[index]?.height ?? Number.NaN, 6);
       });
-      expect(touch.relief).toBeCloseTo(desktop.relief * SECTION_REACH_SCALE, 6);
-      expect(touch.tilt).toBeCloseTo(desktop.tilt * SECTION_REACH_SCALE, 6);
+      expect(touch.relief).toBeCloseTo(desktop.relief, 6);
+      expect(touch.tilt).toBeCloseTo(desktop.tilt, 6);
+      expect(touch.rise).toBeLessThanOrEqual(desktop.rise);
+    });
+  });
+
+  it('keeps the crest at least three quarters as tall as the desktop crest at the same progress while it is on the screen', () => {
+    [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9].forEach((progress) => {
+      const touchCrest = highestEdgeHeight(touchShapeAt(touchTopAt(progress))) - lowestEdgeHeight(touchShapeAt(touchTopAt(progress)));
+      const desktopCrest = highestEdgeHeight(shapeAt(progress, viewport)) - lowestEdgeHeight(shapeAt(progress, viewport));
+
+      expect(touchCrest).toBeGreaterThanOrEqual(desktopCrest * 0.75);
     });
   });
 
