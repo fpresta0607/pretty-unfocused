@@ -75,6 +75,15 @@ describe('the player', () => {
     expect(frame.hasAttribute('data-loaded')).toBe(true);
   });
 
+  it('removes the thumbnail once the video has loaded so no edge of it shows around the video', () => {
+    click(getElement('#play-link'));
+    const poster = getElement<HTMLImageElement>('dialog .player-poster');
+
+    getElement<HTMLIFrameElement>('dialog iframe').dispatchEvent(new Event('load'));
+
+    expect(poster.isConnected).toBe(false);
+  });
+
   it('falls back from maxresdefault to sddefault and then hqdefault when a thumbnail fails to load', () => {
     click(getElement('#play-link'));
     const poster = getElement<HTMLImageElement>('dialog .player-poster');

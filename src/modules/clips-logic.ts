@@ -2,6 +2,7 @@ import { EASE_POP } from './motion-tokens.ts';
 
 export const DEAL_START_FRACTION = 1;
 export const DEAL_SPAN_FRACTION = 0.45;
+export const PINNED_DEAL_SPAN_FRACTION = 0.6;
 export const DEAL_WINDOW = 0.5;
 
 function clamp(value: number, lowest: number, highest: number): number {
@@ -10,6 +11,10 @@ function clamp(value: number, lowest: number, highest: number): number {
 
 export function dealProgress(fanTop: number, viewportHeight: number): number {
   return clamp((DEAL_START_FRACTION - fanTop / viewportHeight) / DEAL_SPAN_FRACTION, 0, 1);
+}
+
+export function pinnedDealProgress(sectionTop: number, viewportHeight: number): number {
+  return clamp(-sectionTop / (PINNED_DEAL_SPAN_FRACTION * viewportHeight), 0, 1);
 }
 
 export function dealRanks(positions: readonly number[]): number[] {

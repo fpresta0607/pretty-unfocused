@@ -185,6 +185,7 @@ html:not([data-motion='on']) .archive {
 
 .archive-panel {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: 1fr;
   transition:
     grid-template-rows var(--dur-ui) var(--ease-out),
@@ -206,10 +207,15 @@ html:not([data-motion='on']) .archive {
 }
 
 .archive-description {
-  max-inline-size: 40em;
+  max-inline-size: 62ch;
   margin-block-end: var(--space-3);
   font-size: var(--size-body);
   line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.archive-description p + p {
+  margin-block-start: var(--space-2);
 }
 
 .archive-actions {

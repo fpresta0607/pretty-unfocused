@@ -1,6 +1,6 @@
 import { module as Module } from 'modujs';
 
-import { cardDeal, dealProgress, dealRanks } from './clips-logic.ts';
+import { cardDeal, dealProgress, dealRanks, pinnedDealProgress } from './clips-logic.ts';
 import { isMotionEnabled, SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
 import { hasEntered, isRevealOpen, revealSectionHeading } from './section-heading-reveal.ts';
 
@@ -9,6 +9,7 @@ export class Clips extends Module {
   private ranks: number[] = [];
   private heading: HTMLElement | null = null;
   private fan: HTMLElement | null = null;
+  private inner: HTMLElement | null = null;
   private dashes: HTMLElement[] = [];
   private lastProgress = Number.NaN;
   private pendingFrame: number | undefined;
@@ -37,6 +38,7 @@ export class Clips extends Module {
 
   init(): void {
     this.fan = this.el.querySelector<HTMLElement>('[data-clips="fan"]');
+    this.inner = this.el.querySelector<HTMLElement>('.clips-inner');
     this.dashes = Array.from(this.el.querySelectorAll<HTMLElement>('[data-clips="dash"]'));
     this.fan?.addEventListener('scroll', this.updateDashes, { passive: true });
     if (!isMotionEnabled(document.documentElement)) {
@@ -58,10 +60,17 @@ export class Clips extends Module {
     window.cancelAnimationFrame(this.pendingFrame ?? 0);
   }
 
-  private update(): void {
+  private readDealProgress(): number {
+    if (this.inner !== null && getComputedStyle(this.inner).position === 'sticky') {
+      return pinnedDealProgress(this.el.getBoundingClientRect().top, window.innerHeight);
+    }
     const stainLift = Number.parseFloat(this.el.style.getPropertyValue('--stain-lift')) || 0;
     const naturalFanTop = (this.fan?.getBoundingClientRect().top ?? window.innerHeight) + stainLift;
-    const progress = dealProgress(naturalFanTop, window.innerHeight);
+    return dealProgress(naturalFanTop, window.innerHeight);
+  }
+
+  private update(): void {
+    const progress = this.readDealProgress();
     if (progress !== this.lastProgress) {
       this.lastProgress = progress;
       this.cards.forEach((card, index) => {

@@ -45,7 +45,7 @@ describe('parseYoutubeFeed with the real feed fixture', () => {
 });
 
 describe('parseYoutubeFeed with inline feeds', () => {
-  it('decodes entities in titles and descriptions', () => {
+  it('decodes entities in titles and descriptions and keeps the lines of a description', () => {
     const feed = parseYoutubeFeed(
       buildFeed(`<title>Tom &amp; Jerry&#39;s &quot;Show&quot;</title>
         <media:group><media:description>Fun &amp; games
@@ -54,7 +54,7 @@ describe('parseYoutubeFeed with inline feeds', () => {
     );
 
     expect(feed.entries[0]?.title).toBe('Tom & Jerry\'s "Show"');
-    expect(feed.entries[0]?.description).toBe('Fun & games on two lines');
+    expect(feed.entries[0]?.description).toBe('Fun & games\n\non two lines');
   });
 
   it('throws an error naming the feed when it has no entries', () => {

@@ -27,7 +27,19 @@ export function decodeEntities(text: string): string {
   );
 }
 
+function stripTags(markup: string): string {
+  return decodeEntities(markup.replace(/<[^>]*>/g, ' '));
+}
+
 export function toPlainText(markup: string): string {
-  const withoutTags = markup.replace(/<[^>]*>/g, ' ');
-  return decodeEntities(withoutTags).replace(/\s+/g, ' ').trim();
+  return stripTags(markup).replace(/\s+/g, ' ').trim();
+}
+
+export function toPlainLines(markup: string): string {
+  return stripTags(markup)
+    .split(/\r?\n/)
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }

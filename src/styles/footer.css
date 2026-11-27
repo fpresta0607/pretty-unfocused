@@ -54,20 +54,6 @@ html[data-motion='on'] .footer {
   }
 }
 
-@media not ((hover: hover) and (pointer: fine)) {
-  html[data-motion='on'] .footer-pin {
-    margin-block-start: -40svh;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--dur-ui) var(--ease-out);
-  }
-
-  html[data-motion='on'] .footer[data-stain-swept] .footer-pin {
-    opacity: 1;
-    pointer-events: auto;
-  }
-}
-
 html[data-motion='on']:has(.footer[data-stain-swept]) {
   background-color: var(--wine);
 }
@@ -244,7 +230,8 @@ html[data-motion='on']:has(.footer[data-stain-swept]) {
   clip-path: inset(-2em 100% -2em 0px);
 }
 
-html[data-footer-in-view] .mini-card {
+html[data-footer-in-view] .mini-card,
+[data-frame-section='say-hi'] .mini-card {
   opacity: 0;
   visibility: hidden;
   transform: translateY(var(--space-4));
@@ -282,7 +269,7 @@ html[data-footer-in-view] .mini-card {
   }
 }
 
-@media (max-width: 599px) and (max-height: 700px) {
+@media (max-width: 599px) and (max-height: 720px) {
   .footer {
     --pad-top: 4.25rem;
   }
@@ -341,7 +328,7 @@ html[data-footer-in-view] .mini-card {
 @media (max-width: 599px) and (max-height: 600px) {
   .footer {
     --pad-top: 3.75rem;
-    --word-clear: calc(var(--round-size) + var(--space-3) + 1.625rem);
+    --word-clear: calc(var(--round-size) + var(--space-3) + 1rem);
   }
 
   .footer-heading {

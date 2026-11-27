@@ -3,6 +3,7 @@ import { escapeHtml } from './escape-html.ts';
 import { formatDuration } from './format-duration.ts';
 import { formatShortDate } from './format-date.ts';
 import { renderIcon } from './icons.ts';
+import { readArchiveDescription } from './read-archive-description.ts';
 import { renderPlayerAttributes } from './render-player-attributes.ts';
 
 function renderNumber(number: number | undefined): string {
@@ -34,7 +35,9 @@ function renderActions(episode: Episode): string {
 }
 
 export function renderArchiveRow(episode: Episode, index: number, number: number | undefined): string {
-  const descriptionMarkup = episode.description === '' ? '' : `<p class="archive-description">${escapeHtml(episode.description)}</p>`;
+  const paragraphs = readArchiveDescription(episode.description);
+  const descriptionMarkup =
+    paragraphs.length === 0 ? '' : `<div class="archive-description">${paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}</div>`;
   const actions = renderActions(episode);
   const actionsMarkup = actions === '' ? '' : `<div class="archive-actions">${actions}</div>`;
   return `<li class="archive-row" data-archive="row">

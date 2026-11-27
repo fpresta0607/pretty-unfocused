@@ -10,12 +10,14 @@ const MAX_STAGGER_STEPS = 6;
 const STICKER_TILT_DEGREES = -8;
 const STICKER_HIDDEN_ROTATION = -24;
 const LANDED_ROW_FRACTION = 0.75;
+const SCROLL_PASSES = 3;
 
 export class Archive extends Module {
   private pendingRows: HTMLElement[] = [];
   private heading: HTMLElement | null = null;
   private sticker: HTMLElement | null = null;
   private pendingFrame: number | undefined;
+  private stopScrollingAgain = (): void => undefined;
   private readonly smoothScrollDevice = window.matchMedia(SMOOTH_SCROLL_DEVICE_QUERY);
 
   private readonly scheduleUpdate = (): void => {
@@ -36,7 +38,7 @@ export class Archive extends Module {
     const isOpening = trigger.getAttribute('aria-expanded') !== 'true';
     trigger.setAttribute('aria-expanded', String(isOpening));
     if (isOpening) {
-      this.bringActionsIntoView(trigger);
+      this.bringRowIntoView(trigger);
     }
   };
 
@@ -60,6 +62,7 @@ export class Archive extends Module {
 
   destroy(): void {
     this.el.removeEventListener('click', this.handleClick);
+    this.stopScrollingAgain();
     this.stopWatching();
   }
 
@@ -100,16 +103,25 @@ export class Archive extends Module {
     this.sticker = null;
   }
 
-  private bringActionsIntoView(trigger: Element): void {
+  private bringRowIntoView(trigger: Element): void {
     const panel = trigger.nextElementSibling;
-    const lastAction = panel?.querySelector<HTMLElement>('.archive-actions > :last-child');
-    if (panel === null || panel === undefined || lastAction === null || lastAction === undefined) {
+    if (panel === null) {
       return;
     }
     const behavior = isMotionEnabled(document.documentElement) ? 'smooth' : 'instant';
-    const scroll = (): void => {
-      if (trigger.getAttribute('aria-expanded') === 'true') {
-        lastAction.scrollIntoView({ block: 'nearest', behavior });
+    const scroll = (passesLeft = SCROLL_PASSES): void => {
+      if (trigger.getAttribute('aria-expanded') !== 'true') {
+        return;
+      }
+      const { scrollMarginTop, scrollMarginBottom } = getComputedStyle(trigger);
+      const roomAbove = trigger.getBoundingClientRect().top - (Number.parseFloat(scrollMarginTop) || 0);
+      const overflowBelow = panel.getBoundingClientRect().bottom - (window.innerHeight - (Number.parseFloat(scrollMarginBottom) || 0));
+      const distance = roomAbove < 0 ? roomAbove : Math.min(Math.max(overflowBelow, 0), roomAbove);
+      if (distance !== 0) {
+        window.scrollBy({ top: distance, behavior });
+        if (passesLeft > 1) {
+          this.scrollAgainWhenScrollEnds(() => scroll(passesLeft - 1));
+        }
       }
     };
     if (!(Number.parseFloat(getComputedStyle(panel).transitionDuration) > 0)) {
@@ -123,6 +135,16 @@ export class Archive extends Module {
       }
     };
     panel.addEventListener('transitionend', scrollWhenOpen);
+  }
+
+  private scrollAgainWhenScrollEnds(scrollAgain: () => void): void {
+    this.stopScrollingAgain();
+    const handleScrollEnd = (): void => {
+      this.stopScrollingAgain = () => undefined;
+      scrollAgain();
+    };
+    window.addEventListener('scrollend', handleScrollEnd, { once: true });
+    this.stopScrollingAgain = () => window.removeEventListener('scrollend', handleScrollEnd);
   }
 
   private revealRows(): void {

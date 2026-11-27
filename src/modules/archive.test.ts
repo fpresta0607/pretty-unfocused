@@ -139,58 +139,114 @@ describe('the every-episode rows', () => {
     expect(document.getElementById(panelId)?.contains(getElement('[href="https://www.youtube.com/watch?v=video2"]'))).toBe(true);
   });
 
-  describe('bringing the actions into view', () => {
-    let scrollIntoView: MockInstance<Element['scrollIntoView']>;
+  describe('bringing the opened row into view', () => {
+    const TOP_MARGIN = 100;
+    const BOTTOM_MARGIN = 80;
+    let scrollBy: MockInstance<Window['scrollBy']>;
+    let panelTransitionDuration: string;
+
+    function placeRow(triggerTop: number, panelBottom: number): void {
+      getTrigger(1).getBoundingClientRect = () => new DOMRect(0, triggerTop, 100, 60);
+      getElement('#archive-panel-1').getBoundingClientRect = () => new DOMRect(0, triggerTop + 60, 100, panelBottom - triggerTop - 60);
+    }
 
     beforeEach(() => {
-      scrollIntoView = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => undefined);
+      panelTransitionDuration = '0s';
+      scrollBy = vi.spyOn(window, 'scrollBy').mockImplementation(() => undefined);
+      const readStyle = window.getComputedStyle.bind(window);
+      vi.spyOn(window, 'getComputedStyle').mockImplementation((element) => {
+        if (element === getTrigger(1)) {
+          return { scrollMarginTop: `${TOP_MARGIN}px`, scrollMarginBottom: `${BOTTOM_MARGIN}px` } as CSSStyleDeclaration;
+        }
+        return element === getElement('#archive-panel-1') ? ({ transitionDuration: panelTransitionDuration } as CSSStyleDeclaration) : readStyle(element);
+      });
     });
 
-    it('scrolls the last action of an opened row into view at once when the page has no motion', () => {
+    it('leaves the page alone when the whole row already fits clear of the frame', () => {
       mountArchive();
+      placeRow(200, 600);
 
       getTrigger(1).click();
 
-      expect(scrollIntoView).toHaveBeenCalledTimes(1);
-      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', behavior: 'instant' });
-      expect(scrollIntoView.mock.contexts[0]).toBe(getElement('[href="https://www.youtube.com/watch?v=video1"]').parentElement?.lastElementChild);
+      expect(scrollBy).not.toHaveBeenCalled();
+    });
+
+    it('scrolls only as far as the end of the panel needs', () => {
+      mountArchive();
+      placeRow(300, 900);
+
+      getTrigger(1).click();
+
+      expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: 180, behavior: 'instant' });
+    });
+
+    it('keeps the row header below the top of the frame when the panel is taller than the room', () => {
+      mountArchive();
+      placeRow(300, 2000);
+
+      getTrigger(1).click();
+
+      expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: 200, behavior: 'instant' });
+    });
+
+    it('scrolls back down when the row header sits under the top of the frame', () => {
+      mountArchive();
+      placeRow(40, 400);
+
+      getTrigger(1).click();
+
+      expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: -60, behavior: 'instant' });
+    });
+
+    it('corrects up to twice more when the sections have moved by the time a scroll ends', () => {
+      mountArchive();
+      placeRow(300, 900);
+      getTrigger(1).click();
+
+      placeRow(250, 800);
+      window.dispatchEvent(new Event('scrollend'));
+      window.dispatchEvent(new Event('scrollend'));
+      window.dispatchEvent(new Event('scrollend'));
+
+      expect(scrollBy).toHaveBeenCalledTimes(3);
+      expect(scrollBy).toHaveBeenLastCalledWith({ top: 80, behavior: 'instant' });
     });
 
     it('scrolls smoothly when the page has motion', () => {
       document.documentElement.dataset.motion = 'on';
       mountArchive();
+      placeRow(300, 900);
 
       getTrigger(1).click();
 
-      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest', behavior: 'smooth' });
+      expect(scrollBy).toHaveBeenCalledWith({ top: 180, behavior: 'smooth' });
     });
 
     it('leaves the page alone when a row closes', () => {
       mountArchive();
+      placeRow(300, 900);
       getTrigger(1).click();
-      scrollIntoView.mockClear();
+      scrollBy.mockClear();
 
       getTrigger(1).click();
 
-      expect(scrollIntoView).not.toHaveBeenCalled();
+      expect(scrollBy).not.toHaveBeenCalled();
     });
 
     it('waits for the panel to finish opening before it scrolls', () => {
       const panel = getElement('#archive-panel-1');
-      const readStyle = window.getComputedStyle.bind(window);
-      vi.spyOn(window, 'getComputedStyle').mockImplementation((element) =>
-        element === panel ? ({ transitionDuration: '0.4s' } as CSSStyleDeclaration) : readStyle(element),
-      );
+      panelTransitionDuration = '0.4s';
       mountArchive();
+      placeRow(300, 900);
 
       getTrigger(1).click();
-      const scrollsBeforeTheEnd = scrollIntoView.mock.calls.length;
+      const scrollsBeforeTheEnd = scrollBy.mock.calls.length;
       const transitionEnd = new TransitionEvent('transitionend');
       Object.defineProperty(transitionEnd, 'propertyName', { value: 'grid-template-rows' });
       panel.dispatchEvent(transitionEnd);
 
       expect(scrollsBeforeTheEnd).toBe(0);
-      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(scrollBy).toHaveBeenCalledTimes(1);
     });
   });
 

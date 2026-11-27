@@ -160,14 +160,21 @@ describe('renderArchive rows', () => {
   it('keeps every description whole, however long', () => {
     const longDescription = `${'word '.repeat(100)}end`;
     const rows = readRows(renderArchive(makeShow([makeEpisode(1), makeEpisode(2, { description: longDescription })])));
-    const shortText = rows[0]?.match(/<p class="archive-description">(.*?)<\/p>/)?.[1];
-    const longText = rows[1]?.match(/<p class="archive-description">(.*?)<\/p>/)?.[1];
+    const shortText = rows[0]?.match(/<div class="archive-description"><p>(.*?)<\/p><\/div>/)?.[1];
+    const longText = rows[1]?.match(/<div class="archive-description"><p>(.*?)<\/p><\/div>/)?.[1];
 
     expect(shortText).toBe('Description 1');
     expect(longText).toBe(longDescription);
   });
 
-  it('leaves out the description paragraph when the episode has none', () => {
+  it('leaves out a description made only of links', () => {
+    const row = readRows(renderArchive(makeShow([makeEpisode(1, { description: 'Tiktok: https://example.com/a?x=1\n#one #two' })])))[0] ?? '';
+
+    expect(row).not.toContain('archive-description');
+    expect(row).not.toContain('example.com');
+  });
+
+  it('leaves out the description when the episode has none', () => {
     const row = readRows(renderArchive(makeShow([makeEpisode(1, { description: '' })])))[0] ?? '';
 
     expect(row).not.toContain('archive-description');

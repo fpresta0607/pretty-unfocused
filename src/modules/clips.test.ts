@@ -108,6 +108,34 @@ describe('the clips fan with motion', () => {
     document.documentElement.dataset.motion = 'on';
   });
 
+  describe('while the section is pinned', () => {
+    beforeEach(() => {
+      getElement<HTMLElement>('.clips-inner').style.position = 'sticky';
+    });
+
+    it('keeps the cards stacked until the section has arrived at the top of the screen', async () => {
+      mountClips();
+
+      await scrollSectionTo(VIEWPORT_HEIGHT * 0.1);
+
+      expect(readDeals()).toEqual(Array(CLIP_COUNT).fill(0));
+    });
+
+    it('deals the cards one by one over the pinned scroll that follows', async () => {
+      mountClips();
+
+      await scrollSectionTo(-VIEWPORT_HEIGHT * 0.15);
+      const dealtAtQuarter = readDeals();
+      await scrollSectionTo(-VIEWPORT_HEIGHT * 0.3);
+      const dealtAtHalf = readDeals();
+      await scrollSectionTo(-VIEWPORT_HEIGHT * 0.6);
+
+      expect(dealtAtQuarter).toEqual(expectedDeals(0.25));
+      expect(dealtAtHalf).toEqual(expectedDeals(0.5));
+      expect(readDeals()).toEqual(Array(CLIP_COUNT).fill(1));
+    });
+  });
+
   it('keeps the cards stacked in the middle while the fan is still below the bottom of the screen', () => {
     mountClips();
 

@@ -49,7 +49,6 @@ export class Player extends Module {
     frame.allow = EMBED_PERMISSIONS;
     frame.allowFullscreen = true;
     frame.referrerPolicy = 'strict-origin-when-cross-origin';
-    frame.addEventListener('load', () => frame.setAttribute('data-loaded', ''), { once: true });
     const poster = document.createElement('img');
     poster.className = 'player-poster';
     let qualityIndex = 0;
@@ -61,6 +60,14 @@ export class Player extends Module {
     });
     poster.src = buildPosterUrl(videoId);
     poster.alt = '';
+    frame.addEventListener(
+      'load',
+      () => {
+        frame.setAttribute('data-loaded', '');
+        poster.remove();
+      },
+      { once: true },
+    );
     this.stage.replaceChildren(poster, frame);
 
     this.opener = opener;
