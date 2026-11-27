@@ -7,8 +7,6 @@
   --row-gap: var(--space-2);
   --row-line: var(--roast);
   --toggle-size: var(--round-size);
-  --frame-clearance-top: calc(var(--space-4) + var(--round-size) + var(--space-3));
-  --frame-clearance-bottom: calc(var(--mini-card-height) + var(--space-4) + var(--space-3));
   --pin-top: calc(var(--space-4) + var(--round-size) + var(--space-5));
 
   z-index: 5;
@@ -104,7 +102,6 @@ html:not([data-motion='on']) .archive {
   font: inherit;
   text-align: start;
   cursor: pointer;
-  scroll-margin-block: var(--frame-clearance-top) var(--frame-clearance-bottom);
 }
 
 .archive-trigger:focus-visible {
@@ -227,8 +224,6 @@ html:not([data-motion='on']) .archive {
 
 .archive .pill {
   --focus-ring: var(--roast);
-
-  scroll-margin-block: var(--frame-clearance-top) var(--frame-clearance-bottom);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -236,6 +231,11 @@ html:not([data-motion='on']) .archive {
     border-color: var(--wine);
     background: var(--wine);
     color: var(--cream);
+  }
+
+  .archive .pill--solid:hover {
+    background: var(--gold);
+    color: var(--wine);
   }
 }
 

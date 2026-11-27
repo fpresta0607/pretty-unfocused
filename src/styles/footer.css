@@ -54,6 +54,16 @@ html[data-motion='on'] .footer {
   }
 }
 
+@media not ((hover: hover) and (pointer: fine)) {
+  html {
+    scroll-snap-type: y proximity;
+  }
+
+  .footer {
+    scroll-snap-align: end;
+  }
+}
+
 html[data-motion='on']:has(.footer[data-stain-swept]) {
   background-color: var(--wine);
 }
@@ -152,7 +162,6 @@ html[data-motion='on']:has(.footer[data-stain-swept]) {
   justify-items: start;
   align-content: start;
   gap: var(--space-2);
-  margin-block-start: var(--space-3);
 }
 
 .footer-link {
@@ -284,7 +293,6 @@ html[data-footer-in-view] .mini-card,
 
   .footer-links {
     gap: var(--space-1);
-    margin-block-start: var(--space-2);
   }
 
   .footer-link {

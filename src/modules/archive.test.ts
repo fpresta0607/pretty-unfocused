@@ -155,8 +155,8 @@ describe('the every-episode rows', () => {
       scrollBy = vi.spyOn(window, 'scrollBy').mockImplementation(() => undefined);
       const readStyle = window.getComputedStyle.bind(window);
       vi.spyOn(window, 'getComputedStyle').mockImplementation((element) => {
-        if (element === getTrigger(1)) {
-          return { scrollMarginTop: `${TOP_MARGIN}px`, scrollMarginBottom: `${BOTTOM_MARGIN}px` } as CSSStyleDeclaration;
+        if (element === document.documentElement) {
+          return { scrollPaddingTop: `${TOP_MARGIN}px`, scrollPaddingBottom: `${BOTTOM_MARGIN}px` } as CSSStyleDeclaration;
         }
         return element === getElement('#archive-panel-1') ? ({ transitionDuration: panelTransitionDuration } as CSSStyleDeclaration) : readStyle(element);
       });
@@ -210,6 +210,17 @@ describe('the every-episode rows', () => {
 
       expect(scrollBy).toHaveBeenCalledTimes(3);
       expect(scrollBy).toHaveBeenLastCalledWith({ top: 80, behavior: 'instant' });
+    });
+
+    it.each(['keydown', 'wheel', 'touchstart', 'pointerdown'])('stops correcting once the reader has used %j, so a later scroll is left alone', (inputType) => {
+      mountArchive();
+      placeRow(300, 900);
+      getTrigger(1).click();
+
+      window.dispatchEvent(new Event(inputType));
+      window.dispatchEvent(new Event('scrollend'));
+
+      expect(scrollBy).toHaveBeenCalledTimes(1);
     });
 
     it('scrolls smoothly when the page has motion', () => {

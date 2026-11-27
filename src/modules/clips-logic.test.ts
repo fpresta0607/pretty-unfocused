@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { cardDeal, dealProgress, dealRanks, pinnedDealProgress } from './clips-logic.ts';
+import { cardDeal, dealProgress, dealRanks, pinnedDealProgress, rowDealProgress } from './clips-logic.ts';
 
 const VIEWPORT_HEIGHT = 800;
 
@@ -22,6 +22,21 @@ describe('dealProgress', () => {
 
   it('scales with the viewport height', () => {
     expect(dealProgress(775, 1000)).toBeCloseTo(dealProgress(620, 800), 10);
+  });
+});
+
+describe('rowDealProgress', () => {
+  it('follows the fan position while that is further along than the section arrival', () => {
+    expect(rowDealProgress(620, 500, VIEWPORT_HEIGHT)).toBeCloseTo(0.5, 10);
+  });
+
+  it.each([
+    ['is still waiting for a section that has not come within 0.3 screens of the top', 700, 0],
+    ['is half dealt when the section is 0.15 screens from the top', 120, 0.5],
+    ['is complete as the section reaches the top of the screen, however low the row sits', 0, 1],
+    ['stays complete for the rest of the scroll', -300, 1],
+  ])('%s', (_behavior, sectionTop, expected) => {
+    expect(rowDealProgress(VIEWPORT_HEIGHT, sectionTop, VIEWPORT_HEIGHT)).toBeCloseTo(expected, 10);
   });
 });
 

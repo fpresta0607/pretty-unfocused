@@ -89,7 +89,7 @@ describe('renderClips with the fixture show', () => {
       expect(card).toContain(`data-player="${clip.youtubeVideoId}"`);
       expect(card).toContain('data-player-shape="vertical"');
       expect(card).toContain(`<span class="visually-hidden">Play ${clip.title}</span>`);
-      expect(readTitleText(card)).toBe(clip.title);
+      expect(readTitleText(card)).toBe(clip.title.replace(/\s+\p{Extended_Pictographic}{4,}$/u, ''));
     });
   });
 
@@ -179,10 +179,17 @@ describe('renderClips fan and limits', () => {
     );
   });
 
-  it('keeps a longer run of emoji as a word of its own', () => {
+  it('leaves a long run of emoji ending a title off the card face, so the title fits its four lines, and keeps it in the play label', () => {
     const card = readCards(renderClips(makeShow([makeClip(0, { title: 'edition 🦃🍂🥧🪵' })])))[0] ?? '';
 
-    expect(card).toContain('<span class="clip-card-word">edition</span> <span class="clip-card-word">🦃🍂🥧🪵</span>');
+    expect(card).toContain('<p class="clip-card-title"><span class="clip-card-word">edition</span></p>');
+    expect(card).toContain('data-player-title="edition 🦃🍂🥧🪵"');
+  });
+
+  it('keeps a long run of emoji in the middle of a title', () => {
+    const card = readCards(renderClips(makeShow([makeClip(0, { title: 'edition 🦃🍂🥧🪵 now' })])))[0] ?? '';
+
+    expect(card).toContain('<span class="clip-card-word">edition</span> <span class="clip-card-word">🦃🍂🥧🪵</span> <span class="clip-card-word">now</span>');
   });
 
   it('escapes a clip title everywhere it is written', () => {

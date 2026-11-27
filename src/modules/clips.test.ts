@@ -108,9 +108,27 @@ describe('the clips fan with motion', () => {
     document.documentElement.dataset.motion = 'on';
   });
 
+  it('has dealt every card by the time the section reaches the top of the screen, even with the row low in the section', async () => {
+    mountClips();
+    getElement('[data-clips="fan"]').getBoundingClientRect = () => new DOMRect(0, VIEWPORT_HEIGHT * 0.9, 1000, 600);
+
+    await scrollSectionTo(0);
+
+    expect(readDeals()).toEqual(Array(CLIP_COUNT).fill(1));
+  });
+
   describe('while the section is pinned', () => {
     beforeEach(() => {
       getElement<HTMLElement>('.clips-inner').style.position = 'sticky';
+    });
+
+    it('deals a swipe row fully by the time the section reaches the top, rather than over the pinned scroll', async () => {
+      getElement<HTMLElement>('[data-clips="fan"]').style.overflowX = 'auto';
+      mountClips();
+
+      await scrollSectionTo(0);
+
+      expect(readDeals()).toEqual(Array(CLIP_COUNT).fill(1));
     });
 
     it('keeps the cards stacked until the section has arrived at the top of the screen', async () => {

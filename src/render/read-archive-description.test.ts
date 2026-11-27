@@ -24,6 +24,22 @@ describe('readArchiveDescription', () => {
     expect(readArchiveDescription(`${PROSE}\n\n${lines}`)).toEqual([PROSE]);
   });
 
+  it.each([
+    ['Follow our socials down below!'],
+    ['Follow our personal socials, too!'],
+    ['BECOME A MEMBER OF THE CHANNEL LINKED BELOW'],
+    ['Socials below as well as Spotify!'],
+    ['Instagram: Coming soon!'],
+  ])('leaves out the line "%s", which only points at links that are not shown', (line) => {
+    expect(readArchiveDescription(`${PROSE}\n\n${line}`)).toEqual([PROSE]);
+  });
+
+  it('leaves out only the sentence that points at links and keeps the rest of the paragraph', () => {
+    expect(readArchiveDescription(`${PROSE} Socials will be linked down below, as well as our Spotify! We read every comment.`)).toEqual([
+      `${PROSE} We read every comment.`,
+    ]);
+  });
+
   it('keeps a prose line that mentions a handle', () => {
     const line = 'This was requested by @someone so thank you for getting us out of our element.';
 

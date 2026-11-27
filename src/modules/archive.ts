@@ -11,6 +11,7 @@ const STICKER_TILT_DEGREES = -8;
 const STICKER_HIDDEN_ROTATION = -24;
 const LANDED_ROW_FRACTION = 0.75;
 const SCROLL_PASSES = 3;
+const READER_INPUTS = ['keydown', 'wheel', 'touchstart', 'pointerdown'] as const;
 
 export class Archive extends Module {
   private pendingRows: HTMLElement[] = [];
@@ -113,9 +114,9 @@ export class Archive extends Module {
       if (trigger.getAttribute('aria-expanded') !== 'true') {
         return;
       }
-      const { scrollMarginTop, scrollMarginBottom } = getComputedStyle(trigger);
-      const roomAbove = trigger.getBoundingClientRect().top - (Number.parseFloat(scrollMarginTop) || 0);
-      const overflowBelow = panel.getBoundingClientRect().bottom - (window.innerHeight - (Number.parseFloat(scrollMarginBottom) || 0));
+      const { scrollPaddingTop, scrollPaddingBottom } = getComputedStyle(document.documentElement);
+      const roomAbove = trigger.getBoundingClientRect().top - (Number.parseFloat(scrollPaddingTop) || 0);
+      const overflowBelow = panel.getBoundingClientRect().bottom - (window.innerHeight - (Number.parseFloat(scrollPaddingBottom) || 0));
       const distance = roomAbove < 0 ? roomAbove : Math.min(Math.max(overflowBelow, 0), roomAbove);
       if (distance !== 0) {
         window.scrollBy({ top: distance, behavior });
@@ -139,12 +140,18 @@ export class Archive extends Module {
 
   private scrollAgainWhenScrollEnds(scrollAgain: () => void): void {
     this.stopScrollingAgain();
-    const handleScrollEnd = (): void => {
+    const stop = (): void => {
+      window.removeEventListener('scrollend', handleScrollEnd);
+      READER_INPUTS.forEach((type) => window.removeEventListener(type, stop));
       this.stopScrollingAgain = () => undefined;
+    };
+    const handleScrollEnd = (): void => {
+      stop();
       scrollAgain();
     };
-    window.addEventListener('scrollend', handleScrollEnd, { once: true });
-    this.stopScrollingAgain = () => window.removeEventListener('scrollend', handleScrollEnd);
+    window.addEventListener('scrollend', handleScrollEnd);
+    READER_INPUTS.forEach((type) => window.addEventListener(type, stop, { passive: true }));
+    this.stopScrollingAgain = stop;
   }
 
   private revealRows(): void {

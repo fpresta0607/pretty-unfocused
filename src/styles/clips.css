@@ -61,7 +61,7 @@ html:not([data-motion='on']) .clips {
   align-self: center;
   margin-inline: calc(var(--gutter) * -1);
   margin-block-start: calc((var(--space-4) + var(--ring) - var(--space-1)) * -1);
-  padding-block: calc(var(--space-4) + var(--ring)) var(--space-1);
+  padding-block: calc(var(--space-4) + var(--ring)) var(--space-3);
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
@@ -144,6 +144,7 @@ html:not([data-motion='on']) .clips {
   font-weight: 700;
   font-size: max(1.0625rem, min(clamp(var(--size-body), calc(var(--card-w) * 0.26 - 25px), var(--size-h3)), calc(var(--title-room) / 6.4)));
   line-height: 1.15;
+  min-block-size: 4.6em;
   text-wrap: balance;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;

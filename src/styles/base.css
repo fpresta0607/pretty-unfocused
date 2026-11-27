@@ -10,7 +10,12 @@
 
 html {
   background: var(--wine);
+  scroll-padding-block: var(--frame-clearance-top) var(--frame-clearance-bottom);
   -webkit-text-size-adjust: 100%;
+}
+
+[data-section] {
+  scroll-margin-block: calc(var(--frame-clearance-top) * -1) calc(var(--frame-clearance-bottom) * -1);
 }
 
 html[data-menu-open] {

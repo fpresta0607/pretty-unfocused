@@ -1,6 +1,6 @@
 import { module as Module } from 'modujs';
 
-import { cardDeal, dealProgress, dealRanks, pinnedDealProgress } from './clips-logic.ts';
+import { cardDeal, dealRanks, pinnedDealProgress, rowDealProgress } from './clips-logic.ts';
 import { isMotionEnabled, SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
 import { hasEntered, isRevealOpen, revealSectionHeading } from './section-heading-reveal.ts';
 
@@ -61,12 +61,14 @@ export class Clips extends Module {
   }
 
   private readDealProgress(): number {
-    if (this.inner !== null && getComputedStyle(this.inner).position === 'sticky') {
-      return pinnedDealProgress(this.el.getBoundingClientRect().top, window.innerHeight);
+    const sectionTop = this.el.getBoundingClientRect().top;
+    const isFanned = this.fan !== null && getComputedStyle(this.fan).overflowX !== 'auto';
+    if (isFanned && this.inner !== null && getComputedStyle(this.inner).position === 'sticky') {
+      return pinnedDealProgress(sectionTop, window.innerHeight);
     }
     const stainLift = Number.parseFloat(this.el.style.getPropertyValue('--stain-lift')) || 0;
     const naturalFanTop = (this.fan?.getBoundingClientRect().top ?? window.innerHeight) + stainLift;
-    return dealProgress(naturalFanTop, window.innerHeight);
+    return rowDealProgress(naturalFanTop, sectionTop, window.innerHeight);
   }
 
   private update(): void {

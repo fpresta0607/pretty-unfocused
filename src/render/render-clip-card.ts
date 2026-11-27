@@ -22,8 +22,14 @@ const MAX_OPENING_GROUP_LENGTH = 14;
 
 function groupTitleWords(title: string): string[] {
   const words: string[] = [];
-  title.split(/\s+/).forEach((token) => {
-    const isTrailingMark = !/[\p{L}\p{N}]/u.test(token) && Array.from(token).length <= MAX_TRAILING_MARK_SYMBOLS;
+  const tokens = title.split(/\s+/);
+  tokens.forEach((token, index) => {
+    const isMark = !/[\p{L}\p{N}]/u.test(token);
+    const isTrailingMark = isMark && Array.from(token).length <= MAX_TRAILING_MARK_SYMBOLS;
+    const isEmojiTail = isMark && index === tokens.length - 1 && !isTrailingMark && /\p{Extended_Pictographic}/u.test(token);
+    if (isEmojiTail) {
+      return;
+    }
     if (isTrailingMark && words.length > 0) {
       words[words.length - 1] += ` ${token}`;
     } else {
