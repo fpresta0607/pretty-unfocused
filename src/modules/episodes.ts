@@ -61,6 +61,8 @@ export class Episodes extends Module {
   private endSteps = 0;
   private frontIndex = -1;
   private layoutFrame = 0;
+  private laidOutWidth = 0;
+  private laidOutHeight = 0;
   private scrollFrame: number | undefined;
   private frameClear = 0;
   private smallViewportHeight = 0;
@@ -78,7 +80,9 @@ export class Episodes extends Module {
     this.setUpNavigation();
     this.layoutCards();
     window.addEventListener('resize', this.handleResize);
-    void document.fonts.ready.then(this.layoutCards);
+    if (document.fonts.status === 'loading') {
+      void document.fonts.ready.then(this.layoutCards);
+    }
     if (!isMotionEnabled(document.documentElement)) {
       return;
     }
@@ -104,11 +108,16 @@ export class Episodes extends Module {
   }
 
   private readonly handleResize = (): void => {
+    if (window.innerWidth === this.laidOutWidth && window.innerHeight === this.laidOutHeight) {
+      return;
+    }
     window.cancelAnimationFrame(this.layoutFrame);
     this.layoutFrame = window.requestAnimationFrame(this.layoutCards);
   };
 
   private readonly layoutCards = (): void => {
+    this.laidOutWidth = window.innerWidth;
+    this.laidOutHeight = window.innerHeight;
     if (this.navigation !== null) {
       this.navigation.hidden = this.isPinnedLayout();
     }

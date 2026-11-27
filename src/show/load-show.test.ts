@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { buildFixtureShow } from './build-fixture-show.ts';
 import { fetchPreviousShow, loadPublishedShow } from './load-show.ts';
-import { PREVIOUS_SHOW_URL, PODCAST_FEED_URL, YOUTUBE_FEED_URL } from './show-links.ts';
+import { PREVIOUS_SHOW_URL, PODCAST_FEED_URL, SPOTIFY_SHOW_URL, YOUTUBE_FEED_URL } from './show-links.ts';
 import { readFixture } from './read-fixture.ts';
 import type { Show } from './show-types.ts';
 
@@ -21,6 +21,7 @@ function makeFeedAnswers(): Record<string, () => Response> {
   return {
     [PODCAST_FEED_URL]: () => new Response(readFixture('podcast-feed.xml')),
     [YOUTUBE_FEED_URL]: () => new Response(readFixture('youtube-feed.xml')),
+    [SPOTIFY_SHOW_URL]: () => new Response('<html></html>'),
   };
 }
 

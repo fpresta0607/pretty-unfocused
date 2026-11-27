@@ -6,11 +6,13 @@ import type { Clip, Episode, Show, Thumbnail } from './show-types.ts';
 export interface ThumbnailAvailability {
   maxresVideoIds: ReadonlySet<string>;
   oardefaultVideoIds: ReadonlySet<string>;
+  showArtworkUrl: string | undefined;
 }
 
 const YOUTUBE_THUMBNAIL_BASE_URL = 'https://i.ytimg.com/vi';
 const SHOW_TITLE_SUFFIX_PATTERN = /\s*\|\s*Pretty Unfocused\s*$/i;
 const PODCAST_ARTWORK_SIZE = 1400;
+const SHOW_ARTWORK_SIZE = 640;
 
 export function stripShowTitleSuffix(title: string): string {
   return title.replace(SHOW_TITLE_SUFFIX_PATTERN, '').trim();
@@ -79,12 +81,17 @@ function buildPodcastEpisode(
   if (artworkUrl === undefined) {
     throw new Error(`Podcast feed item "${item.title}" has no image and the channel has none`);
   }
+  const isShowArtwork = artworkUrl === channelImageUrl;
+  const thumbnail: Thumbnail =
+    isShowArtwork && availability.showArtworkUrl !== undefined
+      ? { src: availability.showArtworkUrl, width: SHOW_ARTWORK_SIZE, height: SHOW_ARTWORK_SIZE }
+      : { src: artworkUrl, width: PODCAST_ARTWORK_SIZE, height: PODCAST_ARTWORK_SIZE };
   return {
     ...sharedFields,
     id: item.guid,
     publishedAt: item.publishedAt,
     description: item.description,
-    thumbnail: { src: artworkUrl, width: PODCAST_ARTWORK_SIZE, height: PODCAST_ARTWORK_SIZE },
+    thumbnail,
   };
 }
 

@@ -67,6 +67,17 @@ describe('renderHero with the fixture show', () => {
     expect(markup).toContain(`srcset="${thumbnail.srcset}"`);
   });
 
+  it('loads the thumbnail at once and ahead of the other images, because it is the first thing painted', () => {
+    const image = markup.match(/<img class="hero-card-image"[^>]*>/)?.[0] ?? '';
+
+    expect(image).toContain('fetchpriority="high"');
+    expect(image).not.toContain('loading=');
+  });
+
+  it('sizes the thumbnail to the card width at each breakpoint, so a phone does not fetch the largest image', () => {
+    expect(markup).toContain('sizes="(min-width: 900px) 23vw, (min-width: 600px) 308px, 66vw"');
+  });
+
   it('gives the h1 the accessible name Pretty Unfocused', () => {
     expect(markup.match(/<h1[\s>]/g)).toHaveLength(1);
     expect(readHeadingAccessibleText(markup)).toBe('Pretty Unfocused');

@@ -3,6 +3,7 @@ import { escapeHtml } from './escape-html.ts';
 import { renderIcon, renderIconSprite } from './icons.ts';
 import { PLATFORM_LINKS, renderPlatformPills } from './platform-links.ts';
 import { renderPlayerAttributes } from './render-player-attributes.ts';
+import { renderStainEdgeDefinitions } from './render-stain-edge.ts';
 import { RING_SMALL_SIZE, RING_SMALL_SRC } from './ring-asset.ts';
 
 export interface FrameSection {
@@ -70,7 +71,7 @@ function renderMiniCard(show: Show): string {
 export function renderFrame(show: Show, sections: readonly FrameSection[]): string {
   const firstSection = sections[0];
   const firstLabel = firstSection === undefined ? '' : escapeHtml(firstSection.label);
-  return `${renderIconSprite()}
+  return `${renderIconSprite()}${renderStainEdgeDefinitions()}
   <header class="frame" data-module-frame>
     <div class="frame-corner frame-corner--menu" data-module-menu>
       ${renderMenuButton()}

@@ -59,8 +59,8 @@ describe('renderEpisodes with the fixture show', () => {
 
     expect(bands).toHaveLength(show.episodes.length);
     for (const band of bands) {
-      expect(band.match(/<path class="stain-edge-rim"/g)).toHaveLength(2);
-      expect(band.match(/<path class="stain-edge-fill"/g)).toHaveLength(2);
+      expect(band.match(/<use class="stain-edge-rim" href="#stain-edge-rim-(wide|narrow)"\/>/g)).toHaveLength(2);
+      expect(band.match(/<use class="stain-edge-fill" href="#stain-edge-fill-(wide|narrow)"\/>/g)).toHaveLength(2);
       expect(band).not.toContain('data-stain-set');
     }
     expect(markup.match(/data-stain-set="wide"/g)).toHaveLength(1);
@@ -116,16 +116,31 @@ describe('renderEpisodes with the fixture show', () => {
     expect(markup).toContain(`style="--card-count:${show.episodes.length + 1}"`);
   });
 
-  it('shows each thumbnail whole, with its size and srcset, loaded at once', () => {
+  it('shows each thumbnail whole, with its size and srcset, loaded when its card nears the screen', () => {
     const [latestEpisode] = show.episodes;
     const [latestCard = ''] = cards;
 
     expect(latestCard).toContain(`width="${latestEpisode?.thumbnail.width}" height="${latestEpisode?.thumbnail.height}"`);
     expect(latestCard).toContain(`srcset="${escapeHtml(latestEpisode?.thumbnail.srcset ?? '')}"`);
     expect(latestCard).not.toContain('sddefault');
-    expect(latestCard).toContain('loading="eager"');
-    expect(latestCard).not.toContain('loading="lazy"');
+    expect(latestCard).toContain('loading="lazy"');
+    expect(latestCard).not.toContain('loading="eager"');
     expect(latestCard).toContain('alt=""');
+  });
+
+  it('sizes each thumbnail to the card width at each breakpoint, so a phone does not fetch the largest image', () => {
+    const [latestCard = ''] = cards;
+
+    expect(latestCard).toContain('sizes="(min-width: 900px) 28vw, (min-width: 600px) 50vw, calc(100vw - 4rem)"');
+  });
+
+  it('loads every thumbnail lazily, including the podcast artwork', () => {
+    const images = cards.flatMap((card) => card.match(/<img class="episode-card-image"[^>]*>/g) ?? []);
+
+    expect(images).toHaveLength(show.episodes.length);
+    for (const image of images) {
+      expect(image).toContain('loading="lazy"');
+    }
   });
 
   it('gives each card its short date', () => {
