@@ -7,7 +7,7 @@ import { renderPlayerAttributes } from './render-player-attributes.ts';
 import { RING_SIZE, RING_SRC, RING_SRCSET } from './ring-asset.ts';
 import { TAGLINE_LINES } from './tagline-lines.ts';
 
-const CARD_IMAGE_SIZES = '(min-width: 900px) 26vw, 80vw';
+const CARD_IMAGE_SIZES = '(min-width: 900px) 23vw, (min-width: 600px) 308px, 66vw';
 
 function renderTaglineLines(): string {
   return TAGLINE_LINES.map((line, index) => {
@@ -48,7 +48,7 @@ function renderEpisodeCard(episode: Episode): string {
   const youtubeUrl = episode.youtubeUrl === undefined ? undefined : escapeHtml(episode.youtubeUrl);
   const spotifyUrl = episode.spotifyUrl === undefined ? undefined : escapeHtml(episode.spotifyUrl);
 
-  const image = `<img class="hero-card-image" src="${escapeHtml(thumbnail.src)}"${srcset} sizes="${CARD_IMAGE_SIZES}" width="${thumbnail.width}" height="${thumbnail.height}" alt="">`;
+  const image = `<img class="hero-card-image" src="${escapeHtml(thumbnail.src)}"${srcset} sizes="${CARD_IMAGE_SIZES}" width="${thumbnail.width}" height="${thumbnail.height}" alt="" fetchpriority="high">`;
   const playerAttributes = renderPlayerAttributes(episode.youtubeVideoId, episode.title);
   const media =
     youtubeUrl === undefined

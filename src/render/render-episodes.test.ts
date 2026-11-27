@@ -5,6 +5,11 @@ import type { Episode, Show } from '../show/show-types.ts';
 import { escapeHtml } from './escape-html.ts';
 import { formatShortDate } from './format-date.ts';
 import { renderEpisodes } from './render-episodes.ts';
+import { resolveImageSlotWidth } from './resolve-image-slot-width.ts';
+
+const PHONE_VIEWPORT_WIDTH = 393;
+const PHONE_THUMBNAIL_RENDERED_WIDTH = 300;
+const HQDEFAULT_WIDTH = 480;
 
 function makeEpisode(index: number, overrides: Partial<Episode> = {}): Episode {
   return {
@@ -59,8 +64,8 @@ describe('renderEpisodes with the fixture show', () => {
 
     expect(bands).toHaveLength(show.episodes.length);
     for (const band of bands) {
-      expect(band.match(/<path class="stain-edge-rim"/g)).toHaveLength(2);
-      expect(band.match(/<path class="stain-edge-fill"/g)).toHaveLength(2);
+      expect(band.match(/<use class="stain-edge-rim" href="#stain-edge-rim-(wide|narrow)"\/>/g)).toHaveLength(2);
+      expect(band.match(/<use class="stain-edge-fill" href="#stain-edge-fill-(wide|narrow)"\/>/g)).toHaveLength(2);
       expect(band).not.toContain('data-stain-set');
     }
     expect(markup.match(/data-stain-set="wide"/g)).toHaveLength(1);
@@ -116,16 +121,35 @@ describe('renderEpisodes with the fixture show', () => {
     expect(markup).toContain(`style="--card-count:${show.episodes.length + 1}"`);
   });
 
-  it('shows each thumbnail whole, with its size and srcset, loaded at once', () => {
+  it('shows each thumbnail whole, with its size and srcset, loaded when its card nears the screen', () => {
     const [latestEpisode] = show.episodes;
     const [latestCard = ''] = cards;
 
     expect(latestCard).toContain(`width="${latestEpisode?.thumbnail.width}" height="${latestEpisode?.thumbnail.height}"`);
     expect(latestCard).toContain(`srcset="${escapeHtml(latestEpisode?.thumbnail.srcset ?? '')}"`);
     expect(latestCard).not.toContain('sddefault');
-    expect(latestCard).toContain('loading="eager"');
-    expect(latestCard).not.toContain('loading="lazy"');
+    expect(latestCard).toContain('loading="lazy"');
+    expect(latestCard).not.toContain('loading="eager"');
     expect(latestCard).toContain('alt=""');
+  });
+
+  it('sizes each thumbnail for a 393 px phone no smaller than it renders and within the 480 px candidate', () => {
+    const [latestCard = ''] = cards;
+    const sizes = latestCard.match(/<img class="episode-card-image"[^>]*\ssizes="([^"]*)"/)?.[1] ?? '';
+
+    const slotWidth = resolveImageSlotWidth(sizes, PHONE_VIEWPORT_WIDTH);
+
+    expect(slotWidth).toBeGreaterThanOrEqual(PHONE_THUMBNAIL_RENDERED_WIDTH);
+    expect(slotWidth).toBeLessThanOrEqual(HQDEFAULT_WIDTH);
+  });
+
+  it('loads every thumbnail lazily, including the podcast artwork', () => {
+    const images = cards.flatMap((card) => card.match(/<img class="episode-card-image"[^>]*>/g) ?? []);
+
+    expect(images).toHaveLength(show.episodes.length);
+    for (const image of images) {
+      expect(image).toContain('loading="lazy"');
+    }
   });
 
   it('gives each card its short date', () => {

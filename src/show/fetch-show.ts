@@ -1,12 +1,13 @@
 import { mergeShow } from './merge-show.ts';
 import { parsePodcastFeed } from './parse-podcast-feed.ts';
 import { parseYoutubeFeed } from './parse-youtube-feed.ts';
-import { PODCAST_FEED_URL, YOUTUBE_FEED_URL } from './show-links.ts';
+import { PODCAST_FEED_URL, SPOTIFY_SHOW_URL, YOUTUBE_FEED_URL } from './show-links.ts';
 import type { Show } from './show-types.ts';
 
 const USER_AGENT = 'pretty-unfocused-site-build (podcast website generator)';
 const MAX_CONCURRENT_IMAGE_CHECKS = 6;
 const IMAGE_BASE_URL = 'https://i.ytimg.com/vi';
+const SPOTIFY_ARTWORK_PATTERN = /<meta property="og:image" content="(https:\/\/i\.scdn\.co\/image\/[0-9a-f]+)"/;
 
 async function fetchFeedText(
   fetchFunction: typeof fetch,
@@ -44,6 +45,25 @@ async function findVideoIdsWithImage(
   return videoIdsWithImage;
 }
 
+async function findSpotifyArtworkUrl(fetchFunction: typeof fetch): Promise<string | undefined> {
+  let response: Response;
+  try {
+    response = await fetchFunction(SPOTIFY_SHOW_URL, { headers: { 'User-Agent': USER_AGENT } });
+  } catch (error) {
+    console.warn(`Spotify show page could not be reached, keeping the feed artwork: ${String(error)}`);
+    return undefined;
+  }
+  if (!response.ok) {
+    console.warn(`Spotify show page answered HTTP ${response.status}, keeping the feed artwork`);
+    return undefined;
+  }
+  const artworkUrl = SPOTIFY_ARTWORK_PATTERN.exec(await response.text())?.[1];
+  if (artworkUrl === undefined) {
+    console.warn('Spotify show page has no i.scdn.co og:image, keeping the feed artwork');
+  }
+  return artworkUrl;
+}
+
 export async function fetchShow(fetchFunction: typeof fetch): Promise<Show> {
   const [podcastXml, youtubeXml] = await Promise.all([
     fetchFeedText(fetchFunction, PODCAST_FEED_URL, 'Podcast feed'),
@@ -57,5 +77,7 @@ export async function fetchShow(fetchFunction: typeof fetch): Promise<Show> {
   const maxresVideoIds = await findVideoIdsWithImage(fetchFunction, fullVideoIds, 'maxresdefault');
   const oardefaultVideoIds = await findVideoIdsWithImage(fetchFunction, shortIds, 'oardefault');
 
-  return mergeShow(podcast, youtube, { maxresVideoIds, oardefaultVideoIds });
+  const showArtworkUrl = await findSpotifyArtworkUrl(fetchFunction);
+
+  return mergeShow(podcast, youtube, { maxresVideoIds, oardefaultVideoIds, showArtworkUrl });
 }

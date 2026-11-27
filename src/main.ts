@@ -13,15 +13,12 @@ import { Menu } from './modules/menu.ts';
 import { Player } from './modules/player.ts';
 import { Scroll } from './modules/scroll.ts';
 import { Stain } from './modules/stain.ts';
+import { startWhenNear } from './start-when-near.ts';
+import { startWhenSettled } from './start-when-settled.ts';
 import './styles/main.css';
 
 const app = new ModularApp({
   modules: {
-    about: About,
-    archive: Archive,
-    clips: Clips,
-    episodes: Episodes,
-    footer: Footer,
     frame: Frame,
     hero: Hero,
     intro: Intro,
@@ -29,8 +26,23 @@ const app = new ModularApp({
     menu: Menu,
     player: Player,
     scroll: Scroll,
-    stain: Stain,
   },
 });
 
 app.init(app);
+
+const sectionsApp = new ModularApp({
+  modules: {
+    about: About,
+    archive: Archive,
+    clips: Clips,
+    footer: Footer,
+    stain: Stain,
+  },
+});
+
+startWhenSettled(() => sectionsApp.init(sectionsApp));
+
+const episodesApp = new ModularApp({ modules: { episodes: Episodes } });
+
+startWhenNear(document.getElementById('episodes'), () => episodesApp.init(episodesApp));

@@ -14,6 +14,7 @@ import {
   type EdgeShape,
 } from './stain-edge.ts';
 
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 const LANDING_TOP_FRACTION = 0.25;
 const LONGEST_LIFT_SHARE = 0.19;
 
@@ -73,8 +74,21 @@ export class Stain extends Module {
     }
     const { width, height } = edge.getBoundingClientRect();
     edge.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    edge.querySelector('.stain-edge-rim')?.setAttribute('d', buildRimPath(shape, { width, height }));
-    edge.querySelector('.stain-edge-fill')?.setAttribute('d', buildEdgePath(shape, { width, height }));
+    this.drawPath(edge, 'rim', buildRimPath(shape, { width, height }));
+    this.drawPath(edge, 'fill', buildEdgePath(shape, { width, height }));
+  }
+
+  // The markup draws the settled edge with a reference to one shared outline; the live edge needs a path of its own to reshape.
+  private drawPath(edge: Element, part: 'rim' | 'fill', outline: string): void {
+    const className = `stain-edge-${part}`;
+    let path = edge.querySelector(`.${className}`);
+    if (path instanceof SVGUseElement) {
+      const ownPath = document.createElementNS(SVG_NAMESPACE, 'path');
+      ownPath.setAttribute('class', className);
+      path.replaceWith(ownPath);
+      path = ownPath;
+    }
+    path?.setAttribute('d', outline);
   }
 
   private measureViewportHeight(): number {
