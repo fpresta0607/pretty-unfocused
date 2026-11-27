@@ -1,7 +1,6 @@
 import ModularApp from 'modujs';
 
 import { About } from './modules/about.ts';
-import { Archive } from './modules/archive.ts';
 import { Clips } from './modules/clips.ts';
 import { Episodes } from './modules/episodes.ts';
 import { Footer } from './modules/footer.ts';
@@ -34,7 +33,6 @@ app.init(app);
 const sectionsApp = new ModularApp({
   modules: {
     about: About,
-    archive: Archive,
     clips: Clips,
     footer: Footer,
     stain: Stain,

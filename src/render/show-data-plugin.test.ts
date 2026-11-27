@@ -65,16 +65,15 @@ describe('showDataPlugin', () => {
     expect(page).toContain('<dialog class="player"');
   });
 
-  it('ends with the clips and every-episode sections, in that order, each in the frame menu', async () => {
+  it('ends main with the clips section, in the frame menu, and has no every-episode list or link to one', async () => {
     const page = await buildPage();
 
     expect(page.indexOf('id="episodes"')).toBeLessThan(page.indexOf('id="clips"'));
-    expect(page.indexOf('id="clips"')).toBeLessThan(page.indexOf('id="every-episode"'));
+    expect(page.indexOf('id="clips"')).toBeLessThan(page.indexOf('</main>'));
     expect(page).toContain('href="#clips" data-menu="link"');
     expect(page).toContain('<span class="menu-link-label">Clips</span>');
-    expect(page).toContain('href="#every-episode" data-menu="link"');
-    expect(page).toContain('<span class="menu-link-label">Every episode</span>');
-    expect(page).toContain('<a class="episode-all" href="#every-episode">');
+    expect(page).not.toContain('every-episode');
+    expect(page).not.toContain('Every episode');
   });
 
   it('closes the page with the footer after main, with its menu link and the frame label', async () => {

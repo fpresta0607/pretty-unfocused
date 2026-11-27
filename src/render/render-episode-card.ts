@@ -3,12 +3,10 @@ import { escapeHtml } from './escape-html.ts';
 import { excerptDescription } from './excerpt-description.ts';
 import { formatShortDate } from './format-date.ts';
 import { renderIcon } from './icons.ts';
-import { RING_SIZE, RING_SRC, RING_SRCSET } from './ring-asset.ts';
 import { renderPlayerAttributes } from './render-player-attributes.ts';
 
 const CARD_IMAGE_SIZES = '(min-width: 900px) 28vw, (min-width: 600px) 50vw, calc(100vw - 4rem)';
 const EXCERPT_MAX_CHARACTERS = 600;
-const RING_IMAGE_SIZES = '(min-width: 900px) 20vw, 60vw';
 
 function renderMedia(episode: Episode): string {
   const { thumbnail } = episode;
@@ -51,20 +49,5 @@ export function renderEpisodeCard(episode: Episode, index: number): string {
         <h3 class="episode-card-title">${escapeHtml(episode.title)}</h3>${descriptionMarkup}
         <div class="episode-card-actions">${renderActions(episode)}</div>
       </div>
-    </li>`;
-}
-
-export function renderAllEpisodesCard(episodeCount: number, index: number): string {
-  return `<li class="episode-card episode-card--all" data-episodes="card" style="--card-index:${index}">
-      <a class="episode-all" href="#every-episode">
-        <span class="visually-hidden">All ${episodeCount} episodes</span>
-        <span class="episode-all-panel" aria-hidden="true">
-          <img class="episode-all-ring" src="${RING_SRC}" srcset="${RING_SRCSET}" sizes="${RING_IMAGE_SIZES}" width="${RING_SIZE}" height="${RING_SIZE}" alt="" loading="lazy" decoding="async">
-          <span class="episode-all-count">${episodeCount}</span>
-        </span>
-        <span class="episode-all-title" aria-hidden="true">All episodes</span>
-        <span class="episode-all-line">Every conversation, from the first to the latest.</span>
-        <span class="round-button" aria-hidden="true">${renderIcon('arrow')}</span>
-      </a>
     </li>`;
 }

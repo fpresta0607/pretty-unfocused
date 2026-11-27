@@ -14,12 +14,15 @@ let smallViewportHeight = 0;
 const measureBox = HTMLElement.prototype.getBoundingClientRect;
 const TOOLBAR_HEIGHT = 88;
 
-const EPISODES: Episode[] = Array.from({ length: 6 }, (_, index) => ({
+const EPISODE_COUNT = 6;
+
+const EPISODES: Episode[] = Array.from({ length: EPISODE_COUNT }, (_, index) => ({
   id: `episode-${index}`,
   title: `Episode ${index}`,
   publishedAt: '2026-10-01T12:00:00.000Z',
   description: 'About the episode',
   thumbnail: { src: 'https://example.com/art.jpg', width: 480, height: 360 },
+  ...(index === EPISODE_COUNT - 1 ? { spotifyUrl: `https://open.spotify.com/episode/${index}` } : {}),
 }));
 
 class FakeIntersectionObserver {
@@ -97,7 +100,7 @@ describe('the card height', () => {
   }
 
   function sizeCards(descriptionLines: number[], fixedHeights: number[] = []): void {
-    document.querySelectorAll<HTMLElement>('.episode-card:not(.episode-card--all)').forEach((card, index) => {
+    document.querySelectorAll<HTMLElement>('.episode-card').forEach((card, index) => {
       const description = getWithin(card, '.episode-card-description');
       Object.defineProperty(card, 'offsetHeight', { value: (fixedHeights[index] ?? 400) + 200, configurable: true });
       Object.defineProperty(getWithin(card, '.episode-card-summary'), 'offsetHeight', { value: 200, configurable: true });
@@ -137,7 +140,7 @@ describe('the card height', () => {
 
     mountEpisodes();
 
-    expect(readFit()).toEqual({ height: `${Math.ceil(400 + CLEAR_ABOVE_BUTTONS + 3 * LINE_HEIGHT)}px`, lines: ['3', '3', '3', '3', '3', '3', ''] });
+    expect(readFit()).toEqual({ height: `${Math.ceil(400 + CLEAR_ABOVE_BUTTONS + 3 * LINE_HEIGHT)}px`, lines: ['3', '3', '3', '3', '3', '3'] });
   });
 
   it('gives the cards with shorter titles the extra lines their room allows', () => {
@@ -145,7 +148,7 @@ describe('the card height', () => {
 
     mountEpisodes();
 
-    expect(readFit()).toEqual({ height: `${Math.ceil(430 + CLEAR_ABOVE_BUTTONS + 3 * LINE_HEIGHT)}px`, lines: ['3', '3', '4', '4', '4', '4', ''] });
+    expect(readFit()).toEqual({ height: `${Math.ceil(430 + CLEAR_ABOVE_BUTTONS + 3 * LINE_HEIGHT)}px`, lines: ['3', '3', '4', '4', '4', '4'] });
   });
 
   it('keeps two lines under the tallest title on a short screen by lowering the clear gap above the buttons to 24 px, then lets the card run past the stage rather than crowd them', () => {
@@ -154,7 +157,7 @@ describe('the card height', () => {
 
     mountEpisodes();
 
-    expect(readFit()).toEqual({ height: `${Math.ceil(400 + FLOOR_CLEAR_ABOVE_BUTTONS + 2 * LINE_HEIGHT)}px`, lines: ['2', '2', '2', '2', '2', '2', ''] });
+    expect(readFit()).toEqual({ height: `${Math.ceil(400 + FLOOR_CLEAR_ABOVE_BUTTONS + 2 * LINE_HEIGHT)}px`, lines: ['2', '2', '2', '2', '2', '2'] });
   });
 
   it.each([
@@ -280,7 +283,7 @@ describe('the card height', () => {
 
       mountEpisodes();
 
-      expect(readFit()).toEqual({ height: `${Math.ceil(400 + FLOOR_CLEAR_ABOVE_BUTTONS)}px`, lines: ['0', '0', '0', '0', '0', '0', ''] });
+      expect(readFit()).toEqual({ height: `${Math.ceil(400 + FLOOR_CLEAR_ABOVE_BUTTONS)}px`, lines: ['0', '0', '0', '0', '0', '0'] });
       expect(readSummaries()).toEqual([true, true, true, true, true, true]);
     });
 
@@ -324,7 +327,7 @@ describe('the card height', () => {
 
       mountEpisodes();
 
-      expect(readFit().lines).toEqual(['1', '0', '0', '0', '0', '0', '']);
+      expect(readFit().lines).toEqual(['1', '0', '0', '0', '0', '0']);
       expect(getElement<HTMLElement>('.episode-card-title').hasAttribute('aria-label')).toBe(false);
     });
 
@@ -334,7 +337,7 @@ describe('the card height', () => {
 
       mountEpisodes();
 
-      expect(readFit().lines).toEqual(['5', '5', '5', '5', '5', '5', '']);
+      expect(readFit().lines).toEqual(['5', '5', '5', '5', '5', '5']);
       expect(getElement<HTMLElement>('.episode-card-title').hasAttribute('aria-label')).toBe(false);
       expect(getElement<HTMLElement>('.episode-card-title').textContent).toBe(Array.from({ length: 12 }, (_, word) => `word${word}`).join(' '));
       expect(readSummaries()).toEqual([false, false, false, false, false, false]);
@@ -376,7 +379,7 @@ describe('the card height', () => {
         const readWidth = (): number => Number.parseFloat(viewport.style.getPropertyValue('--row-card-w')) || NATURAL_CARD_WIDTH;
         getElement<HTMLElement>('#episodes').style.setProperty('--card-thumb', String(THUMB_RATIO));
         Object.defineProperty(getElement('.episode-card'), 'offsetWidth', { get: readWidth });
-        document.querySelectorAll<HTMLElement>('.episode-card:not(.episode-card--all)').forEach((card) => {
+        document.querySelectorAll<HTMLElement>('.episode-card').forEach((card) => {
           Object.defineProperty(card, 'offsetHeight', { get: () => 200 + 400 + (readWidth() - NATURAL_CARD_WIDTH) * THUMB_RATIO });
         });
       }
@@ -441,7 +444,7 @@ describe('the card height', () => {
   it('cuts a description that overruns its lines at a whole word and ends it with an ellipsis', () => {
     const CHARACTERS_PER_LINE = 40;
     const longText = Array.from({ length: 40 }, (_, index) => `word${index}`).join(' ');
-    document.querySelectorAll<HTMLElement>('.episode-card:not(.episode-card--all)').forEach((card, index) => {
+    document.querySelectorAll<HTMLElement>('.episode-card').forEach((card, index) => {
       const description = getWithin(card, '.episode-card-description');
       description.textContent = index === 0 ? longText : 'A short line';
       description.style.lineHeight = `${LINE_HEIGHT}px`;
@@ -488,7 +491,7 @@ describe('the card height', () => {
   it('leaves the height to the content when the page has no layout', () => {
     mountEpisodes();
 
-    expect(readFit()).toEqual({ height: '', lines: ['', '', '', '', '', '', ''] });
+    expect(readFit()).toEqual({ height: '', lines: ['', '', '', '', '', ''] });
   });
 });
 
@@ -511,14 +514,6 @@ ${CARD_STYLES}`;
     const viewport = getElement('.episodes-viewport');
 
     expect(getComputedStyle(viewport).overflowY).toBe('hidden');
-  });
-
-  it.each(['.episode-all', '.episode-all-panel'])('lets the All episodes card shrink %s with the card instead of hanging out past it', (selector) => {
-    expect(getComputedStyle(getElement(selector)).getPropertyValue('min-block-size')).toBe('0');
-  });
-
-  it('keeps the round button of the All episodes card at its full size while the panel gives up height', () => {
-    expect(getComputedStyle(getElement('.episode-all .round-button')).flexShrink).toBe('0');
   });
 });
 
@@ -603,10 +598,10 @@ describe('the episodes section with motion on', () => {
 
   it.each([
     [0, []],
-    [0.8 / 6.5, []],
-    [0.9 / 6.5, [0]],
-    [3 / 6.5, [0, 1, 2]],
-    [1, [0, 1, 2, 3, 4, 5]],
+    [0.8 / 5.5, []],
+    [0.9 / 5.5, [0]],
+    [3 / 5.5, [0, 1, 2]],
+    [1, [0, 1, 2, 3, 4]],
   ])('at progress %j hides the cards %j once the next one leaves only a thin strip of them', (progress, covered) => {
     document.querySelectorAll<HTMLElement>('.episode-card').forEach((card) => Object.defineProperty(card, 'offsetWidth', { value: 300 }));
     getElement<HTMLElement>('.episodes-track').style.columnGap = '18px';
@@ -638,10 +633,10 @@ describe('the episodes section with motion on', () => {
 
   it.each([
     [0, 0],
-    [0.4 / 6.5, 0],
-    [0.6 / 6.5, 1],
+    [0.4 / 5.5, 0],
+    [0.6 / 5.5, 1],
     [0.5, 3],
-    [1, 6],
+    [1, 5],
   ])('at progress %j lights dash %j and tells the colour sweep which card is in front', (progress, index) => {
     mountEpisodes();
 
@@ -664,7 +659,11 @@ describe('the episodes section with motion on', () => {
   describe('when a card takes keyboard focus', () => {
 
     async function focusLastCardLink(): Promise<void> {
-      const target = getElement<HTMLElement>('.episode-all');
+      const lastCard = Array.from(document.querySelectorAll<HTMLElement>('[data-episodes="card"]')).at(-1);
+      const target = lastCard?.querySelector<HTMLElement>('a');
+      if (target === null || target === undefined) {
+        throw new Error('The last card has no link');
+      }
       target.focus();
       await new Promise((resolve) => window.requestAnimationFrame(resolve));
     }

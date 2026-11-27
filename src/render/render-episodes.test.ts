@@ -55,14 +55,14 @@ describe('renderEpisodes with the fixture show', () => {
   it('has one hidden colour band for every card after the first', () => {
     expect(markup).toContain('<div class="episodes-sweeps" aria-hidden="true">');
     const bands = markup.match(/<div class="episodes-sweep" style="--sweep-index:(\d+)">/g) ?? [];
-    expect(bands).toHaveLength(show.episodes.length);
+    expect(bands).toHaveLength(show.episodes.length - 1);
     expect(bands[0]).toContain('--sweep-index:1');
   });
 
   it('draws every colour band with the shared coffee-stain edge and its roast rim, without a second live edge', () => {
     const bands = markup.match(/<div class="episodes-sweep" style="--sweep-index:\d+">[\s\S]*?<\/svg><\/div>/g) ?? [];
 
-    expect(bands).toHaveLength(show.episodes.length);
+    expect(bands).toHaveLength(show.episodes.length - 1);
     for (const band of bands) {
       expect(band.match(/<use class="stain-edge-rim" href="#stain-edge-rim-(wide|narrow)"\/>/g)).toHaveLength(2);
       expect(band.match(/<use class="stain-edge-fill" href="#stain-edge-fill-(wide|narrow)"\/>/g)).toHaveLength(2);
@@ -109,8 +109,8 @@ describe('renderEpisodes with the fixture show', () => {
     expect(markup).toContain('episodes-script');
   });
 
-  it('lists a card for every episode, newest first, plus the card for every episode', () => {
-    expect(cards).toHaveLength(show.episodes.length + 1);
+  it('lists a card for every episode, newest first, and nothing after them', () => {
+    expect(cards).toHaveLength(show.episodes.length);
     show.episodes.forEach((episode, index) => {
       expect(cards[index]).toContain(`<h3 class="episode-card-title">${escapeHtml(episode.title)}</h3>`);
     });
@@ -118,7 +118,7 @@ describe('renderEpisodes with the fixture show', () => {
 
   it('puts the cards in an unordered list in reading order', () => {
     expect(markup).toMatch(/<ul class="episodes-track" role="list">[\s\S]*<\/ul>/);
-    expect(markup).toContain(`style="--card-count:${show.episodes.length + 1}"`);
+    expect(markup).toContain(`style="--card-count:${show.episodes.length}"`);
   });
 
   it('shows each thumbnail whole, with its size and srcset, loaded when its card nears the screen', () => {
@@ -177,23 +177,28 @@ describe('renderEpisodes with the fixture show', () => {
 });
 
 describe('renderEpisodes limits and edge cases', () => {
-  it('shows the latest eight episodes and counts all of them on the last card', () => {
+  it('shows the latest eight episodes and ends the row with the eighth', () => {
     const episodes = Array.from({ length: 12 }, (_, index) => makeEpisode(index + 1));
-    const cards = readCards(renderEpisodes(makeShow(episodes)));
+    const markup = renderEpisodes(makeShow(episodes));
+    const cards = readCards(markup);
 
-    expect(cards).toHaveLength(9);
-    expect(cards[7]).toContain('Episode 8');
-    expect(cards[8]).toContain('All 12 episodes</span>');
+    expect(cards).toHaveLength(8);
+    expect(cards.at(-1)).toContain('Episode 8');
+    expect(markup).toContain('style="--card-count:8"');
   });
 
-  it('links the last card to the every-episode list', () => {
-    const cards = readCards(renderEpisodes(makeShow([makeEpisode(1), makeEpisode(2)])));
+  it('has no All episodes card and no link to an every-episode list', () => {
+    const markup = renderEpisodes(makeShow([makeEpisode(1), makeEpisode(2)]));
 
-    expect(cards.at(-1)).toContain('<span class="visually-hidden">All 2 episodes</span>');
-    expect(cards.at(-1)).toContain('<span class="episode-all-count">2</span>');
-    expect(cards.at(-1)).toContain('<span class="episode-all-title" aria-hidden="true">All episodes</span>');
-    expect(cards.at(-1)).toContain('Every conversation, from the first to the latest.');
-    expect(cards.at(-1)).toContain('href="#every-episode"');
+    expect(markup).not.toContain('episode-card--all');
+    expect(markup).not.toContain('#every-episode');
+  });
+
+  it('draws no colour band for a single episode, which has no card after it to sweep in', () => {
+    const markup = renderEpisodes(makeShow([makeEpisode(1)]));
+
+    expect(readCards(markup)).toHaveLength(1);
+    expect(markup).not.toContain('class="episodes-sweep"');
   });
 
   it('leaves out Play and Watch when the episode has no YouTube video', () => {

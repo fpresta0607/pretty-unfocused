@@ -7,7 +7,7 @@ describe('renderPageFrame', () => {
   it('lists every section in the menu, in page order, from the hero to the footer', () => {
     const labels = [...renderPageFrame(buildFixtureShow()).matchAll(/<span class="menu-link-label">(.*?)<\/span>/g)].map((match) => match[1]);
 
-    expect(labels).toEqual(['Home', 'About the show', 'Episodes', 'Clips', 'Every episode', 'Say hi']);
+    expect(labels).toEqual(['Home', 'About the show', 'Episodes', 'Clips', 'Say hi']);
   });
 
   it('defines each coffee-stain outline once, for every section edge and colour band to reference', () => {
@@ -26,6 +26,6 @@ describe('renderPageFrame', () => {
 
     expect(renderSections(show)).not.toContain('id="clips"');
     expect(renderPageFrame(show)).not.toContain('href="#clips"');
-    expect(renderPageFrame(show)).toContain('href="#every-episode"');
+    expect(renderPageFrame(show)).toContain('href="#say-hi"');
   });
 });

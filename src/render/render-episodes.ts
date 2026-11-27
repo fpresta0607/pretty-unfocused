@@ -1,6 +1,6 @@
 import type { Show } from '../show/show-types.ts';
 import { renderIcon } from './icons.ts';
-import { renderAllEpisodesCard, renderEpisodeCard } from './render-episode-card.ts';
+import { renderEpisodeCard } from './render-episode-card.ts';
 import { renderStainEdge, renderStillStainEdge } from './render-stain-edge.ts';
 
 const LATEST_EPISODE_COUNT = 8;
@@ -36,10 +36,7 @@ function renderSweeps(cardCount: number): string {
 
 function renderTrack(show: Show): string {
   const latestEpisodes = show.episodes.slice(0, LATEST_EPISODE_COUNT);
-  const cards = [
-    ...latestEpisodes.map((episode, index) => renderEpisodeCard(episode, index)),
-    renderAllEpisodesCard(show.episodes.length, latestEpisodes.length),
-  ];
+  const cards = latestEpisodes.map((episode, index) => renderEpisodeCard(episode, index));
   const dashes = cards.map(() => '<span class="episodes-dash" data-episodes="dash"></span>').join('');
   return `<div class="episodes-viewport" data-stain-landing>
       <ul class="episodes-track" role="list">
@@ -53,7 +50,7 @@ export function renderEpisodes(show: Show): string {
   if (show.episodes.length === 0) {
     return '';
   }
-  const cardCount = Math.min(show.episodes.length, LATEST_EPISODE_COUNT) + 1;
+  const cardCount = Math.min(show.episodes.length, LATEST_EPISODE_COUNT);
 
   return `<section class="section episodes" id="episodes" data-section data-surface="dark" aria-labelledby="episodes-heading" style="--card-count:${cardCount}" data-module-episodes data-module-stain data-scroll data-scroll-offset="100%,100%" data-scroll-ignore-fold data-scroll-css-progress data-scroll-event-progress="episodes-progress">
     ${renderStainEdge()}

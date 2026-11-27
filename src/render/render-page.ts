@@ -1,6 +1,5 @@
 import type { Show } from '../show/show-types.ts';
 import { renderAbout } from './render-about.ts';
-import { renderArchive } from './render-archive.ts';
 import { renderClips } from './render-clips.ts';
 import { renderEpisodes } from './render-episodes.ts';
 import { renderFooter } from './render-footer.ts';
@@ -21,7 +20,6 @@ export const SECTION_RENDERERS: readonly SectionRenderer[] = [
   { id: 'about', label: 'About the show', render: renderAbout },
   { id: 'episodes', label: 'Episodes', render: renderEpisodes },
   { id: 'clips', label: 'Clips', render: renderClips },
-  { id: 'every-episode', label: 'Every episode', render: renderArchive },
   FOOTER_SECTION,
 ];
 
