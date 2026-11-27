@@ -1,4 +1,6 @@
 // @vitest-environment happy-dom
+import { readFileSync } from 'node:fs';
+
 import ModularApp from 'modujs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -74,6 +76,21 @@ function mountStain(): void {
   app.init(app);
 }
 
+function referenceSettledOutline(set: string): void {
+  document.querySelector(`[data-stain-set="${set}"]`)?.replaceChildren(
+    ...['rim', 'fill'].map((part) => {
+      const reference = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+      reference.setAttribute('class', `stain-edge-${part}`);
+      reference.setAttribute('href', `#stain-edge-${part}-${set}`);
+      return reference;
+    }),
+  );
+}
+
+function readEdgeDisplays(set: string): string[] {
+  return Array.from(document.querySelectorAll(`[data-stain-set="${set}"] > *`), (part) => getComputedStyle(part).display);
+}
+
 function readPath(set: string): string | null {
   return getElement(`[data-stain-set="${set}"] .stain-edge-fill`).getAttribute('d');
 }
@@ -91,8 +108,8 @@ beforeEach(() => {
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => new DOMRect(0, 0, 0, smallViewportHeight));
   document.body.innerHTML = `<section id="about" data-module-stain>
     <h2 data-stain-landing>Cozy chaos only.</h2>
-    <svg data-stain-set="wide"><path class="stain-edge-rim"/><path class="stain-edge-fill"/></svg>
-    <svg data-stain-set="narrow"><path class="stain-edge-rim"/><path class="stain-edge-fill"/></svg>
+    <svg class="stain-edge" data-stain-set="wide"><path class="stain-edge-rim"/><path class="stain-edge-fill"/></svg>
+    <svg class="stain-edge" data-stain-set="narrow"><path class="stain-edge-rim"/><path class="stain-edge-fill"/></svg>
   </section>`;
   landingOffset = 300;
   placeSectionTop(VIEWPORT.height);
@@ -107,6 +124,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   delete document.documentElement.dataset.motion;
+  document.head.innerHTML = '';
   document.body.innerHTML = '';
 });
 
@@ -121,14 +139,7 @@ describe('the stain edge', () => {
 
   it('swaps the reference to the shared settled outline for a path of its own before it reshapes the edge', () => {
     document.documentElement.dataset.motion = 'on';
-    document.querySelector('[data-stain-set="wide"]')?.replaceChildren(
-      ...['rim', 'fill'].map((part) => {
-        const reference = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        reference.setAttribute('class', `stain-edge-${part}`);
-        reference.setAttribute('href', `#stain-edge-${part}-wide`);
-        return reference;
-      }),
-    );
+    referenceSettledOutline('wide');
 
     mountStain();
 
@@ -136,6 +147,31 @@ describe('the stain edge', () => {
     expect(parts.map((part) => part.tagName.toLowerCase())).toEqual(['path', 'path']);
     expect(parts.map((part) => part.getAttribute('class'))).toEqual(['stain-edge-rim', 'stain-edge-fill']);
     expect(readPath('wide')).toMatch(/^M-100\.0.*Z$/);
+  });
+
+  describe('before the module starts', () => {
+    beforeEach(() => {
+      const stylesheet = document.createElement('style');
+      stylesheet.textContent = readFileSync('src/styles/stain.css', 'utf8');
+      document.head.append(stylesheet);
+      referenceSettledOutline('wide');
+    });
+
+    it('hides the settled outline with motion on, so the screen-tall edge never stretches it over the hero', () => {
+      document.documentElement.dataset.motion = 'on';
+
+      expect(readEdgeDisplays('wide')).toEqual(['none', 'none']);
+
+      mountStain();
+
+      expect(readEdgeDisplays('wide')).not.toContain('none');
+    });
+
+    it('shows the settled outline when the page has no motion, where it is the edge itself', () => {
+      mountStain();
+
+      expect(readEdgeDisplays('wide')).not.toContain('none');
+    });
   });
 
   it('draws one closed cream shape as soon as it starts, sized to the pixels it covers', () => {

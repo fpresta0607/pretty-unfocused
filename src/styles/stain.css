@@ -25,6 +25,13 @@ html[data-motion='on'] .stain-edge {
   block-size: 100svh;
 }
 
+/* A live edge stands a whole screen tall once motion is on, so the short settled outline its markup references would stretch over
+   the section above it, the hero first of all, until the stain module starts and draws the edge to its real size. The section
+   modules start late to keep the first screen cheap, so the edge stays out of sight until it has been drawn. */
+html[data-motion='on'] .stain-edge[data-stain-set] use {
+  display: none;
+}
+
 @media (max-width: 599px) {
   .stain-edge--wide {
     display: none;
