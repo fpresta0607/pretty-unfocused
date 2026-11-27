@@ -4,3 +4,6 @@ export const TIKTOK_URL = 'https://www.tiktok.com/@prettyunfocusedpod';
 export const YOUTUBE_FEED_URL =
   'https://www.youtube.com/feeds/videos.xml?channel_id=UCiGFUcKyuH4VdarkKH1uAvQ';
 export const PODCAST_FEED_URL = 'https://anchor.fm/s/111f1fc90/podcast/rss';
+export const SHOW_EMAIL = 'prettyunfocused@gmail.com';
+export const SITE_URL = 'https://pretty-unfocused.vercel.app';
+export const PREVIOUS_SHOW_URL = `${SITE_URL}/show.json`;

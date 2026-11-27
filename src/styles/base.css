@@ -10,7 +10,12 @@
 
 html {
   background: var(--wine);
+  scroll-padding-block: var(--frame-clearance-top) var(--frame-clearance-bottom);
   -webkit-text-size-adjust: 100%;
+}
+
+[data-section] {
+  scroll-margin-block: calc(var(--frame-clearance-top) * -1) calc(var(--frame-clearance-bottom) * -1);
 }
 
 html[data-menu-open] {
@@ -198,10 +203,12 @@ main:focus {
     border-color var(--dur-ui) var(--ease-out);
 }
 
-.pill:hover {
-  border-color: var(--cream);
-  background: var(--cream);
-  color: var(--wine);
+@media (hover: hover) and (pointer: fine) {
+  .pill:hover {
+    border-color: var(--cream);
+    background: var(--cream);
+    color: var(--wine);
+  }
 }
 
 .pill--solid {

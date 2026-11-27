@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { decodeEntities, toPlainText } from './plain-text.ts';
+import { decodeEntities, toPlainLines, toPlainText } from './plain-text.ts';
 
 describe('decodeEntities', () => {
   it.each([
@@ -26,5 +26,17 @@ describe('toPlainText', () => {
     ['', ''],
   ])('turns %j into %j', (input, expected) => {
     expect(toPlainText(input)).toBe(expected);
+  });
+});
+
+describe('toPlainLines', () => {
+  it.each([
+    ['One line\nnext line', 'One line\nnext line'],
+    ['  spaced \t out \r\n  second  ', 'spaced out\nsecond'],
+    ['First\n\n\n\n\nSecond', 'First\n\nSecond'],
+    ['<p>Tom &amp; Jerry</p>\nbye', 'Tom & Jerry\nbye'],
+    ['\n\n  \n', ''],
+  ])('turns %j into %j', (input, expected) => {
+    expect(toPlainLines(input)).toBe(expected);
   });
 });

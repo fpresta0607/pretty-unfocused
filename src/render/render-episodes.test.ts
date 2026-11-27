@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildFixtureShow } from '../show/build-fixture-show.ts';
-import { YOUTUBE_CHANNEL_URL } from '../show/show-links.ts';
 import type { Episode, Show } from '../show/show-types.ts';
 import { escapeHtml } from './escape-html.ts';
 import { formatShortDate } from './format-date.ts';
@@ -163,14 +162,14 @@ describe('renderEpisodes limits and edge cases', () => {
     expect(cards[8]).toContain('All 12 episodes</span>');
   });
 
-  it('links the last card to the YouTube channel', () => {
+  it('links the last card to the every-episode list', () => {
     const cards = readCards(renderEpisodes(makeShow([makeEpisode(1), makeEpisode(2)])));
 
     expect(cards.at(-1)).toContain('<span class="visually-hidden">All 2 episodes</span>');
     expect(cards.at(-1)).toContain('<span class="episode-all-count">2</span>');
     expect(cards.at(-1)).toContain('<span class="episode-all-title" aria-hidden="true">All episodes</span>');
     expect(cards.at(-1)).toContain('Every conversation, from the first to the latest.');
-    expect(cards.at(-1)).toContain(`href="${YOUTUBE_CHANNEL_URL}"`);
+    expect(cards.at(-1)).toContain('href="#every-episode"');
   });
 
   it('leaves out Play and Watch when the episode has no YouTube video', () => {

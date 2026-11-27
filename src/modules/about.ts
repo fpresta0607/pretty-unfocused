@@ -6,13 +6,13 @@ import { isMotionEnabled, SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
 import { splitIntoLines } from './split-lines.ts';
 import { REVEAL_FROM_SWEEP_PROGRESS, sweepProgress } from './stain-edge.ts';
 
-const MASK_HIDDEN = '130%';
+export const MASK_HIDDEN = '130%';
 export const MOVE_DURATION = 800;
 export const LINE_STAGGER = 120;
 export const SCRIPT_WIPE_DURATION = 560;
 export const SCRIPT_WIPE_AT = LINE_STAGGER + MOVE_DURATION / 2;
-const SCRIPT_HIDDEN = 'inset(-2em 100% -2em 0px)';
-const SCRIPT_SHOWN = 'inset(-2em 0% -2em 0px)';
+export const SCRIPT_HIDDEN = 'inset(-2em 100% -2em 0px)';
+export const SCRIPT_SHOWN = 'inset(-2em 0% -2em 0px)';
 const HOST_STAGGER = 220;
 const HOST_DEAL_TURN_DEGREES = 16;
 const HOST_DEAL_RISE = 0.45;

@@ -177,6 +177,22 @@ describe('the frame', () => {
     expect(getElement('[data-frame="section"]').textContent).toBe('About');
   });
 
+  it('names the section under the label on the frame itself, at the moment the label changes', async () => {
+    placePiece('[data-frame="section"]', 120, 756);
+    placeSection('home', -VIEWPORT_HEIGHT, 757);
+    placeSection('about', 757, 2000);
+    mountFrame();
+    const sectionWhileOverTheHero = getElement<HTMLElement>('.frame').dataset.frameSection;
+
+    await scrollTo(() => {
+      placeSection('home', -VIEWPORT_HEIGHT, 756);
+      placeSection('about', 756, 2000);
+    });
+
+    expect(sectionWhileOverTheHero).toBe('home');
+    expect(getElement<HTMLElement>('.frame').dataset.frameSection).toBe('about');
+  });
+
   it('turns a piece light only once the section edge has reached its centre', async () => {
     placePiece('.frame-button--menu', 68, 52);
     placeSection('home', 0, VIEWPORT_HEIGHT);
@@ -212,6 +228,22 @@ describe('the frame', () => {
     expect(readPieceSurface('.frame-button--menu')).toBe('dark');
     expect(readPieceSurface('[data-frame="section"]')).toBe('light');
     expect(getElement('[data-frame="section"]').textContent).toBe('About');
+  });
+
+  it('colours each letter of the section name by the section right under that letter', async () => {
+    placePiece('[data-frame="section"]', 120, 400);
+    placeSection('home', 0, 400);
+    placeSection('about', 400, 2000);
+    mountFrame();
+    const letters = Array.from(document.querySelectorAll<HTMLElement>('[data-frame="letter"]'));
+    letters.forEach((letter, index) => {
+      letter.getBoundingClientRect = () => new DOMRect(index * 10, index < 2 ? 380 : 410, 8, 8);
+    });
+
+    await scrollTo(() => placeSection('about', 400, 2000));
+
+    expect(letters.map((letter) => letter.dataset.frameSurface)).toEqual(['dark', 'dark', ...Array(letters.length - 2).fill('light')]);
+    expect(getElement('[data-frame="section"]').textContent).toBe(letters.map((letter) => letter.textContent).join(''));
   });
 
   it('watches the first section to decide when the hero has scrolled away', () => {

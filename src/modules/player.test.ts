@@ -24,6 +24,7 @@ function click(element: Element, init: MouseEventInit = {}): MouseEvent {
 beforeEach(() => {
   document.body.innerHTML = `
     <a id="play-link" href="https://www.youtube.com/watch?v=abc123" data-player="abc123" data-player-title="A good episode">Play</a>
+    <a id="clip-link" href="https://www.youtube.com/shorts/short123" data-player="short123" data-player-title="A short clip" data-player-shape="vertical">Clip</a>
     <a id="plain-link" href="https://example.com/">Plain</a>
     ${renderPlayer()}`;
   app = new ModularApp({ modules: { player: Player } });
@@ -72,6 +73,15 @@ describe('the player', () => {
     frame.dispatchEvent(new Event('load'));
 
     expect(frame.hasAttribute('data-loaded')).toBe(true);
+  });
+
+  it('removes the thumbnail once the video has loaded so no edge of it shows around the video', () => {
+    click(getElement('#play-link'));
+    const poster = getElement<HTMLImageElement>('dialog .player-poster');
+
+    getElement<HTMLIFrameElement>('dialog iframe').dispatchEvent(new Event('load'));
+
+    expect(poster.isConnected).toBe(false);
   });
 
   it('falls back from maxresdefault to sddefault and then hqdefault when a thumbnail fails to load', () => {
@@ -177,6 +187,25 @@ describe('the player', () => {
 
     expect(event.defaultPrevented).toBe(false);
     expect(document.querySelector('iframe')).toBeNull();
+  });
+
+  it('plays a wide video in the wide stage', () => {
+    click(getElement('#play-link'));
+
+    expect(getElement('dialog').hasAttribute('data-shape')).toBe(false);
+  });
+
+  it('plays a vertical clip in the tall stage and returns to the wide one once closed', () => {
+    click(getElement('#clip-link'));
+
+    expect(getElement('dialog').getAttribute('data-shape')).toBe('vertical');
+    expect(getElement<HTMLIFrameElement>('dialog iframe').src).toBe('https://www.youtube-nocookie.com/embed/short123?autoplay=1&rel=0');
+
+    click(getElement('[data-player-close]'));
+    expect(getElement('dialog').hasAttribute('data-shape')).toBe(false);
+
+    click(getElement('#play-link'));
+    expect(getElement('dialog').hasAttribute('data-shape')).toBe(false);
   });
 
   it('opens from a child of the play link, such as its icon', () => {

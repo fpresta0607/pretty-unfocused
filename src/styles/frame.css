@@ -100,12 +100,22 @@ html[data-menu-open] .frame-button:hover {
   color: var(--cream);
 }
 
-.frame-section[data-frame-surface='light'] {
+.frame-section[data-frame-surface='light'],
+.frame-section [data-frame-surface='light'] {
   color: var(--wine);
+}
+
+.frame-section [data-frame-surface='dark'] {
+  color: var(--cream);
+}
+
+.frame-section [data-frame='letter'] {
+  white-space: pre;
 }
 
 .menu-panel {
   --menu-origin: calc(var(--gutter) + var(--round-size) / 2) calc(var(--space-4) + var(--round-size) / 2);
+  --menu-link-size: min(var(--size-h2), max(1.75rem, calc((0.62 * 100svh - 210px) / 5.52)));
 
   position: absolute;
   inset: 0;
@@ -114,8 +124,8 @@ html[data-menu-open] .frame-button:hover {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-5);
-  padding: var(--space-8) var(--gutter) var(--space-7);
+  gap: clamp(var(--space-2), 2.5svh, var(--space-5));
+  padding: clamp(5.5rem, 11svh, var(--space-8)) var(--gutter) clamp(4.5rem, 9svh, var(--space-7));
   text-align: center;
   background: var(--wine);
   color: var(--cream);
@@ -138,7 +148,7 @@ html[data-menu-open] .frame-button:hover {
 .menu-list {
   display: grid;
   justify-items: center;
-  gap: var(--space-4);
+  gap: clamp(0px, 0.5svh, var(--space-2));
 }
 
 .menu-socials {
@@ -149,10 +159,10 @@ html[data-menu-open] .frame-button:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
+  gap: clamp(2px, 0.5svh, var(--space-2));
+  padding: clamp(2px, 1.2svh, var(--space-3)) var(--space-4);
   font-family: var(--font-display);
-  font-size: var(--size-h2);
+  font-size: var(--menu-link-size);
   line-height: 0.92;
   text-transform: uppercase;
   text-decoration: none;
@@ -338,7 +348,7 @@ html[data-menu-open] .frame-button:hover {
   .menu-panel {
     --menu-origin: calc(var(--gutter) + var(--round-size) / 2) calc(100% - var(--space-3) - var(--round-size) / 2);
 
-    padding-block: var(--space-7);
+    padding-block: clamp(5.5rem, 11svh, var(--space-7));
   }
 
   .listen-panel {
