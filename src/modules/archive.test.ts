@@ -180,13 +180,22 @@ describe('the every-episode rows', () => {
       expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: 180, behavior: 'instant' });
     });
 
-    it('keeps the row header below the top of the frame when the panel is taller than the room', () => {
+    it('lets the header slide up under the top of the frame so the end of a tall panel rests clear of the bottom of the frame', () => {
+      mountArchive();
+      placeRow(150, 810);
+
+      getTrigger(1).click();
+
+      expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: 90, behavior: 'instant' });
+    });
+
+    it('stops once the header has gone up to the top of the frame when the panel is far taller than the room', () => {
       mountArchive();
       placeRow(300, 2000);
 
       getTrigger(1).click();
 
-      expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: 200, behavior: 'instant' });
+      expect(scrollBy).toHaveBeenCalledExactlyOnceWith({ top: 260, behavior: 'instant' });
     });
 
     it('scrolls back down when the row header sits under the top of the frame', () => {

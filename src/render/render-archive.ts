@@ -22,7 +22,7 @@ export function renderArchive(show: Show): string {
     <div class="archive-inner">
       <div class="archive-head">
         ${renderSectionHeading({ id: 'archive-heading', accessibleName: 'Every episode, so far', lines: ['Every', 'episode,'], script: 'so far' })}
-        <span class="sticker archive-sticker" data-archive="sticker" aria-hidden="true">🎙️🩷</span>
+        <span class="sticker archive-sticker" data-archive="sticker" aria-hidden="true">🪩✨</span>
       </div>
       <ol class="archive-list" role="list" data-archive="list">
         ${rows.join('\n        ')}

@@ -2,7 +2,6 @@ import { EASE_POP } from './motion-tokens.ts';
 
 export const DEAL_START_FRACTION = 1;
 export const DEAL_SPAN_FRACTION = 0.45;
-export const PINNED_DEAL_SPAN_FRACTION = 0.6;
 export const ROW_LANDING_FRACTION = 0.3;
 export const DEAL_WINDOW = 0.5;
 
@@ -16,10 +15,6 @@ export function dealProgress(fanTop: number, viewportHeight: number): number {
 
 export function rowDealProgress(fanTop: number, sectionTop: number, viewportHeight: number): number {
   return Math.max(dealProgress(fanTop, viewportHeight), clamp(1 - sectionTop / (ROW_LANDING_FRACTION * viewportHeight), 0, 1));
-}
-
-export function pinnedDealProgress(sectionTop: number, viewportHeight: number): number {
-  return clamp(-sectionTop / (PINNED_DEAL_SPAN_FRACTION * viewportHeight), 0, 1);
 }
 
 export function dealRanks(positions: readonly number[]): number[] {

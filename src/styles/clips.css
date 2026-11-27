@@ -144,7 +144,6 @@ html:not([data-motion='on']) .clips {
   font-weight: 700;
   font-size: max(1.0625rem, min(clamp(var(--size-body), calc(var(--card-w) * 0.26 - 25px), var(--size-h3)), calc(var(--title-room) / 6.4)));
   line-height: 1.15;
-  min-block-size: 4.6em;
   text-wrap: balance;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
@@ -173,7 +172,6 @@ html:not([data-motion='on']) .clips {
 }
 
 .clip-card:has(:focus-visible) {
-  z-index: 20;
   --lift: 1;
 }
 
@@ -252,24 +250,6 @@ html:not([data-motion='on']) .clips {
 @media (max-width: 599px) {
   .clips {
     --pad-top: calc(var(--space-7) - var(--space-4));
-  }
-}
-
-@media (max-width: 599px) and (max-height: 799px) {
-  .clips-inner {
-    grid-template-rows: auto;
-  }
-
-  .clips-tiktok {
-    order: 1;
-  }
-
-  .clips-fan {
-    order: 2;
-  }
-
-  .clips-dashes {
-    order: 3;
   }
 }
 
@@ -367,19 +347,44 @@ html:not([data-motion='on']) .clips {
 }
 
 @media (min-width: 1440px) {
+  .clips {
+    --size-h2: clamp(3rem, 5.6vw, 8rem);
+    --size-script: clamp(3.0625rem, 5.2vw, 7.4rem);
+    --head-height: calc(var(--size-h2) + var(--size-script) * 0.9);
+  }
+
+  .clips-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      'heading tiktok'
+      'fan fan';
+    align-items: end;
+    max-inline-size: none;
+    row-gap: var(--space-3);
+  }
+
+  .clips .section-heading-mask {
+    display: inline-block;
+  }
+
   .clips-dashes {
     display: none;
+  }
+
+  .clips-tiktok {
+    justify-self: end;
   }
 
   .clips-fan {
     container-type: inline-size;
     margin-inline: 0;
-    padding-block: var(--space-4);
+    padding-block: var(--space-4) var(--space-2);
     overflow: visible;
   }
 
   .clips-fan-list {
-    --card-w: min(calc(100cqi / 5.9), calc((100svh - 17.3rem) / 2.2), 22rem);
+    --card-w: max(10.5rem, min(calc(100cqi / 5.9), calc((100svh - var(--pad-top) - var(--pad-bottom) - var(--head-height) - 3rem) / 2.05)));
     --card-gap: calc(var(--card-w) * -0.1);
     --fan-turn: 3deg;
     --fan-drop: calc(var(--card-w) * 0.032);

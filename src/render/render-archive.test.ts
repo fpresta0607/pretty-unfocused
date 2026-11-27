@@ -73,6 +73,13 @@ describe('renderArchive with the fixture show', () => {
     expect(markup).toContain('aria-labelledby="archive-heading"');
   });
 
+  it('draws the sticker only from the show\'s own emoji', () => {
+    const sticker = markup.match(/data-archive="sticker" aria-hidden="true">([^<]+)</)?.[1] ?? '';
+
+    expect(Array.from(sticker).filter((symbol) => !'\u{1FA77}✨\u{1FAA9}'.includes(symbol))).toEqual([]);
+    expect(sticker).not.toBe('');
+  });
+
   it('tucks a decorative sticker against the headline, outside the h2', () => {
     expect(markup).toMatch(/<\/h2>\s*<span class="sticker archive-sticker" data-archive="sticker" aria-hidden="true">[^<]+<\/span>/);
   });

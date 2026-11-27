@@ -1,6 +1,6 @@
 import { module as Module } from 'modujs';
 
-import { cardDeal, dealRanks, pinnedDealProgress, rowDealProgress } from './clips-logic.ts';
+import { cardDeal, dealRanks, rowDealProgress } from './clips-logic.ts';
 import { isMotionEnabled, SMOOTH_SCROLL_DEVICE_QUERY } from './motion-state.ts';
 import { hasEntered, isRevealOpen, revealSectionHeading } from './section-heading-reveal.ts';
 
@@ -9,7 +9,6 @@ export class Clips extends Module {
   private ranks: number[] = [];
   private heading: HTMLElement | null = null;
   private fan: HTMLElement | null = null;
-  private inner: HTMLElement | null = null;
   private dashes: HTMLElement[] = [];
   private lastProgress = Number.NaN;
   private pendingFrame: number | undefined;
@@ -38,7 +37,6 @@ export class Clips extends Module {
 
   init(): void {
     this.fan = this.el.querySelector<HTMLElement>('[data-clips="fan"]');
-    this.inner = this.el.querySelector<HTMLElement>('.clips-inner');
     this.dashes = Array.from(this.el.querySelectorAll<HTMLElement>('[data-clips="dash"]'));
     this.fan?.addEventListener('scroll', this.updateDashes, { passive: true });
     if (!isMotionEnabled(document.documentElement)) {
@@ -62,10 +60,6 @@ export class Clips extends Module {
 
   private readDealProgress(): number {
     const sectionTop = this.el.getBoundingClientRect().top;
-    const isFanned = this.fan !== null && getComputedStyle(this.fan).overflowX !== 'auto';
-    if (isFanned && this.inner !== null && getComputedStyle(this.inner).position === 'sticky') {
-      return pinnedDealProgress(sectionTop, window.innerHeight);
-    }
     const stainLift = Number.parseFloat(this.el.style.getPropertyValue('--stain-lift')) || 0;
     const naturalFanTop = (this.fan?.getBoundingClientRect().top ?? window.innerHeight) + stainLift;
     return rowDealProgress(naturalFanTop, sectionTop, window.innerHeight);

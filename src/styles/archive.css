@@ -199,7 +199,6 @@ html:not([data-motion='on']) .archive {
 
 .archive-panel-inner {
   min-block-size: 0;
-  padding-inline-start: calc(var(--number-width) + var(--row-gap));
   overflow: clip;
 }
 
@@ -279,7 +278,7 @@ html:not([data-motion='on']) .archive {
   }
 
   .archive-panel-inner {
-    padding-inline-end: calc(var(--toggle-size) + var(--row-gap));
+    padding-inline: calc(var(--number-width) + var(--row-gap)) calc(var(--toggle-size) + var(--row-gap));
   }
 }
 
@@ -298,5 +297,9 @@ html:not([data-motion='on']) .archive {
   .archive-head {
     position: sticky;
     inset-block-start: var(--pin-top);
+  }
+
+  .archive-list {
+    margin-block-start: var(--space-4);
   }
 }

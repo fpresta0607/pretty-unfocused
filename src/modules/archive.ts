@@ -115,9 +115,15 @@ export class Archive extends Module {
         return;
       }
       const { scrollPaddingTop, scrollPaddingBottom } = getComputedStyle(document.documentElement);
-      const roomAbove = trigger.getBoundingClientRect().top - (Number.parseFloat(scrollPaddingTop) || 0);
+      const { top, bottom } = trigger.getBoundingClientRect();
+      const frameTop = Number.parseFloat(scrollPaddingTop) || 0;
       const overflowBelow = panel.getBoundingClientRect().bottom - (window.innerHeight - (Number.parseFloat(scrollPaddingBottom) || 0));
-      const distance = roomAbove < 0 ? roomAbove : Math.min(Math.max(overflowBelow, 0), roomAbove);
+      let distance = 0;
+      if (overflowBelow > 0) {
+        distance = Math.min(overflowBelow, Math.max(bottom - frameTop, 0));
+      } else if (top < frameTop) {
+        distance = Math.max(top - frameTop, overflowBelow);
+      }
       if (distance !== 0) {
         window.scrollBy({ top: distance, behavior });
         if (passesLeft > 1) {
