@@ -4,6 +4,11 @@ import { buildFixtureShow } from '../show/build-fixture-show.ts';
 import type { Episode, Show } from '../show/show-types.ts';
 import { formatShortDate } from './format-date.ts';
 import { renderHero } from './render-hero.ts';
+import { resolveImageSlotWidth } from './resolve-image-slot-width.ts';
+
+const PHONE_VIEWPORT_WIDTH = 393;
+const PHONE_THUMBNAIL_RENDERED_WIDTH = 180;
+const HQDEFAULT_WIDTH = 480;
 
 function getLatestEpisode(show: Show): Episode {
   const [latestEpisode] = show.episodes;
@@ -74,8 +79,13 @@ describe('renderHero with the fixture show', () => {
     expect(image).not.toContain('loading=');
   });
 
-  it('sizes the thumbnail to the card width at each breakpoint, so a phone does not fetch the largest image', () => {
-    expect(markup).toContain('sizes="(min-width: 900px) 23vw, (min-width: 600px) 308px, 66vw"');
+  it('sizes the thumbnail for a 393 px phone no smaller than it renders and within the 480 px candidate', () => {
+    const sizes = markup.match(/<img class="hero-card-image"[^>]*\ssizes="([^"]*)"/)?.[1] ?? '';
+
+    const slotWidth = resolveImageSlotWidth(sizes, PHONE_VIEWPORT_WIDTH);
+
+    expect(slotWidth).toBeGreaterThanOrEqual(PHONE_THUMBNAIL_RENDERED_WIDTH);
+    expect(slotWidth).toBeLessThanOrEqual(HQDEFAULT_WIDTH);
   });
 
   it('gives the h1 the accessible name Pretty Unfocused', () => {

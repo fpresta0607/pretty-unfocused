@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { fetchShow } from './fetch-show.ts';
 import { readFixture } from './read-fixture.ts';
@@ -53,6 +53,10 @@ function buildYoutubeFeed(videoIds: readonly string[]): string {
   return `<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom">${entries}</feed>`;
 }
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe('fetchShow', () => {
   it('builds the show from both feeds and the thumbnail checks', async () => {
     const fakeFetch = createFakeFetch({
@@ -100,7 +104,11 @@ describe('fetchShow', () => {
   });
 
   it('gives an episode without a video the smaller show artwork published on Spotify', async () => {
+    const warn = vi.spyOn(console, 'warn');
+
     const show = await fetchShow(createFakeFetch());
+
+    expect(warn).not.toHaveBeenCalled();
 
     const episodesWithoutVideo = show.episodes.filter((episode) => episode.youtubeVideoId === undefined);
     expect(episodesWithoutVideo.length).toBeGreaterThan(0);
@@ -113,8 +121,13 @@ describe('fetchShow', () => {
     ['the Spotify page is not available', new Response('down', { status: 503 })],
     ['the Spotify page has no image', new Response('<html><head></head></html>')],
     ['the Spotify page image is on another host', new Response('<meta property="og:image" content="https://example.com/image/ab01"/>')],
-  ])('keeps the feed artwork when %s', async (_label, spotifyResponse) => {
+  ])('keeps the feed artwork and warns when %s', async (_label, spotifyResponse) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
     const show = await fetchShow(createFakeFetch({ spotifyResponse }));
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]?.[0]).toMatch(/Spotify show page.*keeping the feed artwork/);
 
     const episodesWithoutVideo = show.episodes.filter((episode) => episode.youtubeVideoId === undefined);
     expect(episodesWithoutVideo.length).toBeGreaterThan(0);
@@ -124,8 +137,13 @@ describe('fetchShow', () => {
     }
   });
 
-  it('keeps the feed artwork and still builds when the Spotify page cannot be reached', async () => {
+  it('keeps the feed artwork, warns and still builds when the Spotify page cannot be reached', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
     const show = await fetchShow(createFakeFetch({ spotifyError: new TypeError('fetch failed') }));
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]?.[0]).toMatch(/Spotify show page could not be reached.*fetch failed/);
 
     const episodesWithoutVideo = show.episodes.filter((episode) => episode.youtubeVideoId === undefined);
     expect(episodesWithoutVideo.length).toBeGreaterThan(0);

@@ -21,6 +21,7 @@ afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
   delete document.documentElement.dataset.motion;
+  window.location.hash = '';
 });
 
 describe('starting the sections below the first screen', () => {
@@ -53,6 +54,16 @@ describe('starting the sections below the first screen', () => {
     window.dispatchEvent(new Event('wheel'));
     window.dispatchEvent(new Event(HERO_SETTLED_EVENT));
     vi.advanceTimersByTime(FALLBACK_DELAY_MS);
+
+    expect(start).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['on', 'off'])('starts at once when the page opens at a hash, with motion %s', (motion) => {
+    document.documentElement.dataset.motion = motion;
+    vi.stubGlobal('requestIdleCallback', vi.fn<(task: () => void) => void>());
+    window.location.hash = '#about';
+
+    startWhenSettled(start);
 
     expect(start).toHaveBeenCalledTimes(1);
   });

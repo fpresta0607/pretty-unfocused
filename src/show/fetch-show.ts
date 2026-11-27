@@ -57,7 +57,11 @@ async function findSpotifyArtworkUrl(fetchFunction: typeof fetch): Promise<strin
     console.warn(`Spotify show page answered HTTP ${response.status}, keeping the feed artwork`);
     return undefined;
   }
-  return SPOTIFY_ARTWORK_PATTERN.exec(await response.text())?.[1];
+  const artworkUrl = SPOTIFY_ARTWORK_PATTERN.exec(await response.text())?.[1];
+  if (artworkUrl === undefined) {
+    console.warn('Spotify show page has no i.scdn.co og:image, keeping the feed artwork');
+  }
+  return artworkUrl;
 }
 
 export async function fetchShow(fetchFunction: typeof fetch): Promise<Show> {

@@ -15,6 +15,10 @@ function runWhenIdle(task: () => void): void {
 // The sections below the first screen fit their cards and edges with forced layouts, so they start once the hero has settled,
 // or at the first sign of the visitor reaching for the page, whichever comes first.
 export function startWhenSettled(start: () => void): void {
+  if (window.location.hash !== '') {
+    start();
+    return;
+  }
   if (!isMotionEnabled(document.documentElement)) {
     runWhenIdle(start);
     return;

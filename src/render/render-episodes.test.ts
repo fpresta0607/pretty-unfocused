@@ -5,6 +5,11 @@ import type { Episode, Show } from '../show/show-types.ts';
 import { escapeHtml } from './escape-html.ts';
 import { formatShortDate } from './format-date.ts';
 import { renderEpisodes } from './render-episodes.ts';
+import { resolveImageSlotWidth } from './resolve-image-slot-width.ts';
+
+const PHONE_VIEWPORT_WIDTH = 393;
+const PHONE_THUMBNAIL_RENDERED_WIDTH = 300;
+const HQDEFAULT_WIDTH = 480;
 
 function makeEpisode(index: number, overrides: Partial<Episode> = {}): Episode {
   return {
@@ -128,10 +133,14 @@ describe('renderEpisodes with the fixture show', () => {
     expect(latestCard).toContain('alt=""');
   });
 
-  it('sizes each thumbnail to the card width at each breakpoint, so a phone does not fetch the largest image', () => {
+  it('sizes each thumbnail for a 393 px phone no smaller than it renders and within the 480 px candidate', () => {
     const [latestCard = ''] = cards;
+    const sizes = latestCard.match(/<img class="episode-card-image"[^>]*\ssizes="([^"]*)"/)?.[1] ?? '';
 
-    expect(latestCard).toContain('sizes="(min-width: 900px) 28vw, (min-width: 600px) 50vw, calc(100vw - 4rem)"');
+    const slotWidth = resolveImageSlotWidth(sizes, PHONE_VIEWPORT_WIDTH);
+
+    expect(slotWidth).toBeGreaterThanOrEqual(PHONE_THUMBNAIL_RENDERED_WIDTH);
+    expect(slotWidth).toBeLessThanOrEqual(HQDEFAULT_WIDTH);
   });
 
   it('loads every thumbnail lazily, including the podcast artwork', () => {
